@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(php artisan make:model:*)",
+      "Bash(php artisan make:migration:*)",
+      "Bash(php artisan migrate:*)",
+      "Bash(php artisan tinker:*)",
+      "Bash(php artisan migrate:status:*)",
+      "Bash(php artisan migrate:fresh:*)",
+      "Bash(php artisan make:auth:*)",
+      "Bash(php artisan make:controller:*)",
+      "Bash(php artisan make:middleware:*)",
+      "Bash(php artisan make:seeder:*)",
+      "Bash(php artisan serve:*)",
+      "Bash(curl:*)",
+      "Bash(kill:*)",
+      "Bash(php artisan:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
