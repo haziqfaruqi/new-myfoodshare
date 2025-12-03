@@ -259,6 +259,99 @@ class DashboardController extends Controller
     }
 
     /**
+     * Restaurant owner schedule management.
+     */
+    public function pickupSchedule()
+    {
+        $user = auth()->user();
+
+        // Get today's pickups (scheduled for today)
+        $todayPickups = \App\Models\FoodMatch::with(['foodListing', 'recipient'])
+            ->whereHas('foodListing', function($query) use ($user) {
+                $query->where('created_by', $user->id);
+            })
+            ->whereDate('pickup_scheduled_at', today())
+            ->whereIn('status', ['approved', 'scheduled'])
+            ->orderBy('pickup_scheduled_at', 'asc')
+            ->get();
+
+        // Get pending pickups (approved but not scheduled)
+        $pendingPickups = \App\Models\FoodMatch::with(['foodListing', 'recipient'])
+            ->whereHas('foodListing', function($query) use ($user) {
+                $query->where('created_by', $user->id);
+            })
+            ->where('status', 'approved')
+            ->whereNull('pickup_scheduled_at')
+            ->orderBy('created_at', 'asc')
+            ->take(10)
+            ->get();
+
+        // Get completed pickups this week
+        $completedPickups = \App\Models\FoodMatch::with(['foodListing', 'recipient'])
+            ->whereHas('foodListing', function($query) use ($user) {
+                $query->where('created_by', $user->id);
+            })
+            ->where('status', 'completed')
+            ->where('updated_at', '>=', now()->startOfWeek())
+            ->count();
+
+        // Get total donated this month
+        $totalDonated = \App\Models\FoodListing::where('created_by', $user->id)
+            ->where('created_at', '>=', now()->startOfMonth())
+            ->sum('quantity');
+
+        
+        // Get recent activity
+        $recentActivity = \App\Models\FoodMatch::with(['foodListing', 'recipient'])
+            ->whereHas('foodListing', function($query) use ($user) {
+                $query->where('created_by', $user->id);
+            })
+            ->whereIn('status', ['approved', 'scheduled', 'completed'])
+            ->orderBy('updated_at', 'desc')
+            ->take(10)
+            ->get();
+
+        return view('restaurant.schedule.index', compact(
+            'todayPickups',
+            'pendingPickups',
+            'completedPickups',
+            'totalDonated',
+            'recentActivity'
+        ));
+    }
+
+    /**
+     * Generate calendar days for current month (optimized).
+     */
+    private function generateCalendarDaysOptimized()
+    {
+        $days = [];
+        $currentDate = now();
+        $startOfMonth = $currentDate->startOfMonth()->startOfWeek();
+        $endOfMonth = $currentDate->endOfMonth()->endOfWeek();
+
+        $userId = auth()->user()->id;
+
+        // Simplified calendar generation without complex queries
+        $date = $startOfMonth;
+        while ($date <= $endOfMonth) {
+            $dateStr = $date->toDateString();
+            $day = [
+                'day' => $date->day,
+                'is_current_month' => $date->month === $currentDate->month,
+                'is_today' => $date->isToday(),
+                'pickup_count' => 0, // Simplified - no complex queries
+                'has_completed' => false // Simplified - no complex queries
+            ];
+
+            $days[] = $day;
+            $date->addDay();
+        }
+
+        return $days;
+    }
+
+    /**
      * Recipient dashboard.
      */
     public function recipientDashboard()
@@ -325,7 +418,18 @@ class DashboardController extends Controller
     public function restaurantProfile()
     {
         $user = auth()->user();
-        return view('restaurant.profile', compact('user'));
+        $profile = $user->restaurantProfile;
+        return view('restaurant.profile.index', compact('user', 'profile'));
+    }
+
+    /**
+     * Edit restaurant profile.
+     */
+    public function editRestaurantProfile()
+    {
+        $user = auth()->user();
+        $profile = $user->restaurantProfile;
+        return view('restaurant.profile.edit', compact('user', 'profile'));
     }
 
     /**

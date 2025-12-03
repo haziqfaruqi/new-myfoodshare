@@ -16,7 +16,8 @@
       "Bash(kill:*)",
       "Bash(php artisan:*)",
       "Bash(php:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(taskkill:*)"
     ],
     "deny": [],
     "ask": []

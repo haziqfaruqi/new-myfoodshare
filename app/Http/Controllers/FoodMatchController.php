@@ -110,14 +110,40 @@ class FoodMatchController extends Controller
             abort(403, 'Unauthorized action');
         }
 
-        $matches = FoodMatch::with(['recipient', 'foodListing'])
+        // Get statistics
+        $pendingRequests = FoodMatch::whereHas('foodListing', function($query) {
+                $query->where('created_by', Auth::id());
+            })
+            ->where('status', 'pending')
+            ->count();
+
+        $approvedRequests = FoodMatch::whereHas('foodListing', function($query) {
+                $query->where('created_by', Auth::id());
+            })
+            ->where('status', 'approved')
+            ->count();
+
+        $rejectedRequests = FoodMatch::whereHas('foodListing', function($query) {
+                $query->where('created_by', Auth::id());
+            })
+            ->where('status', 'rejected')
+            ->count();
+
+        $completedRequests = FoodMatch::whereHas('foodListing', function($query) {
+                $query->where('created_by', Auth::id());
+            })
+            ->where('status', 'completed')
+            ->count();
+
+        // Get paginated matches for the list
+        $requests = FoodMatch::with(['recipient', 'foodListing'])
             ->whereHas('foodListing', function($query) {
                 $query->where('created_by', Auth::id());
             })
             ->latest()
             ->paginate(10);
 
-        return view('restaurant.matches.index', compact('matches'));
+        return view('restaurant.requests.index', compact('pendingRequests', 'approvedRequests', 'rejectedRequests', 'completedRequests', 'requests'));
     }
 
     /**
@@ -328,6 +354,11 @@ class FoodMatchController extends Controller
     public function autoMatch(FoodListing $foodListing)
     {
         if (!Auth::user()->isRestaurantOwner() && !Auth::user()->isAdmin()) {
+            abort(403, 'Unauthorized action');
+        }
+
+        // Verify this restaurant owns the food listing
+        if ($foodListing->created_by !== Auth::id()) {
             abort(403, 'Unauthorized action');
         }
 

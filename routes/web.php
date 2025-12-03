@@ -50,13 +50,30 @@ Route::middleware(['auth'])->group(function () {
     // Restaurant owner routes
     Route::middleware(['role:restaurant_owner'])->prefix('restaurant')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'restaurantDashboard'])->name('restaurant.dashboard');
-        Route::get('/listings', [DashboardController::class, 'myListings'])->name('restaurant.listings');
-        Route::get('/listings/create', [DashboardController::class, 'createListing'])->name('restaurant.listings.create');
+
+        // Manage Listings
+        Route::get('/listings', [FoodListingController::class, 'index'])->name('restaurant.listings');
+        Route::get('/listings/{listing}', [FoodListingController::class, 'show'])->name('restaurant.listings.show');
+        Route::get('/listings/create', [FoodListingController::class, 'create'])->name('restaurant.listings.create');
         Route::post('/listings', [FoodListingController::class, 'storeRestaurantListing'])->name('restaurant.listings.store');
         Route::get('/listings/{listing}/edit', [FoodListingController::class, 'edit'])->name('restaurant.listings.edit');
         Route::put('/listings/{listing}', [FoodListingController::class, 'updateRestaurantListing'])->name('restaurant.listings.update');
         Route::delete('/listings/{listing}', [FoodListingController::class, 'deleteRestaurantListing'])->name('restaurant.listings.destroy');
+
+        // Manage Requests (Food Matches)
+        Route::get('/requests', [FoodMatchController::class, 'restaurantIndex'])->name('restaurant.requests');
+        Route::get('/requests/{match}', [FoodMatchController::class, 'restaurantShow'])->name('restaurant.requests.show');
+        Route::post('/requests/{match}/approve', [FoodMatchController::class, 'approve'])->name('restaurant.requests.approve');
+        Route::post('/requests/{match}/reject', [FoodMatchController::class, 'reject'])->name('restaurant.requests.reject');
+        Route::post('/requests/{match}/schedule', [FoodMatchController::class, 'schedule'])->name('restaurant.requests.schedule');
+
+        // Manage Schedule (Pickup Monitoring)
+        Route::get('/schedule', [DashboardController::class, 'pickupSchedule'])->name('restaurant.schedule');
+
+        // Profile
         Route::get('/profile', [DashboardController::class, 'restaurantProfile'])->name('restaurant.profile');
+        Route::get('/profile/edit', [DashboardController::class, 'editRestaurantProfile'])->name('restaurant.profile.edit');
+        Route::put('/profile', [DashboardController::class, 'updateRestaurantProfile'])->name('restaurant.profile.update');
     });
 
     // Recipient routes
@@ -93,16 +110,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/food-listings/{foodListing}', [FoodListingController::class, 'show'])->name('food-listings.show');
     Route::get('/food-listings/{foodListing}/verify', [FoodListingController::class, 'verify'])->name('food-listing.verify');
 
-    // Restaurant owner food listing routes
-    Route::middleware(['role:restaurant_owner'])->prefix('restaurant')->group(function () {
-        Route::get('/listings', [FoodListingController::class, 'index'])->name('restaurant.food-listings.index');
-        Route::get('/listings/create', [FoodListingController::class, 'create'])->name('restaurant.food-listings.create');
-        Route::get('/listings/{foodListing}', [FoodListingController::class, 'show'])->name('restaurant.food-listings.show');
-        Route::get('/listings/{foodListing}/edit', [FoodListingController::class, 'edit'])->name('restaurant.food-listings.edit');
-        Route::put('/listings/{foodListing}', [FoodListingController::class, 'update'])->name('restaurant.food-listings.update');
-        Route::delete('/listings/{foodListing}', [FoodListingController::class, 'destroy'])->name('restaurant.food-listings.destroy');
-    });
-
+    
     // Admin routes
     Route::middleware(['role:admin'])->prefix('admin')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'adminDashboard'])->name('admin.dashboard');

@@ -67,7 +67,7 @@ class FoodListingController extends Controller
 
         $foodListings = $query->paginate(12);
 
-        return view('food-listings.index', compact('foodListings'));
+        return view('restaurant.listings.index', compact('foodListings'));
     }
 
     /**
