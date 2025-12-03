@@ -50,6 +50,190 @@ class DashboardController extends Controller
     }
 
     /**
+     * Show user approvals page.
+     */
+    public function userApprovals()
+    {
+        $pendingUsers = User::where('status', 'pending')
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+
+        $recentlyApproved = User::where('status', 'active')
+            ->whereNotNull('approved_at')
+            ->orderBy('approved_at', 'desc')
+            ->take(5)
+            ->get();
+
+        return view('admin.user-approvals', compact('pendingUsers', 'recentlyApproved'));
+    }
+
+    /**
+     * Approve user registration.
+     */
+    public function approveUser(Request $request, User $user)
+    {
+        if (!auth()->user()->isAdmin()) {
+            abort(403, 'Unauthorized action');
+        }
+
+        $user->update([
+            'status' => 'active',
+            'approved_at' => now(),
+            'approved_by' => auth()->id(),
+        ]);
+
+        return redirect()->route('admin.user-approvals')
+            ->with('success', 'User approved successfully!');
+    }
+
+    /**
+     * Reject user registration.
+     */
+    public function rejectUser(Request $request, User $user)
+    {
+        if (!auth()->user()->isAdmin()) {
+            abort(403, 'Unauthorized action');
+        }
+
+        $request->validate([
+            'rejection_reason' => 'required|string|max:500',
+        ]);
+
+        $user->update([
+            'status' => 'rejected',
+            'approved_at' => now(),
+            'approved_by' => auth()->id(),
+            'rejection_reason' => $request->rejection_reason,
+        ]);
+
+        return redirect()->route('admin.user-approvals')
+            ->with('success', 'User rejected successfully!');
+    }
+
+    /**
+     * Show user management page.
+     */
+    public function userManagement()
+    {
+        $users = User::orderBy('created_at', 'desc')->paginate(20);
+
+        $stats = [
+            'total_users' => User::count(),
+            'active_users' => User::where('status', 'active')->count(),
+            'pending_users' => User::where('status', 'pending')->count(),
+            'restaurant_owners' => User::where('role', 'restaurant_owner')->where('status', 'active')->count(),
+            'recipients' => User::where('role', 'recipient')->where('status', 'active')->count(),
+        ];
+
+        return view('admin.user-management', compact('users', 'stats'));
+    }
+
+    /**
+     * Update user status.
+     */
+    public function updateUserStatus(Request $request, User $user)
+    {
+        if (!auth()->user()->isAdmin()) {
+            abort(403, 'Unauthorized action');
+        }
+
+        $validated = $request->validate([
+            'status' => 'required|in:active,inactive,pending,rejected',
+            'role' => 'required|in:admin,restaurant_owner,recipient',
+        ]);
+
+        $user->update($validated);
+
+        return redirect()->route('admin.user-management')
+            ->with('success', 'User updated successfully!');
+    }
+
+    /**
+     * Delete user.
+     */
+    public function deleteUser(User $user)
+    {
+        if (!auth()->user()->isAdmin() || auth()->user()->id === $user->id) {
+            abort(403, 'Unauthorized action');
+        }
+
+        $user->delete();
+
+        return redirect()->route('admin.user-management')
+            ->with('success', 'User deleted successfully!');
+    }
+
+    /**
+     * Show active listings management page.
+     */
+    public function activeListings()
+    {
+        $activeListings = FoodListing::with(['restaurantProfile', 'creator'])
+            ->whereIn('status', ['active', 'reserved'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+
+        $stats = [
+            'total_listings' => FoodListing::count(),
+            'active_listings' => FoodListing::where('status', 'active')->count(),
+            'reserved_listings' => FoodListing::where('status', 'reserved')->count(),
+            'expired_listings' => FoodListing::where('expiry_date', '<', now()->toDateString())->count(),
+            'pending_approvals' => FoodListing::where('approval_status', 'pending')->count(),
+        ];
+
+        return view('admin.active-listings', compact('activeListings', 'stats'));
+    }
+
+    /**
+     * Show pickup verification monitoring page.
+     */
+    public function pickupMonitoring()
+    {
+        // Get active matches that need verification (approved or scheduled but not yet verified)
+        $activePickups = \App\Models\FoodMatch::with(['foodListing.restaurantProfile', 'recipient', 'pickupVerification'])
+            ->whereIn('status', ['approved', 'scheduled'])
+            ->whereDoesntHave('pickupVerification') // Only matches without verification records
+            ->where(function($query) {
+                $query->whereNull('pickup_scheduled_at')
+                      ->orWhere('pickup_scheduled_at', '<=', now());
+            })
+            ->orderBy('created_at', 'asc')
+            ->take(15)
+            ->get();
+
+        // Get recent pickups with verification records (use scanned_at as verification timestamp)
+        $recentPickups = \App\Models\PickupVerification::with(['match.foodListing.restaurantProfile', 'match.recipient'])
+            ->whereNotNull('scanned_at')
+            ->where('scanned_at', '>=', now()->subHours(24))
+            ->orderBy('scanned_at', 'desc')
+            ->take(10)
+            ->get();
+
+        // Get verification stats
+        $pendingVerifications = \App\Models\FoodMatch::with(['foodListing.restaurantProfile', 'recipient'])
+            ->whereIn('status', ['approved', 'scheduled'])
+            ->whereDoesntHave('pickupVerification')
+            ->count();
+
+        $completedToday = \App\Models\PickupVerification::whereDate('scanned_at', today())->count();
+
+        $totalVerified = \App\Models\PickupVerification::whereNotNull('scanned_at')->count();
+
+        // Calculate verification rate (mock calculation)
+        $totalRecentMatches = \App\Models\FoodMatch::where('status', 'approved')->where('created_at', '>=', now()->subDays(7))->count();
+        $verificationRate = $totalRecentMatches > 0 ? round(($totalVerified / max($totalRecentMatches, 1)) * 100) : 85;
+
+        $stats = [
+            'active_pickups' => $pendingVerifications,
+            'completed_today' => $completedToday,
+            'verification_rate' => $verificationRate,
+            'total_verified' => $totalVerified,
+        ];
+
+        return view('admin.pickup-monitoring', compact('activePickups', 'recentPickups', 'stats'));
+    }
+
+    /**
      * Restaurant owner dashboard.
      */
     public function restaurantDashboard()

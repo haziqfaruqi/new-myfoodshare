@@ -7,8 +7,11 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     @php
-        use Illuminate\Support\Facades\Storage;
-    @endphp
+    use Illuminate\Support\Facades\Storage;
+    use App\Models\FoodListing;
+    use App\Models\User;
+    use App\Models\PickupVerification;
+@endphp
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
         
@@ -69,25 +72,21 @@
         </div>
 
         <div class="flex-1 overflow-y-auto py-6 px-3 space-y-8">
-            <!-- Main Nav -->
+            <!-- Approvals -->
             <div>
-                <h3 class="px-3 text-xs font-medium text-zinc-400 uppercase tracking-wider mb-2">Platform</h3>
+                <h3 class="px-3 text-xs font-medium text-zinc-400 uppercase tracking-wider mb-2">Approvals</h3>
                 <nav class="space-y-0.5">
-                    <a href="#" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-zinc-900 bg-zinc-100 rounded-md">
-                        <i data-lucide="layout-grid" class="w-4 h-4 text-zinc-500"></i>
-                        Overview
+                    <a href="{{ route('admin.user-approvals') }}" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50 rounded-md transition-colors">
+                        <i data-lucide="user-check" class="w-4 h-4 text-zinc-400"></i>
+                        User Approvals
+                        <span class="ml-auto bg-amber-100 text-amber-700 py-0.5 px-2 rounded-full text-[10px] font-medium">{{ App\Models\User::where('status', 'pending')->count() }}</span>
                     </a>
-                    <a href="#" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50 rounded-md transition-colors">
-                        <i data-lucide="search" class="w-4 h-4 text-zinc-400"></i>
-                        Browse Food
-                    </a>
-                    <a href="#" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50 rounded-md transition-colors">
-                        <i data-lucide="map-pin" class="w-4 h-4 text-zinc-400"></i>
-                        Map View
-                    </a>
-                    <a href="#" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50 rounded-md transition-colors">
-                        <i data-lucide="plus-circle" class="w-4 h-4 text-zinc-400"></i>
-                        Post Donation
+                    <a href="{{ route('admin.food-listings') }}" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50 rounded-md transition-colors">
+                        <i data-lucide="package" class="w-4 h-4 text-zinc-400"></i>
+                        Listing Approvals
+                        <span class="ml-auto bg-amber-100 text-amber-700 py-0.5 px-2 rounded-full text-[10px] font-medium">
+    {{ App\Models\FoodListing::where('approval_status', 'pending')->count() }}
+</span>
                     </a>
                 </nav>
             </div>
@@ -96,18 +95,25 @@
             <div>
                 <h3 class="px-3 text-xs font-medium text-zinc-400 uppercase tracking-wider mb-2">Management</h3>
                 <nav class="space-y-0.5">
-                    <a href="#" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50 rounded-md transition-colors">
-                        <i data-lucide="check-square" class="w-4 h-4 text-zinc-400"></i>
-                        Verifications
-                        <span class="ml-auto bg-emerald-100 text-emerald-700 py-0.5 px-2 rounded-full text-[10px] font-medium">3 New</span>
-                    </a>
-                    <a href="#" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50 rounded-md transition-colors">
-                        <i data-lucide="bar-chart-3" class="w-4 h-4 text-zinc-400"></i>
-                        Analytics
-                    </a>
-                    <a href="#" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50 rounded-md transition-colors">
+                    <a href="{{ route('admin.user-management') }}" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50 rounded-md transition-colors">
                         <i data-lucide="users" class="w-4 h-4 text-zinc-400"></i>
-                        Users
+                        User Management
+                    </a>
+                    <a href="{{ route('admin.active-listings') }}" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50 rounded-md transition-colors">
+                        <i data-lucide="package-2" class="w-4 h-4 text-zinc-400"></i>
+                        Active Listings
+                    </a>
+                </nav>
+            </div>
+
+            <!-- Monitoring -->
+            <div>
+                <h3 class="px-3 text-xs font-medium text-zinc-400 uppercase tracking-wider mb-2">Monitoring</h3>
+                <nav class="space-y-0.5">
+                    <a href="{{ route('admin.pickup-monitoring') }}" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50 rounded-md transition-colors">
+                        <i data-lucide="qr-code" class="w-4 h-4 text-zinc-400"></i>
+                        Pickup Verification
+                        <span class="ml-auto bg-emerald-100 text-emerald-700 py-0.5 px-2 rounded-full text-[10px] font-medium">{{ App\Models\PickupVerification::where('verification_status', 'pending')->whereNull('qr_code_scanned')->count() }}</span>
                     </a>
                 </nav>
             </div>
@@ -252,7 +258,7 @@
                             </div>
                         </div>
 
-                        @if($pendingFoodListings->count() > 0)
+                        @if(isset($pendingFoodListings) && $pendingFoodListings->count() > 0)
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 @foreach($pendingFoodListings as $listing)
                                     <div class="group bg-white rounded-xl border border-zinc-200 overflow-hidden hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300">
@@ -291,7 +297,7 @@
                                                 </span>
                                             </div>
                                             <div class="flex gap-2">
-                                                <a href="{{ route('admin.food-listings.index') }}" class="flex-1 py-2 bg-amber-500 hover:bg-amber-400 text-white text-sm font-medium rounded-lg transition-colors text-center">
+                                                <a href="{{ route('admin.food-listings') }}" class="flex-1 py-2 bg-amber-500 hover:bg-amber-400 text-white text-sm font-medium rounded-lg transition-colors text-center">
                                                     Review
                                                 </a>
                                                 <a href="{{ route('admin.food-listings.show', $listing->id) }}" class="flex-1 py-2 bg-white border border-zinc-200 text-zinc-900 text-sm font-medium rounded-lg hover:border-emerald-500 hover:text-emerald-600 transition-colors text-center">

@@ -103,9 +103,19 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/listings/{foodListing}', [FoodListingController::class, 'destroy'])->name('restaurant.food-listings.destroy');
     });
 
-    // Admin food listing management routes
+    // Admin routes
     Route::middleware(['role:admin'])->prefix('admin')->group(function () {
-        Route::get('/food-listings', [FoodListingController::class, 'adminIndex'])->name('admin.food-listings.index');
+        Route::get('/dashboard', [DashboardController::class, 'adminDashboard'])->name('admin.dashboard');
+        Route::get('/user-approvals', [DashboardController::class, 'userApprovals'])->name('admin.user-approvals');
+        Route::post('/users/{user}/approve', [DashboardController::class, 'approveUser'])->name('admin.users.approve');
+        Route::post('/users/{user}/reject', [DashboardController::class, 'rejectUser'])->name('admin.users.reject');
+        Route::get('/user-management', [DashboardController::class, 'userManagement'])->name('admin.user-management');
+        Route::put('/users/{user}', [DashboardController::class, 'updateUserStatus'])->name('admin.users.update');
+        Route::delete('/users/{user}', [DashboardController::class, 'deleteUser'])->name('admin.users.delete');
+        Route::get('/active-listings', [DashboardController::class, 'activeListings'])->name('admin.active-listings');
+        Route::get('/pickup-monitoring', [DashboardController::class, 'pickupMonitoring'])->name('admin.pickup-monitoring');
+
+        Route::get('/food-listings', [FoodListingController::class, 'adminIndex'])->name('admin.food-listings');
         Route::get('/food-listings/{foodListing}', [FoodListingController::class, 'adminShow'])->name('admin.food-listings.show');
         Route::post('/food-listings/{foodListing}/approve', [FoodListingController::class, 'approve'])->name('admin.food-listings.approve');
         Route::post('/food-listings/{foodListing}/reject', [FoodListingController::class, 'reject'])->name('admin.food-listings.reject');
