@@ -71,6 +71,32 @@ class FoodListingController extends Controller
     }
 
     /**
+     * Display admin listing of pending food listings.
+     */
+    public function adminIndex(Request $request)
+    {
+        $query = FoodListing::with(['restaurantProfile', 'creator'])
+            ->where('approval_status', 'pending')
+            ->where('status', 'active')
+            ->latest();
+
+        // Search functionality
+        if ($request->has('search') && !empty($request->search)) {
+            $query->where('food_name', 'like', '%' . $request->search . '%')
+                  ->orWhere('description', 'like', '%' . $request->search . '%');
+        }
+
+        // Filter by category
+        if ($request->has('category') && !empty($request->category)) {
+            $query->where('category', $request->category);
+        }
+
+        $foodListings = $query->paginate(20);
+
+        return view('admin.food-listings', compact('foodListings'));
+    }
+
+    /**
      * Show the form for creating a new resource.
      */
     public function create()
@@ -151,6 +177,17 @@ class FoodListingController extends Controller
     }
 
     /**
+     * Display the specified resource for admin (shows all listings).
+     */
+    public function adminShow(FoodListing $foodListing)
+    {
+        // Admin can see all listings regardless of status
+        $foodListing->load(['restaurantProfile', 'creator', 'approver', 'matches']);
+
+        return view('admin.food-listings.show', compact('foodListing'));
+    }
+
+    /**
      * Show the form for editing the specified resource.
      */
     public function edit(FoodListing $foodListing)
@@ -201,7 +238,7 @@ class FoodListingController extends Controller
             $imagePaths = [];
             foreach ($request->file('images') as $image) {
                 $path = $image->store('food_images', 'public');
-                $imagePaths[] => $path;
+                $imagePaths[] = $path;
             }
             $validated['images'] = $imagePaths;
         }
@@ -296,5 +333,135 @@ class FoodListingController extends Controller
             'valid' => true,
             'message' => 'Verification successful'
         ]);
+    }
+
+    /**
+     * Store food listing from restaurant dashboard
+     */
+    public function storeRestaurantListing(Request $request)
+    {
+        if (!Auth::user()->isRestaurantOwner()) {
+            abort(403, 'Unauthorized action');
+        }
+
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'food_category' => 'required|string|max:50',
+            'quantity' => 'required|string|max:100',
+            'expiry_date' => 'required|date',
+            'expiry_time' => 'required',
+            'pickup_instructions' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
+        ]);
+
+        $restaurantProfile = Auth::user()->restaurantProfile;
+
+        if (!$restaurantProfile) {
+            return back()->withErrors(['error' => 'Restaurant profile not found.']);
+        }
+
+        $foodListing = new FoodListing();
+        $foodListing->restaurant_profile_id = $restaurantProfile->id;
+        $foodListing->created_by = Auth::id();
+        $foodListing->food_name = $validated['title'];
+        $foodListing->description = $validated['description'];
+        $foodListing->category = $validated['food_category'];
+        $foodListing->quantity = $validated['quantity'];
+        $foodListing->unit = 'kg'; // Default unit
+        $foodListing->expiry_date = $validated['expiry_date'];
+        $foodListing->expiry_time = $validated['expiry_time'];
+        $foodListing->pickup_location = $restaurantProfile->address;
+        $foodListing->pickup_address = $restaurantProfile->address;
+        $foodListing->special_instructions = $validated['pickup_instructions'];
+        $foodListing->status = 'active';
+        $foodListing->approval_status = 'pending';
+
+        // Handle image upload
+        if ($request->hasFile('image')) {
+            $image = $request->file('image');
+            $imageName = time() . '_' . $image->getClientOriginalName();
+            $image->storeAs('food_images', $imageName, 'public');
+            $foodListing->images = ['food_images/' . $imageName];
+        }
+
+        $foodListing->save();
+
+        // Generate QR code
+        $foodListing->generateQrCode();
+
+        return redirect()->route('restaurant.dashboard')
+            ->with('success', 'Food donation posted successfully! It is pending approval.');
+    }
+
+    /**
+     * Update food listing from restaurant dashboard
+     */
+    public function updateRestaurantListing(Request $request, FoodListing $listing)
+    {
+        if (!Auth::user()->isRestaurantOwner() || $listing->created_by !== Auth::id()) {
+            abort(403, 'Unauthorized action');
+        }
+
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'food_category' => 'required|string|max:50',
+            'quantity' => 'required|string|max:100',
+            'expiry_date' => 'required|date',
+            'expiry_time' => 'required',
+            'pickup_instructions' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
+        ]);
+
+        $listing->food_name = $validated['title'];
+        $listing->description = $validated['description'];
+        $listing->category = $validated['food_category'];
+        $listing->quantity = $validated['quantity'];
+        $listing->expiry_date = $validated['expiry_date'];
+        $listing->expiry_time = $validated['expiry_time'];
+        $listing->special_instructions = $validated['pickup_instructions'];
+
+        // Handle image upload
+        if ($request->hasFile('image')) {
+            // Delete old images if exist
+            if ($listing->images) {
+                foreach ($listing->images as $image) {
+                    Storage::disk('public')->delete($image);
+                }
+            }
+
+            $image = $request->file('image');
+            $imageName = time() . '_' . $image->getClientOriginalName();
+            $image->storeAs('food_images', $imageName, 'public');
+            $listing->images = ['food_images/' . $imageName];
+        }
+
+        $listing->save();
+
+        return redirect()->route('restaurant.dashboard')
+            ->with('success', 'Food donation updated successfully!');
+    }
+
+    /**
+     * Delete food listing from restaurant dashboard
+     */
+    public function deleteRestaurantListing(FoodListing $listing)
+    {
+        if (!Auth::user()->isRestaurantOwner() || $listing->created_by !== Auth::id()) {
+            abort(403, 'Unauthorized action');
+        }
+
+        // Delete images if exist
+        if ($listing->images) {
+            foreach ($listing->images as $image) {
+                Storage::disk('public')->delete($image);
+            }
+        }
+
+        $listing->delete();
+
+        return redirect()->route('restaurant.dashboard')
+            ->with('success', 'Food donation removed successfully.');
     }
 }

@@ -52,6 +52,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'restaurantDashboard'])->name('restaurant.dashboard');
         Route::get('/listings', [DashboardController::class, 'myListings'])->name('restaurant.listings');
         Route::get('/listings/create', [DashboardController::class, 'createListing'])->name('restaurant.listings.create');
+        Route::post('/listings', [FoodListingController::class, 'storeRestaurantListing'])->name('restaurant.listings.store');
+        Route::get('/listings/{listing}/edit', [FoodListingController::class, 'edit'])->name('restaurant.listings.edit');
+        Route::put('/listings/{listing}', [FoodListingController::class, 'updateRestaurantListing'])->name('restaurant.listings.update');
+        Route::delete('/listings/{listing}', [FoodListingController::class, 'deleteRestaurantListing'])->name('restaurant.listings.destroy');
         Route::get('/profile', [DashboardController::class, 'restaurantProfile'])->name('restaurant.profile');
     });
 
@@ -93,7 +97,6 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['role:restaurant_owner'])->prefix('restaurant')->group(function () {
         Route::get('/listings', [FoodListingController::class, 'index'])->name('restaurant.food-listings.index');
         Route::get('/listings/create', [FoodListingController::class, 'create'])->name('restaurant.food-listings.create');
-        Route::post('/listings', [FoodListingController::class, 'store'])->name('restaurant.food-listings.store');
         Route::get('/listings/{foodListing}', [FoodListingController::class, 'show'])->name('restaurant.food-listings.show');
         Route::get('/listings/{foodListing}/edit', [FoodListingController::class, 'edit'])->name('restaurant.food-listings.edit');
         Route::put('/listings/{foodListing}', [FoodListingController::class, 'update'])->name('restaurant.food-listings.update');
@@ -102,7 +105,8 @@ Route::middleware(['auth'])->group(function () {
 
     // Admin food listing management routes
     Route::middleware(['role:admin'])->prefix('admin')->group(function () {
-        Route::get('/food-listings', [FoodListingController::class, 'index'])->name('admin.food-listings.index');
+        Route::get('/food-listings', [FoodListingController::class, 'adminIndex'])->name('admin.food-listings.index');
+        Route::get('/food-listings/{foodListing}', [FoodListingController::class, 'adminShow'])->name('admin.food-listings.show');
         Route::post('/food-listings/{foodListing}/approve', [FoodListingController::class, 'approve'])->name('admin.food-listings.approve');
         Route::post('/food-listings/{foodListing}/reject', [FoodListingController::class, 'reject'])->name('admin.food-listings.reject');
     });

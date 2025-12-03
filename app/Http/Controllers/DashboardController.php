@@ -39,7 +39,14 @@ class DashboardController extends Controller
             'pending_approvals' => FoodListing::where('status', 'pending')->count(),
         ];
 
-        return view('admin.dashboard', compact('stats'));
+        // Get pending food listings from restaurant owners
+        $pendingFoodListings = FoodListing::with(['restaurantProfile', 'creator'])
+            ->where('approval_status', 'pending')
+            ->orderBy('created_at', 'desc')
+            ->take(6)
+            ->get();
+
+        return view('admin.dashboard', compact('stats', 'pendingFoodListings'));
     }
 
     /**
@@ -49,17 +56,20 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
 
+        // Get restaurant profile
+        $restaurantProfile = $user->restaurantProfile;
+
         $stats = [
-            'active_listings' => FoodListing::where('user_id', $user->id)->where('status', 'available')->count(),
-            'total_donations' => FoodListing::where('user_id', $user->id)->count(),
-            'pending_pickups' => FoodListing::where('user_id', $user->id)->where('status', 'reserved')->count(),
-            'total_people_helped' => $user->foodListings()->whereHas('matches')->count(),
+            'active_listings' => $restaurantProfile ? FoodListing::where('restaurant_profile_id', $restaurantProfile->id)->where('status', 'available')->count() : 0,
+            'total_donations' => $restaurantProfile ? FoodListing::where('restaurant_profile_id', $restaurantProfile->id)->count() : 0,
+            'pending_pickups' => $restaurantProfile ? FoodListing::where('restaurant_profile_id', $restaurantProfile->id)->where('status', 'reserved')->count() : 0,
+            'total_people_helped' => $restaurantProfile ? FoodListing::where('restaurant_profile_id', $restaurantProfile->id)->whereHas('matches')->count() : 0,
         ];
 
-        $recentListings = FoodListing::where('user_id', $user->id)
+        $recentListings = $restaurantProfile ? FoodListing::where('restaurant_profile_id', $restaurantProfile->id)
             ->orderBy('created_at', 'desc')
             ->take(5)
-            ->get();
+            ->get() : collect();
 
         return view('restaurant.dashboard', compact('stats', 'recentListings'));
     }

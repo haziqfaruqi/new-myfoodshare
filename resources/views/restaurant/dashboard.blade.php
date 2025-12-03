@@ -1,5 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
+@php
+    use Illuminate\Support\Facades\Storage;
+@endphp
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -56,6 +59,29 @@
             opacity: 0;
             transform: scale(0.95);
             transition: opacity 200ms, transform 200ms;
+        }
+
+        /* Animate CSS utilities */
+        @keyframes fade-in-90 {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes zoom-in-90 {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .animate-in {
+            animation: fade-in-90 0.3s ease-out;
+        }
+
+        .fade-in-90 {
+            animation: fade-in-90 0.3s ease-out;
+        }
+
+        .zoom-in-90 {
+            animation: zoom-in-90 0.3s ease-out;
         }
         
         /* Pulse animation for active status */
@@ -190,7 +216,7 @@
                 <!-- Welcome Section -->
                 <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
                     <div>
-                        <h1 class="text-2xl font-bold tracking-tight text-zinc-900">Good Evening, Alex!</h1>
+                        <h1 class="text-2xl font-bold tracking-tight text-zinc-900">Good Evening, {{ auth()->user()->restaurantProfile->restaurant_name ?? 'Restaurant' }}!</h1>
                         <p class="text-sm text-zinc-500 mt-1">Here's what's happening with your donations today.</p>
                     </div>
                     <div class="flex gap-3">
@@ -274,82 +300,89 @@
                             </div>
                         </div>
 
-                        <!-- Listing Card 1 (Pending Pickup) -->
+                        @foreach ($recentListings as $listing)
                         <div class="bg-white rounded-xl border border-zinc-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
                             <div class="flex flex-col md:flex-row">
                                 <div class="w-full md:w-48 h-32 md:h-auto bg-zinc-100 relative">
-                                    <img src="https://images.unsplash.com/photo-1555244162-803834f70033?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" class="w-full h-full object-cover">
+                                    @if($listing->images && count($listing->images) > 0)
+                                        <img src="{{ Storage::url($listing->images[0]) }}" class="w-full h-full object-cover" alt="Food image">
+                                    @else
+                                        <img src="https://images.unsplash.com/photo-1555244162-803834f70033?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" class="w-full h-full object-cover" alt="Food placeholder">
+                                    @endif
                                     <div class="absolute inset-0 bg-black/10"></div>
                                     <div class="absolute top-2 left-2 bg-white/90 backdrop-blur-sm px-2 py-0.5 rounded text-[10px] font-bold text-zinc-900 uppercase tracking-wide border border-white/20">
-                                        Prepared Meal
+                                        {{ $listing->category ?? 'Food' }}
                                     </div>
                                 </div>
                                 <div class="p-5 flex-1 flex flex-col justify-between">
                                     <div>
                                         <div class="flex justify-between items-start">
                                             <div>
-                                                <h3 class="font-semibold text-zinc-900 text-lg">Artisan Bread & Pastries</h3>
-                                                <p class="text-sm text-zinc-500 mt-0.5">Quantity: 5 Trays • Exp: Today, 10:00 PM</p>
+                                                <h3 class="font-semibold text-zinc-900 text-lg">{{ $listing->food_name }}</h3>
+                                                <p class="text-sm text-zinc-500 mt-0.5">Quantity: {{ $listing->quantity }} • Exp: {{ $listing->expiry_date?->format('M j, Y') ?? 'N/A' }}, {{ $listing->expiry_time?->format('g:i A') ?? 'N/A' }}</p>
                                             </div>
-                                            <span class="bg-amber-100 text-amber-800 text-xs font-bold px-2.5 py-1 rounded-full border border-amber-200 flex items-center gap-1">
-                                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
-                                                RESERVED
-                                            </span>
-                                        </div>
-                                        <div class="mt-4 flex items-center gap-4 text-sm">
-                                            <div class="flex items-center gap-2 text-zinc-600">
-                                                <div class="w-6 h-6 rounded-full bg-zinc-100 flex items-center justify-center">
-                                                    <i data-lucide="user" class="w-3 h-3 text-zinc-500"></i>
-                                                </div>
-                                                <span class="font-medium">Claimed by: City Shelter</span>
-                                            </div>
-                                            <div class="h-4 w-px bg-zinc-200"></div>
-                                            <div class="text-zinc-500">
-                                                Pickup: <span class="font-medium text-zinc-900">8:30 PM (in 15m)</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="mt-4 pt-4 border-t border-zinc-100 flex justify-end gap-3">
-                                        <button class="text-xs font-medium text-zinc-500 hover:text-zinc-900">Contact Receiver</button>
-                                        <button onclick="showQRCode('Artisan Bread & Pastries')" class="text-xs font-medium bg-zinc-900 text-white px-4 py-2 rounded-lg hover:bg-zinc-800 transition-colors flex items-center gap-2">
-                                            <i data-lucide="scan-line" class="w-3 h-3"></i> View Pickup QR
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Listing Card 2 (Available) -->
-                        <div class="bg-white rounded-xl border border-zinc-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                            <div class="flex flex-col md:flex-row">
-                                <div class="w-full md:w-48 h-32 md:h-auto bg-zinc-100 relative">
-                                    <img src="https://images.unsplash.com/photo-1509440159596-0249088772ff?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" class="w-full h-full object-cover">
-                                    <div class="absolute top-2 left-2 bg-white/90 backdrop-blur-sm px-2 py-0.5 rounded text-[10px] font-bold text-zinc-900 uppercase tracking-wide border border-white/20">
-                                        Bakery
-                                    </div>
-                                </div>
-                                <div class="p-5 flex-1 flex flex-col justify-between">
-                                    <div>
-                                        <div class="flex justify-between items-start">
-                                            <div>
-                                                <h3 class="font-semibold text-zinc-900 text-lg">Assorted Sourdough</h3>
-                                                <p class="text-sm text-zinc-500 mt-0.5">Quantity: 12 Loaves • Exp: Tomorrow, 9:00 AM</p>
-                                            </div>
-                                            <span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-2.5 py-1 rounded-full border border-emerald-200">
-                                                AVAILABLE
-                                            </span>
+                                            @if($listing->status === 'reserved')
+                                                <span class="bg-amber-100 text-amber-800 text-xs font-bold px-2.5 py-1 rounded-full border border-amber-200 flex items-center gap-1">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                                    RESERVED
+                                                </span>
+                                            @else
+                                                <span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-2.5 py-1 rounded-full border border-emerald-200">
+                                                    AVAILABLE
+                                                </span>
+                                            @endif
                                         </div>
                                         <div class="mt-3 text-sm text-zinc-600">
-                                            <p class="line-clamp-2">Day-old bread, perfectly good for consumption. Packed in paper bags ready for transport.</p>
+                                            <p class="line-clamp-2">{{ $listing->description }}</p>
                                         </div>
+                                        @if($listing->status === 'reserved' && $listing->matches->first())
+                                            <div class="mt-4 flex items-center gap-4 text-sm">
+                                                <div class="flex items-center gap-2 text-zinc-600">
+                                                    <div class="w-6 h-6 rounded-full bg-zinc-100 flex items-center justify-center">
+                                                        <i data-lucide="user" class="w-3 h-3 text-zinc-500"></i>
+                                                    </div>
+                                                    <span class="font-medium">Claimed by: {{ $listing->matches->first()->recipient->organization_name }}</span>
+                                                </div>
+                                                <div class="h-4 w-px bg-zinc-200"></div>
+                                                <div class="text-zinc-500">
+                                                    Pickup: <span class="font-medium text-zinc-900">{{ $listing->expiry_time?->format('g:i A') ?? 'N/A' }}</span>
+                                                </div>
+                                            </div>
+                                        @endif
                                     </div>
                                     <div class="mt-4 pt-4 border-t border-zinc-100 flex justify-end gap-3">
-                                        <button class="text-xs font-medium text-zinc-500 hover:text-zinc-900">Edit Details</button>
-                                        <button class="text-xs font-medium text-red-600 hover:text-red-700">Remove</button>
+                                        @if($listing->status === 'reserved')
+                                            <button class="text-xs font-medium text-zinc-500 hover:text-zinc-900">Contact Receiver</button>
+                                            <button onclick="showQRCode({{ $listing->id }})" class="text-xs font-medium bg-zinc-900 text-white px-4 py-2 rounded-lg hover:bg-zinc-800 transition-colors flex items-center gap-2">
+                                                <i data-lucide="scan-line" class="w-3 h-3"></i> View Pickup QR
+                                            </button>
+                                        @else
+                                            <a href="{{ route('restaurant.listings.edit', $listing->id) }}" class="text-xs font-medium text-zinc-500 hover:text-zinc-900">Edit Details</a>
+                                            <form action="{{ route('restaurant.food-listings.destroy', $listing->id) }}" method="POST" class="inline">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="text-xs font-medium text-red-600 hover:text-red-700">Remove</button>
+                                            </form>
+                                        @endif
                                     </div>
                                 </div>
                             </div>
                         </div>
+                        @endforeach
+
+                        @if($recentListings->isEmpty())
+                        <div class="bg-white rounded-xl border border-zinc-200 p-8 text-center">
+                            <div class="w-16 h-16 bg-zinc-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i data-lucide="package" class="w-8 h-8 text-zinc-400"></i>
+                            </div>
+                            <h3 class="font-medium text-zinc-900 mb-1">No active listings</h3>
+                            <p class="text-sm text-zinc-500 mb-4">You haven't posted any food donations yet.</p>
+                            <button onclick="document.getElementById('post-modal').classList.remove('hidden')" class="inline-flex items-center gap-2 px-4 py-2 bg-zinc-900 text-white rounded-lg text-sm font-medium hover:bg-zinc-800 transition-colors">
+                                <i data-lucide="plus" class="w-4 h-4"></i>
+                                Post Your First Donation
+                            </button>
+                        </div>
+                        @endif
 
                     </div>
 
@@ -428,18 +461,40 @@
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
-            
-            <div class="p-6 overflow-y-auto space-y-4">
+
+            <form action="{{ route('restaurant.listings.store') }}" method="POST" enctype="multipart/form-data" class="p-6 overflow-y-auto space-y-4">
+                @csrf
                 <!-- Form Fields -->
                 <div class="space-y-1">
+                    <label class="text-xs font-medium text-zinc-700">Food Image</label>
+                    <div class="border-2 border-dashed border-zinc-200 rounded-lg p-6 text-center hover:border-zinc-300 transition-colors cursor-pointer" onclick="document.getElementById('food-image').click()">
+                        <input type="file" id="food-image" name="image" class="hidden" accept="image/*" onchange="previewImage(event)">
+                        <div id="image-preview" class="hidden">
+                            <img id="preview-img" class="w-20 h-20 object-cover rounded-lg mx-auto mb-2">
+                            <p class="text-xs text-emerald-600 font-medium">Click to change image</p>
+                        </div>
+                        <div id="image-upload-placeholder">
+                            <i data-lucide="image-plus" class="w-8 h-8 text-zinc-400 mx-auto mb-2"></i>
+                            <p class="text-xs text-zinc-500 font-medium">Click to upload food image</p>
+                            <p class="text-[10px] text-zinc-400 mt-1">PNG, JPG up to 5MB</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-1">
                     <label class="text-xs font-medium text-zinc-700">Listing Title</label>
-                    <input type="text" placeholder="e.g. 5kg of Assorted Vegetables" class="w-full px-3 py-2 bg-white border border-zinc-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all">
+                    <input type="text" name="title" placeholder="e.g. 5kg of Assorted Vegetables" class="w-full px-3 py-2 bg-white border border-zinc-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-xs font-medium text-zinc-700">Description</label>
+                    <textarea name="description" rows="2" placeholder="Describe the food items, condition, and any other relevant details..." class="w-full px-3 py-2 bg-white border border-zinc-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 resize-none"></textarea>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
                     <div class="space-y-1">
                         <label class="text-xs font-medium text-zinc-700">Food Category</label>
-                        <select class="w-full px-3 py-2 bg-white border border-zinc-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+                        <select name="food_category" class="w-full px-3 py-2 bg-white border border-zinc-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
                             <option>Prepared Meals</option>
                             <option>Bakery</option>
                             <option>Produce</option>
@@ -449,42 +504,47 @@
                     </div>
                     <div class="space-y-1">
                         <label class="text-xs font-medium text-zinc-700">Quantity (Est.)</label>
-                        <input type="text" placeholder="e.g. 10 boxes / 5kg" class="w-full px-3 py-2 bg-white border border-zinc-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+                        <input type="text" name="quantity" placeholder="e.g. 10 boxes / 5kg" class="w-full px-3 py-2 bg-white border border-zinc-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
                     </div>
                 </div>
 
                 <div class="space-y-1">
                     <label class="text-xs font-medium text-zinc-700">Expiry Date & Time</label>
                     <div class="flex gap-2">
-                        <input type="date" class="flex-1 px-3 py-2 bg-white border border-zinc-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
-                        <input type="time" class="flex-1 px-3 py-2 bg-white border border-zinc-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+                        <input type="date" name="expiry_date" class="flex-1 px-3 py-2 bg-white border border-zinc-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+                        <input type="time" name="expiry_time" class="flex-1 px-3 py-2 bg-white border border-zinc-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
                     </div>
                 </div>
 
                 <div class="space-y-1">
                     <label class="text-xs font-medium text-zinc-700">Pickup Instructions</label>
-                    <textarea rows="3" placeholder="Enter rear entrance code, ask for Manager Mike..." class="w-full px-3 py-2 bg-white border border-zinc-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 resize-none"></textarea>
+                    <textarea name="pickup_instructions" rows="3" placeholder="Enter rear entrance code, ask for Manager Mike..." class="w-full px-3 py-2 bg-white border border-zinc-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 resize-none"></textarea>
                 </div>
 
-                <!-- Location Preview (Static) -->
+                <!-- Location Preview (Dynamic from Restaurant Profile) -->
                 <div class="p-3 bg-zinc-50 rounded-lg border border-zinc-200 flex items-center gap-3">
                     <div class="w-8 h-8 rounded-full bg-zinc-200 flex items-center justify-center">
                         <i data-lucide="map-pin" class="w-4 h-4 text-zinc-500"></i>
                     </div>
                     <div class="flex-1">
-                        <p class="text-xs font-medium text-zinc-900">Current Location</p>
-                        <p class="text-[10px] text-zinc-500">123 Main St, Urban Bistro (Lat: 40.7128, Long: -74.0060)</p>
+                        <p class="text-xs font-medium text-zinc-900">Pickup Location</p>
+                        <p class="text-[10px] text-zinc-500" id="restaurant-location">
+                            {{ auth()->user()->restaurantProfile?->address ?? 'Set restaurant location in profile' }}
+                        </p>
                     </div>
-                    <button class="text-xs text-emerald-600 font-medium">Change</button>
                 </div>
-            </div>
 
-            <div class="p-6 pt-2 border-t border-zinc-100 bg-zinc-50">
-                <button class="w-full py-2.5 bg-zinc-900 text-white rounded-lg font-medium shadow-lg shadow-zinc-900/10 hover:bg-zinc-800 transition-all flex items-center justify-center gap-2">
-                    <i data-lucide="check" class="w-4 h-4"></i>
-                    Post Donation
-                </button>
-            </div>
+                <!-- Submit Button -->
+                <div class="flex gap-3 pt-4 border-t border-zinc-100">
+                    <button type="button" onclick="document.getElementById('post-modal').classList.add('hidden')" class="flex-1 py-2.5 border border-zinc-200 text-zinc-700 rounded-lg font-medium hover:bg-zinc-50 transition-all">
+                        Cancel
+                    </button>
+                    <button type="submit" class="flex-1 py-2.5 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-all flex items-center justify-center gap-2">
+                        <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                        Post Donation
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -594,6 +654,30 @@
             qrModal.classList.add('hidden');
         }
 
+        // Image upload preview
+        function previewImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                // Validate file size (5MB limit)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('File size must be less than 5MB');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('preview-img').src = e.target.result;
+                    document.getElementById('image-preview').classList.remove('hidden');
+                    document.getElementById('image-upload-placeholder').classList.add('hidden');
+
+                    // Add success animation
+                    const previewImg = document.getElementById('preview-img');
+                    previewImg.classList.add('scale-105');
+                    setTimeout(() => previewImg.classList.remove('scale-105'), 200);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
     </script>
 </body>
 </html>

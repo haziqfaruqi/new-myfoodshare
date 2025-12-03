@@ -6,6 +6,9 @@
     <title>Admin Dashboard - MyFoodshare</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    @php
+        use Illuminate\Support\Facades\Storage;
+    @endphp
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
         
@@ -179,17 +182,7 @@
                             <h1 class="text-2xl font-semibold tracking-tight text-zinc-900">Dashboard</h1>
                             <p class="text-sm text-zinc-500 mt-1">Manage listings, track impact, and help the community.</p>
                         </div>
-                        <div class="flex gap-3">
-                            <button class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-zinc-200 shadow-sm rounded-lg text-sm font-medium text-zinc-700 hover:bg-zinc-50 transition-all">
-                                <i data-lucide="filter" class="w-4 h-4"></i>
-                                Filters
-                            </button>
-                            <button class="inline-flex items-center gap-2 px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-white shadow-sm shadow-zinc-500/20 rounded-lg text-sm font-medium transition-all">
-                                <i data-lucide="plus" class="w-4 h-4"></i>
-                                New Listing
-                            </button>
-                        </div>
-                    </div>
+                      </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         <!-- Stat Card 1 -->
@@ -248,117 +241,74 @@
                     <!-- Left: Food Listings (Broad View) -->
                     <div class="lg:col-span-2 space-y-6">
                         <div class="flex items-center justify-between">
-                            <h2 class="text-lg font-medium text-zinc-900">Available Near You</h2>
+                            <h2 class="text-lg font-medium text-zinc-900">Food Listings Pending Approval</h2>
                             <div class="flex items-center gap-2">
                                 <span class="text-xs font-medium text-zinc-500">Sort by:</span>
                                 <select class="bg-transparent text-xs font-medium text-zinc-900 border-none focus:ring-0 cursor-pointer pr-6">
-                                    <option>Proximity</option>
+                                    <option>Latest</option>
                                     <option>Expiry (Soonest)</option>
                                     <option>Quantity</option>
                                 </select>
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <!-- Food Card 1 -->
-                            <div class="group bg-white rounded-xl border border-zinc-200 overflow-hidden hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300">
-                                <div class="h-32 bg-zinc-100 relative overflow-hidden">
-                                    <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent z-10"></div>
-                                    <!-- Placeholder for Image -->
-                                    <div class="w-full h-full bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1509440159596-0249088772ff?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80');"></div>
-                                    <div class="absolute bottom-3 left-3 z-20 flex flex-col">
-                                        <span class="text-white font-medium text-sm">Artisan Sourdough</span>
-                                        <span class="text-zinc-200 text-xs">Bakery Items</span>
-                                    </div>
-                                    <span class="absolute top-3 right-3 z-20 bg-emerald-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full tracking-wide">VERIFIED</span>
-                                </div>
-                                <div class="p-4">
-                                    <div class="flex justify-between items-start mb-2">
-                                        <div>
-                                            <p class="text-xs text-zinc-500 flex items-center gap-1">
-                                                <i data-lucide="map-pin" class="w-3 h-3"></i> 0.4 miles away
-                                            </p>
+                        @if($pendingFoodListings->count() > 0)
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                @foreach($pendingFoodListings as $listing)
+                                    <div class="group bg-white rounded-xl border border-zinc-200 overflow-hidden hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300">
+                                        <div class="h-32 bg-zinc-100 relative overflow-hidden">
+                                            <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent z-10"></div>
+                                            @if($listing->images && count($listing->images) > 0)
+                                                <img src="{{ Storage::url($listing->images[0]) }}" alt="{{ $listing->food_name }}" class="w-full h-full object-cover">
+                                            @else
+                                                <div class="w-full h-full bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1547592180-85f173990554?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80');"></div>
+                                            @endif
+                                            <div class="absolute bottom-3 left-3 z-20 flex flex-col">
+                                                <span class="text-white font-medium text-sm">{{ $listing->food_name }}</span>
+                                                <span class="text-zinc-200 text-xs">{{ ucfirst($listing->category) }}</span>
+                                            </div>
+                                            <span class="absolute top-3 right-3 z-20 bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full tracking-wide">PENDING</span>
                                         </div>
-                                        <div class="flex items-center gap-1 text-xs font-medium text-orange-600 bg-orange-50 px-2 py-0.5 rounded">
-                                            <i data-lucide="clock" class="w-3 h-3"></i>
-                                            Exp: 2h
+                                        <div class="p-4">
+                                            <div class="flex justify-between items-start mb-2">
+                                                <div>
+                                                    <p class="text-xs text-zinc-500 flex items-center gap-1">
+                                                        <i data-lucide="map-pin" class="w-3 h-3"></i> {{ $listing->pickup_location }}
+                                                    </p>
+                                                </div>
+                                                <div class="flex items-center gap-1 text-xs font-medium text-orange-600 bg-orange-50 px-2 py-0.5 rounded">
+                                                    <i data-lucide="clock" class="w-3 h-3"></i>
+                                                    Exp: {{ $listing->expiry_date?->format('M d') }}
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center gap-2 mb-4">
+                                                <div class="w-5 h-5 rounded-full bg-zinc-200 flex items-center justify-center text-[10px] font-bold text-zinc-600">
+                                                    {{ substr($listing->restaurantProfile->restaurant_name ?? $listing->creator->name, 0, 2) }}
+                                                </div>
+                                                <span class="text-xs text-zinc-600">
+                                                    {{ $listing->restaurantProfile->restaurant_name ?? $listing->creator->name }} •
+                                                    {{ $listing->quantity }} {{ $listing->unit }}
+                                                </span>
+                                            </div>
+                                            <div class="flex gap-2">
+                                                <a href="{{ route('admin.food-listings.index') }}" class="flex-1 py-2 bg-amber-500 hover:bg-amber-400 text-white text-sm font-medium rounded-lg transition-colors text-center">
+                                                    Review
+                                                </a>
+                                                <a href="{{ route('admin.food-listings.show', $listing->id) }}" class="flex-1 py-2 bg-white border border-zinc-200 text-zinc-900 text-sm font-medium rounded-lg hover:border-emerald-500 hover:text-emerald-600 transition-colors text-center">
+                                                    View Details
+                                                </a>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="flex items-center gap-2 mb-4">
-                                        <div class="w-5 h-5 rounded-full bg-zinc-200 flex items-center justify-center text-[10px] font-bold text-zinc-600">LB</div>
-                                        <span class="text-xs text-zinc-600">Le Boulangerie • <span class="text-emerald-600">4.9 ★</span></span>
-                                    </div>
-                                    <button class="w-full py-2 bg-white border border-zinc-200 text-zinc-900 text-sm font-medium rounded-lg hover:border-emerald-500 hover:text-emerald-600 transition-colors">
-                                        View Details
-                                    </button>
-                                </div>
+                                @endforeach
                             </div>
-
-                            <!-- Food Card 2 -->
-                            <div class="group bg-white rounded-xl border border-zinc-200 overflow-hidden hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300">
-                                <div class="h-32 bg-zinc-100 relative overflow-hidden">
-                                    <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent z-10"></div>
-                                    <div class="w-full h-full bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1547592180-85f173990554?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80');"></div>
-                                    <div class="absolute bottom-3 left-3 z-20 flex flex-col">
-                                        <span class="text-white font-medium text-sm">Fresh Organic Veggies</span>
-                                        <span class="text-zinc-200 text-xs">Produce</span>
-                                    </div>
-                                </div>
-                                <div class="p-4">
-                                    <div class="flex justify-between items-start mb-2">
-                                        <div>
-                                            <p class="text-xs text-zinc-500 flex items-center gap-1">
-                                                <i data-lucide="map-pin" class="w-3 h-3"></i> 1.2 miles away
-                                            </p>
-                                        </div>
-                                        <div class="flex items-center gap-1 text-xs font-medium text-zinc-600 bg-zinc-100 px-2 py-0.5 rounded">
-                                            <i data-lucide="clock" class="w-3 h-3"></i>
-                                            Exp: 1d
-                                        </div>
-                                    </div>
-                                    <div class="flex items-center gap-2 mb-4">
-                                        <div class="w-5 h-5 rounded-full bg-zinc-200 flex items-center justify-center text-[10px] font-bold text-zinc-600">GM</div>
-                                        <span class="text-xs text-zinc-600">Green Market • <span class="text-emerald-600">4.7 ★</span></span>
-                                    </div>
-                                    <button class="w-full py-2 bg-white border border-zinc-200 text-zinc-900 text-sm font-medium rounded-lg hover:border-emerald-500 hover:text-emerald-600 transition-colors">
-                                        View Details
-                                    </button>
-                                </div>
+                        @else
+                            <div class="bg-white rounded-xl border border-zinc-200 p-8 text-center">
+                                <i data-lucide="check-circle" class="w-12 h-12 text-emerald-500 mx-auto mb-4"></i>
+                                <h3 class="text-lg font-medium text-zinc-900 mb-2">No Pending Approvals</h3>
+                                <p class="text-sm text-zinc-500">All food listings have been reviewed and processed.</p>
                             </div>
-
-                             <!-- Food Card 3 -->
-                             <div class="group bg-white rounded-xl border border-zinc-200 overflow-hidden hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300">
-                                <div class="h-32 bg-zinc-100 relative overflow-hidden">
-                                    <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent z-10"></div>
-                                    <div class="w-full h-full bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1555244162-803834f70033?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80');"></div>
-                                    <div class="absolute bottom-3 left-3 z-20 flex flex-col">
-                                        <span class="text-white font-medium text-sm">Catering Trays</span>
-                                        <span class="text-zinc-200 text-xs">Prepared Meals</span>
-                                    </div>
-                                    <span class="absolute top-3 right-3 z-20 bg-zinc-900/80 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full tracking-wide">BULK</span>
-                                </div>
-                                <div class="p-4">
-                                    <div class="flex justify-between items-start mb-2">
-                                        <div>
-                                            <p class="text-xs text-zinc-500 flex items-center gap-1">
-                                                <i data-lucide="map-pin" class="w-3 h-3"></i> 2.5 miles away
-                                            </p>
-                                        </div>
-                                        <div class="flex items-center gap-1 text-xs font-medium text-zinc-600 bg-zinc-100 px-2 py-0.5 rounded">
-                                            <i data-lucide="clock" class="w-3 h-3"></i>
-                                            Exp: 5h
-                                        </div>
-                                    </div>
-                                    <div class="flex items-center gap-2 mb-4">
-                                        <div class="w-5 h-5 rounded-full bg-zinc-200 flex items-center justify-center text-[10px] font-bold text-zinc-600">EC</div>
-                                        <span class="text-xs text-zinc-600">Events Co. • <span class="text-emerald-600">5.0 ★</span></span>
-                                    </div>
-                                    <button class="w-full py-2 bg-white border border-zinc-200 text-zinc-900 text-sm font-medium rounded-lg hover:border-emerald-500 hover:text-emerald-600 transition-colors">
-                                        View Details
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+                        @endif
                     </div>
 
                     <!-- Right: Activity & Verification -->
