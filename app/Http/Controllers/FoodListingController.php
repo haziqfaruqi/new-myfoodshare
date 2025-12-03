@@ -18,12 +18,13 @@ class FoodListingController extends Controller
     public function index(Request $request)
     {
         $query = FoodListing::with(['restaurantProfile', 'creator'])
-            ->where('status', 'active')
-            ->where('approval_status', 'approved')
-            ->where('expiry_date', '>=', now()->toDateString())
-            ->orWhere(function ($q) {
-                $q->where('expiry_date', '=', now()->toDateString())
-                  ->where('expiry_time', '>=', now()->format('H:i'));
+            ->where('created_by', auth()->id())
+            ->where(function ($q) {
+                $q->where('expiry_date', '>', now()->toDateString())
+                  ->orWhere(function ($q2) {
+                      $q2->where('expiry_date', '=', now()->toDateString())
+                         ->where('expiry_time', '>=', now()->format('H:i'));
+                  });
             });
 
         // Search functionality
@@ -441,6 +442,18 @@ class FoodListingController extends Controller
 
         return redirect()->route('restaurant.dashboard')
             ->with('success', 'Food donation updated successfully!');
+    }
+
+    /**
+     * Show the form for editing restaurant food listing.
+     */
+    public function editRestaurantListing(FoodListing $listing)
+    {
+        if (!Auth::user()->isRestaurantOwner() || $listing->created_by !== Auth::id()) {
+            abort(403, 'Unauthorized action');
+        }
+
+        return view('restaurant.listings.edit', compact('listing'));
     }
 
     /**

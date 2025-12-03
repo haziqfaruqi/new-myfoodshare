@@ -244,13 +244,22 @@ class DashboardController extends Controller
         $restaurantProfile = $user->restaurantProfile;
 
         $stats = [
-            'active_listings' => $restaurantProfile ? FoodListing::where('restaurant_profile_id', $restaurantProfile->id)->where('status', 'available')->count() : 0,
+            'active_listings' => $restaurantProfile ? FoodListing::where('restaurant_profile_id', $restaurantProfile->id)->where('status', 'active')->where('approval_status', 'approved')->count() : 0,
             'total_donations' => $restaurantProfile ? FoodListing::where('restaurant_profile_id', $restaurantProfile->id)->count() : 0,
-            'pending_pickups' => $restaurantProfile ? FoodListing::where('restaurant_profile_id', $restaurantProfile->id)->where('status', 'reserved')->count() : 0,
+            'pending_pickups' => $restaurantProfile ? FoodListing::where('restaurant_profile_id', $restaurantProfile->id)->whereIn('status', ['active', 'reserved'])->count() : 0,
             'total_people_helped' => $restaurantProfile ? FoodListing::where('restaurant_profile_id', $restaurantProfile->id)->whereHas('matches')->count() : 0,
         ];
 
         $recentListings = $restaurantProfile ? FoodListing::where('restaurant_profile_id', $restaurantProfile->id)
+            ->where('status', 'active')
+            ->where('approval_status', 'approved')
+            ->where(function ($q) {
+                $q->where('expiry_date', '>', now()->toDateString())
+                  ->orWhere(function ($q2) {
+                      $q2->where('expiry_date', '=', now()->toDateString())
+                         ->where('expiry_time', '>=', now()->format('H:i'));
+                  });
+            })
             ->orderBy('created_at', 'desc')
             ->take(5)
             ->get() : collect();
@@ -430,6 +439,36 @@ class DashboardController extends Controller
         $user = auth()->user();
         $profile = $user->restaurantProfile;
         return view('restaurant.profile.edit', compact('user', 'profile'));
+    }
+
+    /**
+     * Update restaurant profile.
+     */
+    public function updateRestaurantProfile(Request $request)
+    {
+        $user = auth()->user();
+        $profile = $user->restaurantProfile;
+
+        if (!$profile) {
+            return back()->withErrors(['error' => 'Restaurant profile not found.']);
+        }
+
+        $validated = $request->validate([
+            'restaurant_name' => 'required|string|max:255',
+            'address' => 'required|string|max:255',
+            'city' => 'required|string|max:100',
+            'state' => 'required|string|max:100',
+            'zip_code' => 'required|string|max:20',
+            'phone' => 'nullable|string|max:20',
+            'website' => 'nullable|url|max:255',
+            'business_hours' => 'nullable|string|max:255',
+            'description' => 'nullable|string',
+        ]);
+
+        $profile->update($validated);
+
+        return redirect()->route('restaurant.profile')
+            ->with('success', 'Restaurant profile updated successfully!');
     }
 
     /**

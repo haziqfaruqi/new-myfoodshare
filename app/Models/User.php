@@ -108,6 +108,11 @@ class User extends Authenticatable
         return $this->role === 'donor' || $this->role === 'restaurant_owner'; // Support both roles
     }
 
+    public function restaurantOwner()
+    {
+        return $this->isRestaurantOwner();
+    }
+
     public function admin()
     {
         return $this->role === 'admin';

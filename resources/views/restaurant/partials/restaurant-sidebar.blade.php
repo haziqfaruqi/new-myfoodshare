@@ -13,24 +13,34 @@
         <div>
             <h3 class="px-3 text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">Main</h3>
             <nav class="space-y-1">
-                <a href="{{ route('restaurant.dashboard') }}" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-zinc-900 bg-zinc-100 rounded-md">
-                    <i data-lucide="layout-dashboard" class="w-4 h-4 text-zinc-500"></i>
+                <a href="{{ route('restaurant.dashboard') }}"
+                   class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors
+                   {{ request()->is('restaurant/dashboard') || request()->is('restaurant*') && !request()->is('restaurant/listings*') && !request()->is('restaurant/requests*') && !request()->is('restaurant/schedule*') && !request()->is('restaurant/profile*') ? 'text-zinc-900 bg-zinc-100' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50' }}">
+                    <i data-lucide="layout-dashboard" class="w-4 h-4 {{ request()->is('restaurant/dashboard') || request()->is('restaurant*') && !request()->is('restaurant/listings*') && !request()->is('restaurant/requests*') && !request()->is('restaurant/schedule*') && !request()->is('restaurant/profile*') ? 'text-zinc-500' : 'text-zinc-400' }}"></i>
                     Dashboard
                 </a>
-                <a href="{{ route('restaurant.listings') }}" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50 rounded-md transition-colors">
-                    <i data-lucide="package" class="w-4 h-4 text-zinc-400"></i>
+                <a href="{{ route('restaurant.listings') }}"
+                   class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors
+                   {{ request()->is('restaurant/listings*') ? 'text-zinc-900 bg-zinc-100' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50' }}">
+                    <i data-lucide="package" class="w-4 h-4 {{ request()->is('restaurant/listings*') ? 'text-zinc-500' : 'text-zinc-400' }}"></i>
                     Manage Listings
                 </a>
-                <a href="{{ route('restaurant.requests') }}" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50 rounded-md transition-colors">
-                    <i data-lucide="clipboard-list" class="w-4 h-4 text-zinc-400"></i>
+                <a href="{{ route('restaurant.requests') }}"
+                   class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors
+                   {{ request()->is('restaurant/requests*') ? 'text-zinc-900 bg-zinc-100' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50' }}">
+                    <i data-lucide="clipboard-list" class="w-4 h-4 {{ request()->is('restaurant/requests*') ? 'text-zinc-500' : 'text-zinc-400' }}"></i>
                     Manage Requests
                 </a>
-                <a href="{{ route('restaurant.schedule') }}" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50 rounded-md transition-colors">
-                    <i data-lucide="calendar" class="w-4 h-4 text-zinc-400"></i>
+                <a href="{{ route('restaurant.schedule') }}"
+                   class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors
+                   {{ request()->is('restaurant/schedule*') ? 'text-zinc-900 bg-zinc-100' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50' }}">
+                    <i data-lucide="calendar" class="w-4 h-4 {{ request()->is('restaurant/schedule*') ? 'text-zinc-500' : 'text-zinc-400' }}"></i>
                     Manage Schedule
                 </a>
-                <a href="{{ route('restaurant.profile') }}" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50 rounded-md transition-colors">
-                    <i data-lucide="user" class="w-4 h-4 text-zinc-400"></i>
+                <a href="{{ route('restaurant.profile') }}"
+                   class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors
+                   {{ request()->is('restaurant/profile*') ? 'text-zinc-900 bg-zinc-100' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50' }}">
+                    <i data-lucide="user" class="w-4 h-4 {{ request()->is('restaurant/profile*') ? 'text-zinc-500' : 'text-zinc-400' }}"></i>
                     Profile
                 </a>
             </nav>

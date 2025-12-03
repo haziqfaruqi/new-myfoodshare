@@ -3,15 +3,23 @@
 @section('title', 'Restaurant Profile - Restaurant Portal')
 
 @section('content')
-<div class="max-w-4xl mx-auto space-y-6">
-    <!-- Page Header -->
-    <div>
-        <h1 class="text-2xl font-bold tracking-tight text-zinc-900">Restaurant Profile</h1>
-        <p class="text-sm text-zinc-500 mt-1">Manage your restaurant information and account settings.</p>
+<div class="max-w-6xl mx-auto space-y-8">
+    <!-- Welcome Section -->
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold tracking-tight text-zinc-900">Restaurant Profile</h1>
+            <p class="text-sm text-zinc-500 mt-1">Manage your restaurant information and account settings.</p>
+        </div>
+        <div class="flex gap-3">
+            <a href="{{ route('restaurant.profile.edit') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-zinc-200 shadow-sm rounded-lg text-sm font-medium text-zinc-700 hover:bg-zinc-50 transition-all">
+                <i data-lucide="edit-3" class="w-4 h-4"></i>
+                Edit Profile
+            </a>
+        </div>
     </div>
 
     <!-- Profile Card -->
-    <div class="bg-white rounded-xl border border-zinc-200 overflow-hidden">
+    <div class="bg-white rounded-xl border border-zinc-200 overflow-hidden shadow-sm">
         <div class="h-32 bg-gradient-to-r from-emerald-500 to-emerald-600 relative">
             <div class="absolute inset-0 bg-black/10"></div>
             <div class="absolute -bottom-12 left-6">
@@ -34,10 +42,61 @@
                         </div>
                     </div>
                 </div>
-                <a href="{{ route('restaurant.profile.edit') }}" class="inline-flex items-center gap-2 px-4 py-2 border border-zinc-200 text-zinc-700 rounded-lg text-sm font-medium hover:bg-zinc-50 transition-colors">
-                    <i data-lucide="edit-3" class="w-4 h-4"></i>
-                    Edit Profile
-                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="p-5 bg-white rounded-xl border border-zinc-200 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+                <span class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Account Status</span>
+                <div class="p-2 bg-emerald-50 rounded-lg">
+                    <i data-lucide="check-circle" class="w-4 h-4 text-emerald-600"></i>
+                </div>
+            </div>
+            <div class="flex items-baseline gap-2">
+                <span class="text-2xl font-bold text-zinc-900">Active</span>
+                <span class="text-xs font-medium text-emerald-600">Verified</span>
+            </div>
+        </div>
+
+        <div class="p-5 bg-white rounded-xl border border-zinc-200 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+                <span class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Member Since</span>
+                <div class="p-2 bg-blue-50 rounded-lg">
+                    <i data-lucide="calendar" class="w-4 h-4 text-blue-600"></i>
+                </div>
+            </div>
+            <div class="flex items-baseline gap-2">
+                <span class="text-2xl font-bold text-zinc-900">{{ auth()->user()->created_at->format('M Y') }}</span>
+                <span class="text-xs font-medium text-zinc-500">Member</span>
+            </div>
+        </div>
+
+        <div class="p-5 bg-white rounded-xl border border-zinc-200 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+                <span class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Donations</span>
+                <div class="p-2 bg-orange-50 rounded-lg">
+                    <i data-lucide="package" class="w-4 h-4 text-orange-600"></i>
+                </div>
+            </div>
+            <div class="flex items-baseline gap-2">
+                <span class="text-2xl font-bold text-zinc-900">24</span>
+                <span class="text-xs font-medium text-emerald-600">Total</span>
+            </div>
+        </div>
+
+        <div class="p-5 bg-white rounded-xl border border-zinc-200 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+                <span class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Account ID</span>
+                <div class="p-2 bg-purple-50 rounded-lg">
+                    <i data-lucide="hash" class="w-4 h-4 text-purple-600"></i>
+                </div>
+            </div>
+            <div class="flex items-baseline gap-2">
+                <span class="text-2xl font-bold text-zinc-900">#{{ str_pad($profile->id, 6, '0', STR_PAD_LEFT) }}</span>
+                <span class="text-xs font-medium text-zinc-500">Profile</span>
             </div>
         </div>
     </div>
@@ -45,61 +104,74 @@
     <!-- Profile Information Sections -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Non-Editable Information -->
-        <div class="bg-white rounded-xl border border-zinc-200">
+        <div class="bg-white rounded-xl border border-zinc-200 shadow-sm">
             <div class="p-6 border-b border-zinc-200">
-                <h3 class="text-lg font-semibold text-zinc-900">Non-Editable Information</h3>
-                <p class="text-sm text-zinc-500 mt-1">This information is system-generated and cannot be modified.</p>
+                <h3 class="text-lg font-semibold text-zinc-900">Account Information</h3>
+                <p class="text-sm text-zinc-500 mt-1">System-generated information and account details.</p>
             </div>
-            <div class="p-6 space-y-6">
-                <div class="space-y-4">
-                    <div>
-                        <label class="text-xs font-medium text-zinc-500 uppercase tracking-wider">Account Status</label>
-                        <div class="mt-1">
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-emerald-100 text-emerald-800">
-                                <i data-lucide="check-circle" class="w-3 h-3 mr-1.5"></i>
-                                Active
-                            </span>
+            <div class="p-6 space-y-4">
+                <div class="flex items-center justify-between py-3 border-b border-zinc-100">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">
+                            <i data-lucide="check-circle" class="w-4 h-4 text-emerald-600"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs font-medium text-zinc-500 uppercase tracking-wider">Account Status</p>
+                            <p class="text-sm font-medium text-zinc-900">Active</p>
                         </div>
                     </div>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+                        Verified
+                    </span>
+                </div>
 
-                    <div>
-                        <label class="text-xs font-medium text-zinc-500 uppercase tracking-wider">Business License</label>
-                        <div class="mt-1">
-                            <span class="text-sm text-zinc-900 font-medium">License #{{ $profile->license_number ?? 'LIC-' . str_pad($profile->id, 6, '0', STR_PAD_LEFT) }}</span>
-                            <p class="text-xs text-zinc-500 mt-1">Verified on {{ $profile->license_verified_at?->format('M j, Y') ?? 'Pending verification' }}</p>
+                <div class="flex items-center justify-between py-3 border-b border-zinc-100">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                            <i data-lucide="building-2" class="w-4 h-4 text-blue-600"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs font-medium text-zinc-500 uppercase tracking-wider">Account Type</p>
+                            <p class="text-sm font-medium text-zinc-900">Restaurant Partner</p>
                         </div>
                     </div>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        Business
+                    </span>
+                </div>
 
-                    <div>
-                        <label class="text-xs font-medium text-zinc-500 uppercase tracking-wider">Account Type</label>
-                        <div class="mt-1">
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                                <i data-lucide="building-2" class="w-3 h-3 mr-1.5"></i>
-                                Restaurant Partner
-                            </span>
+                <div class="flex items-center justify-between py-3 border-b border-zinc-100">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
+                            <i data-lucide="award" class="w-4 h-4 text-purple-600"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs font-medium text-zinc-500 uppercase tracking-wider">Business License</p>
+                            <p class="text-sm font-medium text-zinc-900">#{{ $profile->license_number ?? 'LIC-' . str_pad($profile->id, 6, '0', STR_PAD_LEFT) }}</p>
                         </div>
                     </div>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                        {{ $profile->license_verified_at ? 'Verified' : 'Pending' }}
+                    </span>
+                </div>
 
-                    <div>
-                        <label class="text-xs font-medium text-zinc-500 uppercase tracking-wider">Member Since</label>
-                        <div class="mt-1">
-                            <span class="text-sm text-zinc-900 font-medium">{{ auth()->user()->created_at->format('F j, Y') }}</span>
-                            <p class="text-xs text-zinc-500 mt-1">Member for {{ auth()->user()->created_at->diffInDays() }} days</p>
+                <div class="flex items-center justify-between py-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center">
+                            <i data-lucide="calendar-days" class="w-4 h-4 text-orange-600"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs font-medium text-zinc-500 uppercase tracking-wider">Member Since</p>
+                            <p class="text-sm font-medium text-zinc-900">{{ auth()->user()->created_at->format('F j, Y') }}</p>
                         </div>
                     </div>
-
-                    <div>
-                        <label class="text-xs font-medium text-zinc-500 uppercase tracking-wider">Account ID</label>
-                        <div class="mt-1">
-                            <code class="text-xs bg-zinc-100 text-zinc-800 px-2 py-1 rounded">#{{ str_pad($profile->id, 6, '0', STR_PAD_LEFT) }}</code>
-                        </div>
-                    </div>
+                    <span class="text-xs text-zinc-500">{{ auth()->user()->created_at->diffInDays() }} days</span>
                 </div>
             </div>
         </div>
 
         <!-- Editable Information -->
-        <div class="bg-white rounded-xl border border-zinc-200">
+        <div class="bg-white rounded-xl border border-zinc-200 shadow-sm">
             <div class="p-6 border-b border-zinc-200">
                 <h3 class="text-lg font-semibold text-zinc-900">Restaurant Information</h3>
                 <p class="text-sm text-zinc-500 mt-1">Update your restaurant details and contact information.</p>
@@ -174,6 +246,12 @@
                     </div>
 
                     <div>
+                        <label class="text-xs font-medium text-zinc-700">Business Hours</label>
+                        <input type="text" name="business_hours" value="{{ $profile->business_hours ?? '9:00 AM - 9:00 PM' }}" placeholder="e.g., 9:00 AM - 9:00 PM"
+                               class="w-full mt-1 px-3 py-2 bg-white border border-zinc-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+                    </div>
+
+                    <div>
                         <label class="text-xs font-medium text-zinc-700">Description</label>
                         <textarea name="description" rows="4" class="w-full mt-1 px-3 py-2 bg-white border border-zinc-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 resize-none">{{ $profile->description }}</textarea>
                     </div>
@@ -193,65 +271,97 @@
     </div>
 
     <!-- Contact Information -->
-    <div class="bg-white rounded-xl border border-zinc-200">
+    <div class="bg-white rounded-xl border border-zinc-200 shadow-sm">
         <div class="p-6 border-b border-zinc-200">
             <h3 class="text-lg font-semibold text-zinc-900">Contact Information</h3>
-            <p class="text-sm text-zinc-500 mt-1">Your primary account contact details.</p>
+            <p class="text-sm text-zinc-500 mt-1">Your primary account contact details and restaurant information.</p>
         </div>
         <div class="p-6">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Primary Contact -->
                 <div>
-                    <h4 class="text-sm font-medium text-zinc-900 mb-3">Primary Contact</h4>
-                    <div class="space-y-3">
-                        <div class="flex items-center gap-3">
-                            <i data-lucide="user" class="w-4 h-4 text-zinc-400"></i>
-                            <div>
-                                <p class="text-xs text-zinc-500">Name</p>
-                                <p class="text-sm text-zinc-900">{{ auth()->user()->name }}</p>
+                    <h4 class="text-sm font-medium text-zinc-900 mb-4">Primary Contact</h4>
+                    <div class="space-y-4">
+                        <div class="flex items-start gap-3 p-4 bg-zinc-50 rounded-lg">
+                            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                                <i data-lucide="user" class="w-5 h-5 text-blue-600"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-xs font-medium text-zinc-500 uppercase tracking-wider">Full Name</p>
+                                <p class="text-sm font-medium text-zinc-900">{{ auth()->user()->name }}</p>
                             </div>
                         </div>
-                        <div class="flex items-center gap-3">
-                            <i data-lucide="mail" class="w-4 h-4 text-zinc-400"></i>
-                            <div>
-                                <p class="text-xs text-zinc-500">Email</p>
-                                <p class="text-sm text-zinc-900">{{ auth()->user()->email }}</p>
+
+                        <div class="flex items-start gap-3 p-4 bg-zinc-50 rounded-lg">
+                            <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                                <i data-lucide="mail" class="w-5 h-5 text-emerald-600"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-xs font-medium text-zinc-500 uppercase tracking-wider">Email Address</p>
+                                <p class="text-sm font-medium text-zinc-900">{{ auth()->user()->email }}</p>
                             </div>
                         </div>
-                        <div class="flex items-center gap-3">
-                            <i data-lucide="phone" class="w-4 h-4 text-zinc-400"></i>
-                            <div>
-                                <p class="text-xs text-zinc-500">Phone</p>
-                                <p class="text-sm text-zinc-900">{{ auth()->user()->phone ?? 'Not provided' }}</p>
+
+                        <div class="flex items-start gap-3 p-4 bg-zinc-50 rounded-lg">
+                            <div class="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0">
+                                <i data-lucide="phone" class="w-5 h-5 text-orange-600"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-xs font-medium text-zinc-500 uppercase tracking-wider">Phone Number</p>
+                                <p class="text-sm font-medium text-zinc-900">{{ auth()->user()->phone ?? 'Not provided' }}</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
+                <!-- Restaurant Contact -->
                 <div>
-                    <h4 class="text-sm font-medium text-zinc-900 mb-3">Restaurant Contact</h4>
-                    <div class="space-y-3">
-                        <div class="flex items-center gap-3">
-                            <i data-lucide="building-2" class="w-4 h-4 text-zinc-400"></i>
-                            <div>
-                                <p class="text-xs text-zinc-500">Main Office</p>
-                                <p class="text-sm text-zinc-900">{{ $profile->restaurant_name }}</p>
+                    <h4 class="text-sm font-medium text-zinc-900 mb-4">Restaurant Contact</h4>
+                    <div class="space-y-4">
+                        <div class="flex items-start gap-3 p-4 bg-zinc-50 rounded-lg">
+                            <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
+                                <i data-lucide="building-2" class="w-5 h-5 text-purple-600"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-xs font-medium text-zinc-500 uppercase tracking-wider">Restaurant Name</p>
+                                <p class="text-sm font-medium text-zinc-900">{{ $profile->restaurant_name }}</p>
                             </div>
                         </div>
-                        <div class="flex items-center gap-3">
-                            <i data-lucide="map-pin" class="w-4 h-4 text-zinc-400"></i>
-                            <div>
-                                <p class="text-xs text-zinc-500">Address</p>
-                                <p class="text-sm text-zinc-900">{{ $profile->address }}</p>
-                                <p class="text-sm text-zinc-900">{{ $profile->city }}, {{ $profile->state }} {{ $profile->zip_code }}</p>
+
+                        <div class="flex items-start gap-3 p-4 bg-zinc-50 rounded-lg">
+                            <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                                <i data-lucide="map-pin" class="w-5 h-5 text-red-600"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-xs font-medium text-zinc-500 uppercase tracking-wider">Business Address</p>
+                                <p class="text-sm font-medium text-zinc-900">{{ $profile->address }}</p>
+                                <p class="text-sm font-medium text-zinc-900">{{ $profile->city }}, {{ $profile->state }} {{ $profile->zip_code }}</p>
                             </div>
                         </div>
-                        <div class="flex items-center gap-3">
-                            <i data-lucide="clock" class="w-4 h-4 text-zinc-400"></i>
-                            <div>
-                                <p class="text-xs text-zinc-500">Business Hours</p>
-                                <p class="text-sm text-zinc-900">{{ $profile->business_hours ?? '9:00 AM - 9:00 PM' }}</p>
+
+                        <div class="flex items-start gap-3 p-4 bg-zinc-50 rounded-lg">
+                            <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+                                <i data-lucide="clock" class="w-5 h-5 text-amber-600"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-xs font-medium text-zinc-500 uppercase tracking-wider">Business Hours</p>
+                                <p class="text-sm font-medium text-zinc-900">{{ $profile->business_hours ?? '9:00 AM - 9:00 PM' }}</p>
                             </div>
                         </div>
+
+                        @if($profile->website)
+                        <div class="flex items-start gap-3 p-4 bg-zinc-50 rounded-lg">
+                            <div class="w-10 h-10 rounded-full bg-cyan-100 flex items-center justify-center flex-shrink-0">
+                                <i data-lucide="globe" class="w-5 h-5 text-cyan-600"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-xs font-medium text-zinc-500 uppercase tracking-wider">Website</p>
+                                <a href="{{ $profile->website }}" target="_blank" class="text-sm font-medium text-emerald-600 hover:text-emerald-700 underline">
+                                    {{ $profile->website }}
+                                </a>
+                            </div>
+                        </div>
+                        @endif
                     </div>
                 </div>
             </div>

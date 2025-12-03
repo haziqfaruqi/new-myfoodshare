@@ -23,6 +23,7 @@ Route::get('/', function () {
     return view('public.home');
 })->name('home');
 
+
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
@@ -56,7 +57,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/listings/{listing}', [FoodListingController::class, 'show'])->name('restaurant.listings.show');
         Route::get('/listings/create', [FoodListingController::class, 'create'])->name('restaurant.listings.create');
         Route::post('/listings', [FoodListingController::class, 'storeRestaurantListing'])->name('restaurant.listings.store');
-        Route::get('/listings/{listing}/edit', [FoodListingController::class, 'edit'])->name('restaurant.listings.edit');
+        Route::get('/listings/{listing}/edit', [FoodListingController::class, 'editRestaurantListing'])->name('restaurant.listings.edit');
         Route::put('/listings/{listing}', [FoodListingController::class, 'updateRestaurantListing'])->name('restaurant.listings.update');
         Route::delete('/listings/{listing}', [FoodListingController::class, 'deleteRestaurantListing'])->name('restaurant.listings.destroy');
 
