@@ -1,11 +1,12 @@
 @extends('admin.layouts.admin-layout')
 
-
 @section('title', 'Pickup Verification - Admin Panel')
 
 @section('content')
 
-<div class="max-w-6xl mx-auto space-y-8 p-6 md:p-8">
+<div class="flex-1 overflow-y-auto p-6 md:p-8 scroll-smooth">
+
+    <div class="max-w-6xl mx-auto space-y-8">
 
     <!-- Header -->
     <div class="space-y-2">
@@ -195,8 +196,9 @@
     </div>
 
     <footer class="mt-12 mb-4 text-center">
-        <p class="text-xs text-zinc-400">© 2024 FoodShare Platform. Reducing waste, feeding communities.</p>
+        <p class="text-xs text-zinc-400">© 2024 MyFoodshare Platform. Reducing waste, feeding communities.</p>
     </footer>
+    </div>
 </div>
 @endsection
 

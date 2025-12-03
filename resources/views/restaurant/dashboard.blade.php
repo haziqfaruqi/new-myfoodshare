@@ -6,7 +6,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FoodShare - Restaurant Partner Portal</title>
+    <title>MyFoodshare - Restaurant Partner Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
@@ -108,7 +108,7 @@
         <div class="h-16 flex items-center px-6 border-b border-zinc-100">
             <div class="flex items-center gap-2 text-emerald-600">
                 <i data-lucide="leaf" class="w-6 h-6 fill-current"></i>
-                <span class="font-bold tracking-tight text-zinc-900 text-lg">FoodShare</span>
+                <span class="font-bold tracking-tight text-zinc-900 text-lg">MyFoodshare</span>
                 <span class="text-[10px] bg-zinc-100 text-zinc-500 px-1.5 py-0.5 rounded ml-1">PARTNER</span>
             </div>
         </div>
@@ -179,7 +179,7 @@
         <header class="h-16 border-b border-zinc-200 bg-white/80 backdrop-blur-md sticky top-0 z-10 flex items-center justify-between px-6">
             <div class="md:hidden flex items-center gap-2">
                 <i data-lucide="menu" class="w-5 h-5 text-zinc-600"></i>
-                <span class="font-semibold text-zinc-900">FoodShare</span>
+                <span class="font-semibold text-zinc-900">MyFoodshare</span>
             </div>
             
             <div class="hidden md:flex items-center text-sm breadcrumbs text-zinc-500">

@@ -13,6 +13,13 @@
 @section('content')
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- Header -->
+        <div class="space-y-2">
+            <h1 class="text-2xl font-semibold tracking-tight text-zinc-900">Listing Approvals</h1>
+            <p class="text-sm text-zinc-500">Review and manage food requests</p>
+        </div>
+        
     <!-- Search and Filters -->
     <div class="bg-white rounded-xl border border-zinc-200 p-6 mb-6">
         <form method="GET" class="flex flex-col sm:flex-row gap-4">

@@ -1,10 +1,10 @@
 <!-- Sidebar Navigation -->
 <aside class="w-64 border-r border-zinc-200 bg-white hidden md:flex flex-col z-20">
     <div class="h-16 flex items-center px-6 border-b border-zinc-100">
-        <div class="flex items-center gap-2 text-emerald-600">
+        <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2 text-emerald-600 hover:text-emerald-700 transition-colors">
             <i data-lucide="leaf" class="w-5 h-5 fill-current"></i>
-            <span class="font-semibold tracking-tight text-zinc-900">FoodShare</span>
-        </div>
+            <span class="font-semibold tracking-tight text-zinc-900">MyFoodshare</span>
+        </a>
     </div>
 
     <div class="flex-1 overflow-y-auto py-6 px-3 space-y-8">

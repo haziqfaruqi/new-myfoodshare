@@ -3,7 +3,7 @@
     <div class="h-16 flex items-center px-6 border-b border-zinc-100">
         <div class="flex items-center gap-2 text-emerald-600">
             <i data-lucide="leaf" class="w-5 h-5 fill-current"></i>
-            <span class="font-semibold tracking-tight text-zinc-900">FoodShare</span>
+            <span class="font-semibold tracking-tight text-zinc-900">MyFoodshare</span>
         </div>
     </div>
 

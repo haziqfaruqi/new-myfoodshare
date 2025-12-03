@@ -176,7 +176,7 @@
 </div>
 
 <footer class="mt-12 mb-4 text-center">
-    <p class="text-xs text-zinc-400">© 2024 FoodShare Platform. Reducing waste, feeding communities.</p>
+    <p class="text-xs text-zinc-400">© 2024 MyFoodshare Platform. Reducing waste, feeding communities.</p>
 </footer>
 
 <!-- Reject User Modal -->
