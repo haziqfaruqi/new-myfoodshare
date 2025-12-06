@@ -19,7 +19,9 @@
       "Bash(find:*)",
       "Bash(taskkill:*)",
       "Bash(mkdir:*)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(findstr:*)",
+      "Bash(tasklist:*)"
     ],
     "deny": [],
     "ask": []

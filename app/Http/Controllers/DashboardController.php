@@ -418,13 +418,20 @@ class DashboardController extends Controller
             ->orderBy('pickup_scheduled_at', 'asc')
             ->get() : collect();
 
+        // Calculate available food count for sidebar
+        $availableFoodCount = $this->getAvailableFoodCount();
+
         // Get stats
         $stats = [
             'active_matches' => $user->recipient ? $user->recipient->matches()->whereIn('status', ['approved', 'scheduled'])->count() : 0,
             'completed_pickups' => $user->recipient ? $user->recipient->matches()->where('status', 'completed')->count() : 0,
             'total_food_received' => $user->recipient ? $user->recipient->matches()->where('status', 'completed')->count() : 0,
             'pending_requests' => $user->recipient ? $user->recipient->matches()->where('status', 'pending')->count() : 0,
+            'available_food_count' => $availableFoodCount,
         ];
+
+        // Share available food count with all recipient views
+        view()->share('availableFoodCount', $availableFoodCount);
 
         return view('recipient.dashboard', compact('stats', 'nearbyFoodListings', 'upcomingPickups'));
     }
@@ -523,10 +530,187 @@ class DashboardController extends Controller
      */
     public function availableFood()
     {
+        $user = auth()->user();
+
+        // Get user's location
+        $userLat = $user->latitude;
+        $userLon = $user->longitude;
+
+        // Get available food listings within 5km radius
+        $nearbyFoodListings = collect();
+        if ($userLat && $userLon) {
+            $allListings = FoodListing::with(['restaurantProfile', 'creator'])
+                ->where('status', 'active')
+                ->where('approval_status', 'approved')
+                ->where(function ($q) {
+                    $q->where('expiry_date', '>=', now()->toDateString())
+                      ->orWhere(function ($q2) {
+                          $q2->where('expiry_date', '=', now()->toDateString())
+                             ->where('expiry_time', '>=', now()->format('H:i'));
+                      });
+                })
+                ->get();
+
+            foreach ($allListings as $listing) {
+                if ($listing->latitude && $listing->longitude) {
+                    $distance = $this->calculateDistance($userLat, $userLon, $listing->latitude, $listing->longitude);
+                    if ($distance <= 5) {
+                        $listing->distance = round($distance, 1);
+                        $nearbyFoodListings->push($listing);
+                    }
+                }
+            }
+        } else {
+            // If user doesn't have coordinates, get all active approved listings (same logic as getAvailableFoodCount)
+            $nearbyFoodListings = FoodListing::with(['restaurantProfile', 'creator'])
+                ->where('status', 'active')
+                ->where('approval_status', 'approved')
+                ->where(function ($q) {
+                    $q->where('expiry_date', '>=', now()->toDateString())
+                      ->orWhere(function ($q2) {
+                          $q2->where('expiry_date', '=', now()->toDateString())
+                             ->where('expiry_time', '>=', now()->format('H:i'));
+                      });
+                })
+                ->get();
+        }
+
+        // Share available food count with sidebar
+        view()->share('availableFoodCount', $nearbyFoodListings->count());
+
         $foodListings = FoodListing::where('status', 'available')
             ->orderBy('expiry_datetime', 'asc')
             ->paginate(12);
 
         return view('recipient.available-food', compact('foodListings'));
+    }
+
+    /**
+     * Get available food count within 5km radius.
+     */
+    private function getAvailableFoodCount()
+    {
+        $user = auth()->user();
+
+        if (!$user) {
+            return 0;
+        }
+
+        // If user doesn't have coordinates, return all active approved listings
+        if (!$user->latitude || !$user->longitude) {
+            return FoodListing::where('status', 'active')
+                ->where('approval_status', 'approved')
+                ->where(function ($q) {
+                    $q->where('expiry_date', '>=', now()->toDateString())
+                      ->orWhere(function ($q2) {
+                          $q2->where('expiry_date', '=', now()->toDateString())
+                             ->where('expiry_time', '>=', now()->format('H:i'));
+                      });
+                })
+                ->count();
+        }
+
+        $allListings = FoodListing::with(['restaurantProfile', 'creator'])
+            ->where('status', 'active')
+            ->where('approval_status', 'approved')
+            ->where('expiry_date', '>=', now()->toDateString())
+            ->orWhere(function ($q) {
+                $q->where('expiry_date', '=', now()->toDateString())
+                  ->where('expiry_time', '>=', now()->format('H:i'));
+            })
+            ->get();
+
+        $count = 0;
+        foreach ($allListings as $listing) {
+            if ($listing->latitude && $listing->longitude) {
+                $distance = $this->calculateDistance($user->latitude, $user->longitude, $listing->latitude, $listing->longitude);
+                if ($distance <= 5) {
+                    $count++;
+                }
+            }
+        }
+
+        return $count;
+    }
+
+    /**
+     * Map view for recipients.
+     */
+    public function mapView()
+    {
+        $availableFoodCount = $this->getAvailableFoodCount();
+        view()->share('availableFoodCount', $availableFoodCount);
+        return view('recipient.map-view');
+    }
+
+    /**
+     * My matches for recipients.
+     */
+    public function myMatches()
+    {
+        $user = auth()->user();
+        $availableFoodCount = $this->getAvailableFoodCount();
+
+        // Share available food count with sidebar
+        view()->share('availableFoodCount', $availableFoodCount);
+
+        // Get user's matches with related data
+        $matches = $user->recipient ? $user->recipient->matches()
+            ->with(['foodListing.restaurantProfile', 'foodListing.creator'])
+            ->orderBy('created_at', 'desc')
+            ->get() : collect();
+
+        return view('recipient.my-matches', compact('matches'));
+    }
+
+    /**
+     * Impact report for recipients.
+     */
+    public function impactReport()
+    {
+        $user = auth()->user();
+
+        // Get user's completed matches for impact calculations
+        $completedMatches = $user->recipient ? $user->recipient->matches()
+            ->with(['foodListing.restaurantProfile'])
+            ->where('status', 'completed')
+            ->get() : collect();
+
+        // Calculate impact metrics
+        $totalCO2Saved = $completedMatches->sum(function($match) {
+            return $match->foodListing->estimated_co2_saved ?? 0;
+        });
+
+        $totalMealsRecovered = $completedMatches->count();
+        $totalMoneySaved = $completedMatches->sum(function($match) {
+            return $match->foodListing->estimated_value ?? 0;
+        });
+
+        $peopleHelped = $completedMatches->count(); // Simple approximation
+
+        // Get available food count for sidebar
+        $availableFoodCount = $this->getAvailableFoodCount();
+        view()->share('availableFoodCount', $availableFoodCount);
+
+        return view('recipient.impact-report', compact(
+            'totalCO2Saved', 'totalMealsRecovered', 'totalMoneySaved', 'peopleHelped', 'completedMatches'
+        ));
+    }
+
+    /**
+     * NGO profile for recipients.
+     */
+    public function ngoProfile()
+    {
+        $user = auth()->user();
+
+        // Get user's recipient profile if it exists
+        $recipientProfile = $user->recipient;
+
+        // Get available food count for sidebar
+        $availableFoodCount = $this->getAvailableFoodCount();
+        view()->share('availableFoodCount', $availableFoodCount);
+
+        return view('recipient.ngo-profile', compact('recipientProfile'));
     }
 }

@@ -82,6 +82,10 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['role:recipient'])->prefix('recipient')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'recipientDashboard'])->name('recipient.dashboard');
         Route::get('/available-food', [DashboardController::class, 'availableFood'])->name('recipient.available-food');
+        Route::get('/map-view', [DashboardController::class, 'mapView'])->name('recipient.map-view');
+        Route::get('/my-matches', [DashboardController::class, 'myMatches'])->name('recipient.my-matches');
+        Route::get('/impact-report', [DashboardController::class, 'impactReport'])->name('recipient.impact-report');
+        Route::get('/ngo-profile', [DashboardController::class, 'ngoProfile'])->name('recipient.ngo-profile');
 
         // Food matching routes
         Route::get('/matches', [FoodMatchController::class, 'index'])->name('recipient.matches.index');

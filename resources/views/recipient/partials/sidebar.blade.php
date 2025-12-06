@@ -13,22 +13,22 @@
         <div>
             <h3 class="px-3 text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">Collection</h3>
             <nav class="space-y-1">
-                <a href="{{ route('recipient.dashboard') }}" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-zinc-900 bg-zinc-100 rounded-md">
-                    <i data-lucide="layout-grid" class="w-4 h-4 text-zinc-500"></i>
+                <a href="{{ route('recipient.dashboard') }}" class="flex items-center gap-3 px-3 py-2 text-sm font-medium {{ request()->is('recipient/dashboard*') ? 'text-zinc-900 bg-zinc-100' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50' }} rounded-md transition-colors">
+                    <i data-lucide="layout-grid" class="w-4 h-4 {{ request()->is('recipient/dashboard*') ? 'text-zinc-500' : 'text-zinc-400' }}"></i>
                     Dashboard
                 </a>
-                <a href="{{ route('recipient.available-food') }}" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50 rounded-md transition-colors">
-                    <i data-lucide="search" class="w-4 h-4 text-zinc-400"></i>
+                <a href="{{ route('recipient.available-food') }}" class="flex items-center gap-3 px-3 py-2 text-sm font-medium {{ request()->is('recipient/available-food*') ? 'text-zinc-900 bg-zinc-100' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50' }} rounded-md transition-colors">
+                    <i data-lucide="search" class="w-4 h-4 {{ request()->is('recipient/available-food*') ? 'text-zinc-500' : 'text-zinc-400' }}"></i>
                     Browse Food
-                    <span class="ml-auto bg-emerald-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">12 New</span>
+                    <span class="ml-auto bg-emerald-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">{{ $availableFoodCount ?? 12 }} New</span>
                 </a>
-                <a href="#" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50 rounded-md transition-colors">
-                    <i data-lucide="map" class="w-4 h-4 text-zinc-400"></i>
+                <a href="{{ route('recipient.map-view') }}" class="flex items-center gap-3 px-3 py-2 text-sm font-medium {{ request()->is('recipient/map-view*') ? 'text-zinc-900 bg-zinc-100' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50' }} rounded-md transition-colors">
+                    <i data-lucide="map" class="w-4 h-4 {{ request()->is('recipient/map-view*') ? 'text-zinc-500' : 'text-zinc-400' }}"></i>
                     Map View
                 </a>
-                <a href="#" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50 rounded-md transition-colors">
-                    <i data-lucide="clock" class="w-4 h-4 text-zinc-400"></i>
-                    My Pickups
+                <a href="{{ route('recipient.my-matches') }}" class="flex items-center gap-3 px-3 py-2 text-sm font-medium {{ request()->is('recipient/my-matches*') ? 'text-zinc-900 bg-zinc-100' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50' }} rounded-md transition-colors">
+                    <i data-lucide="clock" class="w-4 h-4 {{ request()->is('recipient/my-matches*') ? 'text-zinc-500' : 'text-zinc-400' }}"></i>
+                    My Matches
                 </a>
             </nav>
         </div>
@@ -37,17 +37,13 @@
         <div>
             <h3 class="px-3 text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">Organization</h3>
             <nav class="space-y-1">
-                <a href="#" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50 rounded-md transition-colors">
-                    <i data-lucide="pie-chart" class="w-4 h-4 text-zinc-400"></i>
+                <a href="{{ route('recipient.impact-report') }}" class="flex items-center gap-3 px-3 py-2 text-sm font-medium {{ request()->is('recipient/impact-report*') ? 'text-zinc-900 bg-zinc-100' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50' }} rounded-md transition-colors">
+                    <i data-lucide="pie-chart" class="w-4 h-4 {{ request()->is('recipient/impact-report*') ? 'text-zinc-500' : 'text-zinc-400' }}"></i>
                     Impact Report
                 </a>
-                <a href="#" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50 rounded-md transition-colors">
-                    <i data-lucide="building-2" class="w-4 h-4 text-zinc-400"></i>
+                <a href="{{ route('recipient.ngo-profile') }}" class="flex items-center gap-3 px-3 py-2 text-sm font-medium {{ request()->is('recipient/ngo-profile*') ? 'text-zinc-900 bg-zinc-100' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50' }} rounded-md transition-colors">
+                    <i data-lucide="building-2" class="w-4 h-4 {{ request()->is('recipient/ngo-profile*') ? 'text-zinc-500' : 'text-zinc-400' }}"></i>
                     NGO Profile
-                </a>
-                <a href="#" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50 rounded-md transition-colors">
-                    <i data-lucide="settings" class="w-4 h-4 text-zinc-400"></i>
-                    Settings
                 </a>
             </nav>
         </div>
