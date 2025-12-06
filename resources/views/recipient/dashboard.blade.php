@@ -460,8 +460,60 @@
         alert('Full map view would open here');
     }
 
-    // Initialize Lucide icons
-    lucide.createIcons();
+    // Initialize Lucide icons with enhanced retry logic
+    function initializeIcons() {
+        const maxRetries = 10;
+        let retryCount = 0;
+
+        function tryInitializeIcons() {
+            console.log(`Lucide initialization attempt ${retryCount + 1}/${maxRetries}`);
+            console.log('Lucide type:', typeof lucide);
+
+            if (typeof lucide !== 'undefined' && lucide.createIcons) {
+                try {
+                    lucide.createIcons();
+                    console.log('Lucide icons initialized successfully');
+
+                    // Force refresh icons
+                    setTimeout(() => {
+                        const icons = document.querySelectorAll('[data-lucide]');
+                        console.log('Found icons:', icons.length);
+                        if (icons.length > 0) {
+                            lucide.createIcons();
+                            console.log('Icons refreshed successfully');
+                        }
+                    }, 200);
+
+                    return;
+                } catch (error) {
+                    console.error('Error initializing Lucide icons:', error);
+                }
+            } else if (retryCount < maxRetries) {
+                retryCount++;
+                console.log(`Lucide not loaded, retry ${retryCount}/${maxRetries}`);
+                setTimeout(tryInitializeIcons, 200);
+            } else {
+                console.error('Lucide icons failed to load after multiple attempts');
+
+                // Fallback: Try to load Lucide from CDN if not available
+                if (typeof lucide === 'undefined') {
+                    console.log('Attempting to load Lucide from CDN...');
+                    const script = document.createElement('script');
+                    script.src = 'https://unpkg.com/lucide@latest';
+                    script.onload = () => {
+                        console.log('Lucide loaded from CDN');
+                        lucide.createIcons();
+                    };
+                    script.onerror = () => {
+                        console.error('Failed to load Lucide from CDN');
+                    };
+                    document.head.appendChild(script);
+                }
+            }
+        }
+
+        tryInitializeIcons();
+    }
 
     // Load Google Maps script
     function loadGoogleMaps() {
@@ -472,7 +524,25 @@
         document.head.appendChild(script);
     }
 
-    // Load maps when page is ready
-    window.addEventListener('load', loadGoogleMaps);
-</script>
+    // Initialize everything when DOM is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM loaded, initializing...');
+
+        // Initialize icons immediately and with multiple delays
+        initializeIcons();
+
+        // Also initialize after different delays
+        setTimeout(() => initializeIcons(), 500);
+        setTimeout(() => initializeIcons(), 1000);
+        setTimeout(() => initializeIcons(), 2000);
+
+        loadGoogleMaps();
+    });
+
+    // Also initialize when the page is fully loaded
+    window.addEventListener('load', function() {
+        setTimeout(() => initializeIcons(), 300);
+    });
+
+    </script>
 @endsection
