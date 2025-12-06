@@ -63,9 +63,12 @@
                 <p class="text-sm font-medium text-zinc-900 truncate">{{ Auth::user()->name }}</p>
                 <p class="text-xs text-zinc-500 truncate">{{ Auth::user()->role === 'admin' ? 'System Administrator' : Auth::user()->role }}</p>
             </div>
-            <a href="{{ route('logout') }}" wire:navigate class="text-zinc-400 hover:text-zinc-600 transition-colors">
+            <a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('sidebar-logout-form').submit();" class="text-zinc-400 hover:text-zinc-600 transition-colors">
                 <i data-lucide="log-out" class="w-4 h-4"></i>
             </a>
+            <form id="sidebar-logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                @csrf
+            </form>
         </div>
     </div>
 </aside>

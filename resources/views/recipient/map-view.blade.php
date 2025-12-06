@@ -225,37 +225,49 @@
     function initLeafletMap() {
         const mapContainer = document.getElementById('map');
 
-        // Default location (Kuala Lumpur)
-        const defaultLocation = [3.1390, 101.6869];
+        // Use pinned location if available, otherwise default location (Kuala Lumpur)
+        let initialLocation = [3.1390, 101.6869]; // Default Kuala Lumpur
+
+        // Check if we have pinned location data from PHP
+        @if(isset($pinnedLocation))
+            initialLocation = [{{ $pinnedLocation['latitude'] }}, {{ $pinnedLocation['longitude'] }}];
+            userLocation = [{{ $pinnedLocation['latitude'] }}, {{ $pinnedLocation['longitude'] }}];
+        @endif
 
         // Initialize the map
-        map = L.map('map').setView(defaultLocation, 12);
+        map = L.map('map').setView(initialLocation, 12);
 
         // Add tile layer (OpenStreetMap)
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
-        // Try to get user location
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    userLocation = [position.coords.latitude, position.coords.longitude];
-                    updateUserLocation();
-                    loadFoodMarkers();
-                },
-                (error) => {
-                    console.log('Geolocation error:', error);
-                    userLocation = defaultLocation;
-                    updateUserLocation();
-                    loadFoodMarkers();
-                }
-            );
-        } else {
-            userLocation = defaultLocation;
+        // If no pinned location, try to get user's current location
+        @if(!isset($pinnedLocation))
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        userLocation = [position.coords.latitude, position.coords.longitude];
+                        updateUserLocation();
+                        loadFoodMarkers();
+                    },
+                    (error) => {
+                        console.log('Geolocation error:', error);
+                        userLocation = initialLocation;
+                        updateUserLocation();
+                        loadFoodMarkers();
+                    }
+                );
+            } else {
+                userLocation = initialLocation;
+                updateUserLocation();
+                loadFoodMarkers();
+            }
+        @else
+            // Use pinned location, don't try to get current location
             updateUserLocation();
             loadFoodMarkers();
-        }
+        @endif
     }
 
     function updateUserLocation() {
@@ -270,7 +282,12 @@
                 })
             }).addTo(map);
 
-            userMarker.bindPopup('Your Location').openPopup();
+            // Show appropriate popup text based on location type
+            @if(isset($pinnedLocation))
+                userMarker.bindPopup('{{ $pinnedLocation['name'] }}').openPopup();
+            @else
+                userMarker.bindPopup('Your Location').openPopup();
+            @endif
 
             // Add radius circle
             radiusCircle = L.circle(userLocation, {

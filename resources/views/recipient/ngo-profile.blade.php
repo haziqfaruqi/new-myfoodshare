@@ -141,6 +141,52 @@
                 </div>
             </div>
 
+            <!-- Location Settings -->
+            <div class="bg-white border border-zinc-200 rounded-xl shadow-sm p-6">
+                <h3 class="text-lg font-semibold text-zinc-900 mb-4">Location Settings</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-zinc-700 mb-2">Organization Location</label>
+                        <p class="text-sm text-zinc-600 mb-3">Pin your organization's location on the map below. This location will be used for food matching and will be displayed on your dashboard and map view.</p>
+
+                        <!-- Location Map -->
+                        <div class="relative">
+                            <div id="location-picker-map" class="w-full h-64 bg-gray-100 rounded-lg border border-zinc-200"></div>
+
+                            <!-- Current Location Display -->
+                            <div class="mt-3 p-3 bg-blue-50 rounded-lg">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-sm font-medium text-blue-900">Current Pinned Location</p>
+                                        <p class="text-xs text-blue-700" id="current-location-text">No location set</p>
+                                    </div>
+                                    <button type="button" onclick="clearLocation()" class="text-xs text-red-600 hover:text-red-700">
+                                        <i data-lucide="x" class="w-4 h-4 inline mr-1"></i>
+                                        Clear
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Location Input Fields -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                            <div>
+                                <label class="block text-sm font-medium text-zinc-700 mb-2">Latitude</label>
+                                <input type="text" id="latitude-input" class="w-full px-3 py-2 border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., 3.1390">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-zinc-700 mb-2">Longitude</label>
+                                <input type="text" id="longitude-input" class="w-full px-3 py-2 border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., 101.6869">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-zinc-700 mb-2">Location Name</label>
+                                <input type="text" id="location-name-input" class="w-full px-3 py-2 border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., Main Office">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Documents -->
             <div class="bg-white border border-zinc-200 rounded-xl shadow-sm p-6">
                 <h3 class="text-lg font-semibold text-zinc-900 mb-4">Required Documents</h3>
@@ -189,11 +235,144 @@
 @endsection
 
 @section('scripts')
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
 <script>
+    let locationMap;
+    let locationMarker;
+    let currentLocation = null;
+
     // Initialize Lucide icons
     document.addEventListener('DOMContentLoaded', function() {
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();
+        }
+
+        // Initialize location picker map
+        initLocationPickerMap();
+
+        // Load current saved location
+        loadCurrentLocation();
+    });
+
+    function initLocationPickerMap() {
+        // Initialize map with default Kuala Lumpur location
+        locationMap = L.map('location-picker-map').setView([3.1390, 101.6869], 12);
+
+        // Add tile layer (OpenStreetMap)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(locationMap);
+
+        // Add click event to map
+        locationMap.on('click', function(e) {
+            selectLocation(e.latlng.lat, e.latlng.lng);
+        });
+
+        // Add marker click event
+        locationMap.on('click', function(e) {
+            if (e.originalEvent.target.classList.contains('leaflet-marker-icon')) {
+                return; // Don't create new marker when clicking on existing one
+            }
+            selectLocation(e.latlng.lat, e.latlng.lng);
+        });
+    }
+
+    function selectLocation(lat, lng) {
+        // Remove existing marker
+        if (locationMarker) {
+            locationMap.removeLayer(locationMarker);
+        }
+
+        // Add new marker
+        locationMarker = L.marker([lat, lng], {
+            icon: L.divIcon({
+                className: 'location-marker',
+                html: '<div style="background-color: #3B82F6; width: 24px; height: 24px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>',
+                iconSize: [24, 24],
+                iconAnchor: [12, 12]
+            })
+        }).addTo(locationMap);
+
+        // Update input fields
+        document.getElementById('latitude-input').value = lat.toFixed(6);
+        document.getElementById('longitude-input').value = lng.toFixed(6);
+
+        // Update location display
+        updateLocationDisplay(lat, lng);
+
+        // Make marker draggable
+        locationMarker.dragging.enable();
+        locationMarker.on('dragend', function(e) {
+            const position = e.target.getLatLng();
+            selectLocation(position.lat, position.lng);
+        });
+    }
+
+    function updateLocationDisplay(lat, lng) {
+        const locationText = document.getElementById('current-location-text');
+        if (lat && lng) {
+            const locationName = document.getElementById('location-name-input').value || 'Custom Location';
+            locationText.textContent = `${locationName} (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+        } else {
+            locationText.textContent = 'No location set';
+        }
+    }
+
+    function clearLocation() {
+        // Remove marker
+        if (locationMarker) {
+            locationMap.removeLayer(locationMarker);
+            locationMarker = null;
+        }
+
+        // Clear input fields
+        document.getElementById('latitude-input').value = '';
+        document.getElementById('longitude-input').value = '';
+        document.getElementById('location-name-input').value = '';
+
+        // Update location display
+        document.getElementById('current-location-text').textContent = 'No location set';
+
+        // Reset map view
+        locationMap.setView([3.1390, 101.6869], 12);
+    }
+
+    function loadCurrentLocation() {
+        // Load saved location from server if available
+        @json($recipientProfile)
+        if (recipientProfile && recipientProfile.latitude && recipientProfile.longitude) {
+            selectLocation(recipientProfile.latitude, recipientProfile.longitude);
+            document.getElementById('location-name-input').value = recipientProfile.location_name || '';
+        }
+    }
+
+    // Save location when inputs change
+    document.getElementById('latitude-input').addEventListener('input', function() {
+        const lat = parseFloat(this.value);
+        const lng = parseFloat(document.getElementById('longitude-input').value);
+        if (lat && lng) {
+            selectLocation(lat, lng);
+        }
+    });
+
+    document.getElementById('longitude-input').addEventListener('input', function() {
+        const lat = parseFloat(document.getElementById('latitude-input').value);
+        const lng = parseFloat(this.value);
+        if (lat && lng) {
+            selectLocation(lat, lng);
+        }
+    });
+
+    document.getElementById('location-name-input').addEventListener('input', function() {
+        const lat = parseFloat(document.getElementById('latitude-input').value);
+        const lng = parseFloat(document.getElementById('longitude-input').value);
+        if (lat && lng) {
+            updateLocationDisplay(lat, lng);
         }
     });
 </script>

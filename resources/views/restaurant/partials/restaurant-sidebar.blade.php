@@ -59,9 +59,12 @@
                     <span class="text-zinc-400 ml-1">(128)</span>
                 </div>
             </div>
-            <button class="text-zinc-400 hover:text-zinc-600">
-                <i data-lucide="more-vertical" class="w-4 h-4"></i>
-            </button>
+            <a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('restaurant-logout-form').submit();" class="text-zinc-400 hover:text-red-600 transition-colors">
+                <i data-lucide="log-out" class="w-4 h-4"></i>
+            </a>
+            <form id="restaurant-logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                @csrf
+            </form>
         </div>
     </div>
 </aside>

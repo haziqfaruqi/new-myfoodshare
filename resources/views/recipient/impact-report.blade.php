@@ -33,12 +33,12 @@
                 <div class="p-1.5 bg-emerald-500 rounded-lg">
                     <i data-lucide="leaf" class="w-4 h-4 text-white"></i>
                 </div>
-                <span class="text-xs font-medium text-emerald-700 bg-emerald-200 px-2 py-1 rounded-full">+12%</span>
+                <span class="text-xs font-medium text-emerald-700 bg-emerald-200 px-2 py-1 rounded-full">+{{ $monthlyRecoveryData->count() > 0 ? round(($monthlyRecoveryData->last()['meals'] - $monthlyRecoveryData->first()['meals']) / max($monthlyRecoveryData->first()['meals'], 1) * 100, 0) : 12 }}%</span>
             </div>
             <div class="space-y-1">
                 <p class="text-xs text-emerald-700">CO₂ Saved</p>
-                <p class="text-2xl font-bold text-emerald-900">847 kg</p>
-                <p class="text-xs text-emerald-600">Equivalent to 4 trees</p>
+                <p class="text-2xl font-bold text-emerald-900">{{ number_format($totalCO2Saved, 0) }} kg</p>
+                <p class="text-xs text-emerald-600">Equivalent to {{ round($totalCO2Saved / 200, 1) }} trees</p>
             </div>
         </div>
 
@@ -48,12 +48,12 @@
                 <div class="p-1.5 bg-orange-500 rounded-lg">
                     <i data-lucide="utensils" class="w-4 h-4 text-white"></i>
                 </div>
-                <span class="text-xs font-medium text-orange-700 bg-orange-200 px-2 py-1 rounded-full">+8%</span>
+                <span class="text-xs font-medium text-orange-700 bg-orange-200 px-2 py-1 rounded-full">+{{ $monthlyRecoveryData->count() > 0 ? round(($monthlyRecoveryData->last()['meals'] - $monthlyRecoveryData->first()['meals']) / max($monthlyRecoveryData->first()['meals'], 1) * 100, 0) : 8 }}%</span>
             </div>
             <div class="space-y-1">
                 <p class="text-xs text-orange-700">Meals Recovered</p>
-                <p class="text-2xl font-bold text-orange-900">1,242</p>
-                <p class="text-xs text-orange-600">This month</p>
+                <p class="text-2xl font-bold text-orange-900">{{ number_format($totalMealsRecovered, 0) }}</p>
+                <p class="text-xs text-orange-600">Total meals</p>
             </div>
         </div>
 
@@ -63,11 +63,11 @@
                 <div class="p-1.5 bg-blue-500 rounded-lg">
                     <i data-lucide="dollar-sign" class="w-4 h-4 text-white"></i>
                 </div>
-                <span class="text-xs font-medium text-blue-700 bg-blue-200 px-2 py-1 rounded-full">+15%</span>
+                <span class="text-xs font-medium text-blue-700 bg-blue-200 px-2 py-1 rounded-full">+{{ $monthlyRecoveryData->count() > 0 ? round(($monthlyRecoveryData->last()['money_saved'] - $monthlyRecoveryData->first()['money_saved']) / max($monthlyRecoveryData->first()['money_saved'], 1) * 100, 0) : 15 }}%</span>
             </div>
             <div class="space-y-1">
                 <p class="text-xs text-blue-700">Money Saved</p>
-                <p class="text-2xl font-bold text-blue-900">RM 62,100</p>
+                <p class="text-2xl font-bold text-blue-900">RM {{ number_format($totalMoneySaved, 0) }}</p>
                 <p class="text-xs text-blue-600">Total value</p>
             </div>
         </div>
@@ -82,7 +82,7 @@
             </div>
             <div class="space-y-1">
                 <p class="text-xs text-purple-700">People Helped</p>
-                <p class="text-2xl font-bold text-purple-900">892</p>
+                <p class="text-2xl font-bold text-purple-900">{{ number_format($peopleHelped, 0) }}</p>
                 <p class="text-xs text-purple-600">Lives impacted</p>
             </div>
         </div>
@@ -97,66 +97,58 @@
             <div class="bg-white border border-zinc-200 rounded-xl shadow-sm p-6">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="font-semibold text-zinc-900">Monthly Recovery Trend</h3>
-                    <select class="text-xs border border-zinc-200 rounded px-2 py-1">
-                        <option>2023</option>
-                        <option>2024</option>
+                    <select class="text-xs border border-zinc-200 rounded px-2 py-1" onchange="updateMonthlyChart(this.value)">
+                        <option>Last 6 Months</option>
+                        <option>Last 12 Months</option>
+                        <option>This Year</option>
                     </select>
                 </div>
                 <div class="h-64 flex items-center justify-center bg-zinc-50 rounded-lg">
-                    <p class="text-sm text-zinc-500">Chart visualization would appear here</p>
+                    @if($monthlyRecoveryData->count() > 0)
+                        <canvas id="monthlyRecoveryChart" width="400" height="200"></canvas>
+                    @else
+                        <div class="text-center">
+                            <i data-lucide="bar-chart-3" class="w-12 h-12 text-zinc-300 mx-auto mb-2"></i>
+                            <p class="text-sm text-zinc-500">No recovery data available yet</p>
+                            <p class="text-xs text-zinc-400 mt-1">Start completing pickups to see trends</p>
+                        </div>
+                    @endif
                 </div>
             </div>
 
             <!-- Food Categories Distribution -->
             <div class="bg-white border border-zinc-200 rounded-xl shadow-sm p-6">
                 <h3 class="font-semibold text-zinc-900 mb-4">Food Categories Distribution</h3>
-                <div class="space-y-3">
-                    <div class="flex items-center justify-between">
-                        <span class="text-sm text-zinc-700">Italian</span>
-                        <div class="flex items-center gap-3">
-                            <div class="w-32 bg-zinc-200 rounded-full h-2">
-                                <div class="bg-orange-500 h-2 rounded-full" style="width: 35%"></div>
+                @if($foodCategoryData->count() > 0)
+                    <div class="space-y-3">
+                        @php
+                            $totalMealsByCategory = $foodCategoryData->sum('count');
+                            $colors = ['#f97316', '#ef4444', '#eab308', '#22c55e', '#3b82f6', '#8b5cf6', '#ec4899', '#6b7280'];
+                        @endphp
+                        @foreach($foodCategoryData as $index => $categoryData)
+                            @php
+                                $percentage = $totalMealsByCategory > 0 ? round(($categoryData['count'] / $totalMealsByCategory) * 100, 1) : 0;
+                                $color = $colors[$index % count($colors)];
+                            @endphp
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-zinc-700">{{ $categoryData['category'] }}</span>
+                                <div class="flex items-center gap-3">
+                                    <div class="w-32 bg-zinc-200 rounded-full h-2">
+                                        <div class="h-2 rounded-full transition-all duration-500"
+                                             style="width: {{ $percentage }}%; background-color: {{ $color }}"></div>
+                                    </div>
+                                    <span class="text-sm text-zinc-600 w-12">{{ $percentage }}%</span>
+                                </div>
                             </div>
-                            <span class="text-sm text-zinc-600 w-12">35%</span>
-                        </div>
+                        @endforeach
                     </div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-sm text-zinc-700">Chinese</span>
-                        <div class="flex items-center gap-3">
-                            <div class="w-32 bg-zinc-200 rounded-full h-2">
-                                <div class="bg-red-500 h-2 rounded-full" style="width: 28%"></div>
-                            </div>
-                            <span class="text-sm text-zinc-600 w-12">28%</span>
-                        </div>
+                @else
+                    <div class="text-center py-8">
+                        <i data-lucide="package" class="w-12 h-12 text-zinc-300 mx-auto mb-2"></i>
+                        <p class="text-sm text-zinc-500">No category data available yet</p>
+                        <p class="text-xs text-zinc-400 mt-1">Food will be categorized as you complete pickups</p>
                     </div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-sm text-zinc-700">Indian</span>
-                        <div class="flex items-center gap-3">
-                            <div class="w-32 bg-zinc-200 rounded-full h-2">
-                                <div class="bg-yellow-500 h-2 rounded-full" style="width: 20%"></div>
-                            </div>
-                            <span class="text-sm text-zinc-600 w-12">20%</span>
-                        </div>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-sm text-zinc-700">Mexican</span>
-                        <div class="flex items-center gap-3">
-                            <div class="w-32 bg-zinc-200 rounded-full h-2">
-                                <div class="bg-green-500 h-2 rounded-full" style="width: 12%"></div>
-                            </div>
-                            <span class="text-sm text-zinc-600 w-12">12%</span>
-                        </div>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-sm text-zinc-700">American</span>
-                        <div class="flex items-center gap-3">
-                            <div class="w-32 bg-zinc-200 rounded-full h-2">
-                                <div class="bg-blue-500 h-2 rounded-full" style="width: 5%"></div>
-                            </div>
-                            <span class="text-sm text-zinc-600 w-12">5%</span>
-                        </div>
-                    </div>
-                </div>
+                @endif
             </div>
 
             <!-- Environmental Impact Timeline -->
@@ -204,20 +196,20 @@
                         <span class="text-sm text-zinc-600">Average Rating</span>
                         <div class="flex items-center gap-1">
                             <i data-lucide="star" class="w-4 h-4 text-amber-500"></i>
-                            <span class="font-medium">4.8</span>
+                            <span class="font-medium">{{ $keyStats['averageRating'] }}</span>
                         </div>
                     </div>
                     <div class="flex justify-between items-center">
                         <span class="text-sm text-zinc-600">Success Rate</span>
-                        <span class="font-medium text-emerald-600">94%</span>
+                        <span class="font-medium text-emerald-600">{{ $keyStats['successRate'] }}%</span>
                     </div>
                     <div class="flex justify-between items-center">
                         <span class="text-sm text-zinc-600">Avg. Response Time</span>
-                        <span class="font-medium">2.3 hours</span>
+                        <span class="font-medium">{{ $keyStats['avgResponseTime'] }} hours</span>
                     </div>
                     <div class="flex justify-between items-center">
                         <span class="text-sm text-zinc-600">Partner Restaurants</span>
-                        <span class="font-medium">24</span>
+                        <span class="font-medium">{{ $keyStats['partnerRestaurants'] }}</span>
                     </div>
                 </div>
             </div>
@@ -258,12 +250,118 @@
 @endsection
 
 @section('scripts')
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     // Initialize Lucide icons
     document.addEventListener('DOMContentLoaded', function() {
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();
         }
+
+        // Initialize Monthly Recovery Chart
+        initMonthlyRecoveryChart();
     });
+
+    function initMonthlyRecoveryChart() {
+        const ctx = document.getElementById('monthlyRecoveryChart');
+        if (!ctx) return;
+
+        @if($monthlyRecoveryData->count() > 0)
+            const monthlyData = @json($monthlyRecoveryData);
+            const labels = monthlyData.map(item => {
+                const date = new Date(item.month + '-01');
+                return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+            });
+            const mealsData = monthlyData.map(item => item.meals);
+            const co2Data = monthlyData.map(item => item.co2_saved);
+            const moneyData = monthlyData.map(item => item.money_saved);
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Meals Recovered',
+                        data: mealsData,
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }, {
+                        label: 'CO₂ Saved (kg)',
+                        data: co2Data,
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        yAxisID: 'y1'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        if (context.dataset.label.includes('CO₂')) {
+                                            label += context.parsed.y.toFixed(1) + ' kg';
+                                        } else if (context.dataset.label.includes('Money')) {
+                                            label += 'RM ' + context.parsed.y.toFixed(2);
+                                        } else {
+                                            label += context.parsed.y;
+                                        }
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Meals'
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'CO₂ Saved (kg)'
+                            },
+                            grid: {
+                                drawOnChartArea: false,
+                            },
+                        }
+                    }
+                }
+            });
+        @endif
+    }
+
+    function updateMonthlyChart(period) {
+        // Placeholder for chart update functionality
+        console.log('Updating chart for period:', period);
+        // In a real implementation, this would fetch new data based on the selected period
+    }
 </script>
 @endsection

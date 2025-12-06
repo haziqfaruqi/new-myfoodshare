@@ -20,5 +20,14 @@
             <i data-lucide="bell" class="w-5 h-5"></i>
             <span class="absolute top-0 right-0 w-2 h-2 bg-rose-500 rounded-full border-2 border-white"></span>
         </button>
+        <a href="{{ route('logout') }}"
+           class="px-3 py-1.5 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
+           onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+            <i data-lucide="log-out" class="w-4 h-4 inline mr-1"></i>
+            Logout
+        </a>
+        <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+            @csrf
+        </form>
     </div>
 </header>

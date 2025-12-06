@@ -383,9 +383,24 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
 
-        // Get user's location
-        $userLat = $user->latitude;
-        $userLon = $user->longitude;
+        // Get recipient profile for pinned location
+        $recipientProfile = $user->recipient;
+        $pinnedLocation = null;
+
+        if ($recipientProfile && $recipientProfile->latitude && $recipientProfile->longitude) {
+            // Use NGO's pinned location
+            $userLat = $recipientProfile->latitude;
+            $userLon = $recipientProfile->longitude;
+            $pinnedLocation = [
+                'latitude' => $recipientProfile->latitude,
+                'longitude' => $recipientProfile->longitude,
+                'name' => $recipientProfile->location_name ?? 'Organization Location'
+            ];
+        } else {
+            // Fallback to user's current location
+            $userLat = $user->latitude;
+            $userLon = $user->longitude;
+        }
 
         // Get available food listings within 5km radius
         $nearbyFoodListings = collect();
@@ -433,7 +448,7 @@ class DashboardController extends Controller
         // Share available food count with all recipient views
         view()->share('availableFoodCount', $availableFoodCount);
 
-        return view('recipient.dashboard', compact('stats', 'nearbyFoodListings', 'upcomingPickups'));
+        return view('recipient.dashboard', compact('stats', 'nearbyFoodListings', 'upcomingPickups', 'pinnedLocation'));
     }
 
     /**
@@ -532,9 +547,18 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
 
-        // Get user's location
-        $userLat = $user->latitude;
-        $userLon = $user->longitude;
+        // Get recipient profile for pinned location
+        $recipientProfile = $user->recipient;
+
+        if ($recipientProfile && $recipientProfile->latitude && $recipientProfile->longitude) {
+            // Use NGO's pinned location
+            $userLat = $recipientProfile->latitude;
+            $userLon = $recipientProfile->longitude;
+        } else {
+            // Fallback to user's current location
+            $userLat = $user->latitude;
+            $userLon = $user->longitude;
+        }
 
         // Get available food listings within 5km radius
         $nearbyFoodListings = collect();
@@ -638,9 +662,24 @@ class DashboardController extends Controller
      */
     public function mapView()
     {
+        $user = auth()->user();
+
+        // Get recipient profile for pinned location
+        $recipientProfile = $user->recipient;
+        $pinnedLocation = null;
+
+        if ($recipientProfile && $recipientProfile->latitude && $recipientProfile->longitude) {
+            $pinnedLocation = [
+                'latitude' => $recipientProfile->latitude,
+                'longitude' => $recipientProfile->longitude,
+                'name' => $recipientProfile->location_name ?? 'Organization Location'
+            ];
+        }
+
         $availableFoodCount = $this->getAvailableFoodCount();
         view()->share('availableFoodCount', $availableFoodCount);
-        return view('recipient.map-view');
+
+        return view('recipient.map-view', compact('pinnedLocation'));
     }
 
     /**
@@ -688,13 +727,157 @@ class DashboardController extends Controller
 
         $peopleHelped = $completedMatches->count(); // Simple approximation
 
+        // Get monthly recovery data for charts
+        $monthlyRecoveryData = $this->getMonthlyRecoveryData();
+
+        // Get food category distribution
+        $foodCategoryData = $this->getFoodCategoryDistribution();
+
+        // Get key statistics
+        $keyStats = $this->getKeyImpactStatistics();
+
         // Get available food count for sidebar
         $availableFoodCount = $this->getAvailableFoodCount();
         view()->share('availableFoodCount', $availableFoodCount);
 
         return view('recipient.impact-report', compact(
-            'totalCO2Saved', 'totalMealsRecovered', 'totalMoneySaved', 'peopleHelped', 'completedMatches'
+            'totalCO2Saved', 'totalMealsRecovered', 'totalMoneySaved', 'peopleHelped',
+            'completedMatches', 'monthlyRecoveryData', 'foodCategoryData', 'keyStats'
         ));
+    }
+
+    /**
+     * Get monthly recovery data for charts.
+     */
+    private function getMonthlyRecoveryData()
+    {
+        $user = auth()->user();
+
+        if (!$user->recipient) {
+            return collect();
+        }
+
+        // Get completed matches grouped by month
+        return $user->recipient->matches()
+            ->where('status', 'completed')
+            ->where('completed_at', '>=', now()->subMonths(6))
+            ->orderBy('completed_at')
+            ->get()
+            ->groupBy(function($match) {
+                return $match->completed_at->format('Y-m');
+            })
+            ->map(function($matches, $month) {
+                return [
+                    'month' => $month,
+                    'meals' => $matches->count(),
+                    'co2_saved' => $matches->sum(function($match) {
+                        return $match->foodListing->estimated_co2_saved ?? 0;
+                    }),
+                    'money_saved' => $matches->sum(function($match) {
+                        return $match->foodListing->estimated_value ?? 0;
+                    })
+                ];
+            });
+    }
+
+    /**
+     * Get food category distribution data.
+     */
+    private function getFoodCategoryDistribution()
+    {
+        $user = auth()->user();
+
+        if (!$user->recipient) {
+            return collect();
+        }
+
+        // Define the specific categories requested by user
+        $preferredCategories = ['Prepared Meals', 'Bakery', 'Produce', 'Dairy', 'Canned Goods'];
+
+        // Get completed matches with food listing categories
+        $completedMatches = $user->recipient->matches()
+            ->where('status', 'completed')
+            ->whereHas('foodListing', function($query) {
+                $query->whereNotNull('category');
+            })
+            ->with('foodListing')
+            ->get();
+
+        // Group matches by category and count
+        $categoryData = $completedMatches->groupBy(function($match) {
+            $category = $match->foodListing->category;
+            // Normalize category names to match preferred categories
+            if (stripos($category, 'meal') !== false || stripos($category, 'food') !== false || stripos($category, 'ready') !== false) {
+                return 'Prepared Meals';
+            } elseif (stripos($category, 'bakery') !== false || stripos($category, 'bread') !== false || stripos($category, 'pastry') !== false) {
+                return 'Bakery';
+            } elseif (stripos($category, 'produce') !== false || stripos($category, 'fruit') !== false || stripos($category, 'vegetable') !== false) {
+                return 'Produce';
+            } elseif (stripos($category, 'dairy') !== false || stripos($category, 'milk') !== false || stripos($category, 'cheese') !== false || stripos($category, 'yogurt') !== false) {
+                return 'Dairy';
+            } elseif (stripos($category, 'canned') !== false || stripos($category, 'tin') !== false) {
+                return 'Canned Goods';
+            }
+            return $category; // Keep original name if it doesn't match any preferred categories
+        });
+
+        // Map to the preferred categories structure
+        return collect($preferredCategories)
+            ->map(function($preferredCategory) use ($categoryData) {
+                $matches = $categoryData->get($preferredCategory, collect());
+                return [
+                    'category' => $preferredCategory,
+                    'count' => $matches->count(),
+                    'percentage' => 0 // Will be calculated in view
+                ];
+            })
+            ->filter(function($item) {
+                return $item['count'] > 0; // Only include categories with data
+            })
+            ->sortByDesc('count');
+    }
+
+    /**
+     * Get key impact statistics.
+     */
+    private function getKeyImpactStatistics()
+    {
+        $user = auth()->user();
+
+        if (!$user->recipient) {
+            return [
+                'averageRating' => 0,
+                'successRate' => 0,
+                'avgResponseTime' => 0,
+                'partnerRestaurants' => 0
+            ];
+        }
+
+        $completedMatches = $user->recipient->matches()
+            ->where('status', 'completed')
+            ->count();
+
+        $totalMatches = $user->recipient->matches()->count();
+
+        $successRate = $totalMatches > 0 ? ($completedMatches / $totalMatches) * 100 : 0;
+
+        // Get unique restaurants helped
+        $partnerRestaurants = $user->recipient->matches()
+            ->where('status', 'completed')
+            ->whereHas('foodListing.restaurantProfile')
+            ->with('foodListing.restaurantProfile')
+            ->get()
+            ->unique(function($match) {
+                return $match->foodListing->restaurantProfile->id ?? $match->foodListing->creator_id;
+            })
+            ->count();
+
+        return [
+            'averageRating' => 4.8, // Placeholder - would need ratings system
+            'successRate' => round($successRate, 1),
+            'avgResponseTime' => 2.3, // Placeholder - would need response time tracking
+            'partnerRestaurants' => $partnerRestaurants
+        ];
     }
 
     /**

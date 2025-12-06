@@ -36,7 +36,7 @@
                 </div>
             </div>
             <div class="flex items-baseline gap-2">
-                <span class="text-2xl font-bold text-zinc-900">24</span>
+                <span class="text-2xl font-bold text-zinc-900">{{ $matches->count() }}</span>
                 <span class="text-xs font-medium text-zinc-500">All time</span>
             </div>
         </div>
@@ -49,7 +49,7 @@
                 </div>
             </div>
             <div class="flex items-baseline gap-2">
-                <span class="text-2xl font-bold text-zinc-900">3</span>
+                <span class="text-2xl font-bold text-zinc-900">{{ $matches->where('status', 'pending')->count() }}</span>
                 <span class="text-xs font-medium text-amber-600">Waiting approval</span>
             </div>
         </div>
@@ -62,7 +62,7 @@
                 </div>
             </div>
             <div class="flex items-baseline gap-2">
-                <span class="text-2xl font-bold text-zinc-900">5</span>
+                <span class="text-2xl font-bold text-zinc-900">{{ $matches->whereIn('status', ['approved', 'scheduled'])->count() }}</span>
                 <span class="text-xs font-medium text-emerald-600">Scheduled</span>
             </div>
         </div>
@@ -75,7 +75,7 @@
                 </div>
             </div>
             <div class="flex items-baseline gap-2">
-                <span class="text-2xl font-bold text-zinc-900">16</span>
+                <span class="text-2xl font-bold text-zinc-900">{{ $matches->where('status', 'completed')->count() }}</span>
                 <span class="text-xs font-medium text-zinc-500">Successfully picked up</span>
             </div>
         </div>
@@ -84,144 +84,130 @@
     <!-- Matches List -->
     <div class="flex-1 overflow-y-auto px-6 md:px-8 pb-6">
         <div class="space-y-4">
-            <!-- Match Item 1 -->
+            @foreach ($matches as $match)
+            @php
+                $foodListing = $match->foodListing;
+                $restaurantName = $foodListing->restaurantProfile->restaurant_name ?? $foodListing->creator->name;
+                $foodType = $foodListing->food_type ?? 'Food';
+                $quantity = $foodListing->quantity ?? 'N/A';
+                $unit = $foodListing->unit ?? 'units';
+                $pickupScheduledAt = $match->pickup_scheduled_at;
+                $distance = $match->distance;
+                $status = $match->status;
+                $rating = $match->rating ?? 0;
+            @endphp
             <div class="bg-white rounded-xl border border-zinc-200 shadow-sm p-6">
                 <div class="flex items-start justify-between mb-4">
                     <div class="flex gap-4">
-                        <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <i data-lucide="restaurant" class="w-6 h-6 text-orange-600"></i>
+                        {{-- Status Icon --}}
+                        <div class="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0
+                            @if($status == 'pending')
+                                bg-amber-100
+                            @elseif($status == 'approved' || $status == 'scheduled')
+                                bg-emerald-100
+                            @elseif($status == 'completed')
+                                bg-green-100
+                            @else
+                                bg-zinc-100
+                            @endif">
+                            <i data-lucide="@if($status == 'pending') clock @elseif($status == 'approved' || $status == 'scheduled') check-circle @elseif($status == 'completed') utensils @else clock @endif"
+                               class="w-6 h-6
+                                    @if($status == 'pending') text-amber-600
+                                    @elseif($status == 'approved' || $status == 'scheduled') text-emerald-600
+                                    @elseif($status == 'completed') text-green-600
+                                    @else text-zinc-600 @endif"></i>
                         </div>
                         <div class="flex-1">
                             <div class="flex items-center gap-3 mb-1">
-                                <h3 class="font-semibold text-zinc-900">Classic Pizza Restaurant</h3>
-                                <span class="bg-amber-100 text-amber-800 text-xs font-medium px-2 py-1 rounded-full">Pending</span>
+                                <h3 class="font-semibold text-zinc-900">{{ $restaurantName }}</h3>
+                                <span class="@if($status == 'pending') bg-amber-100 text-amber-800
+                                            @elseif($status == 'approved' || $status == 'scheduled') bg-emerald-100 text-emerald-800
+                                            @elseif($status == 'completed') bg-green-100 text-green-800
+                                            @else bg-zinc-100 text-zinc-800 @endif
+                                            text-xs font-medium px-2 py-1 rounded-full">
+                                    {{ ucfirst($status) }}
+                                </span>
+                                {{-- Ready badge for approved matches that are due --}}
+                                @if($status == 'approved' && $pickupScheduledAt && $pickupScheduledAt <= now())
+                                    <span class="bg-white text-emerald-700 text-[8px] font-bold px-1.5 py-0.5 rounded shadow-sm uppercase">Ready</span>
+                                @endif
                             </div>
-                            <p class="text-sm text-zinc-600 mb-2">2 Large Pepperoni Pizzas</p>
+                            <p class="text-sm text-zinc-600 mb-2">{{ $quantity }} {{ $unit }} of {{ $foodType }}</p>
                             <div class="flex items-center gap-4 text-xs text-zinc-500">
-                                <span class="flex items-center gap-1">
-                                    <i data-lucide="calendar" class="w-3 h-3"></i>
-                                    Today, 6:00 PM
-                                </span>
-                                <span class="flex items-center gap-1">
-                                    <i data-lucide="map-pin" class="w-3 h-3"></i>
-                                    1.2 km away
-                                </span>
+                                @if($pickupScheduledAt)
+                                    <span class="flex items-center gap-1">
+                                        <i data-lucide="calendar" class="w-3 h-3"></i>
+                                        {{ \Carbon\Carbon::parse($pickupScheduledAt)->format('M j, Y g:i A') }}
+                                    </span>
+                                @endif
+                                @if($distance)
+                                    <span class="flex items-center gap-1">
+                                        <i data-lucide="map-pin" class="w-3 h-3"></i>
+                                        {{ $distance }} km away
+                                    </span>
+                                @endif
                                 <span class="flex items-center gap-1">
                                     <i data-lucide="package" class="w-3 h-3"></i>
-                                    Quantity: 2
+                                    Quantity: {{ $quantity }}
                                 </span>
+                                {{-- Show rating for completed matches --}}
+                                @if($status == 'completed' && $rating > 0)
+                                    <span class="flex items-center gap-1">
+                                        <i data-lucide="star" class="w-3 h-3 text-amber-500"></i>
+                                        Rated {{ $rating }}/5
+                                    </span>
+                                @endif
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="flex gap-3">
-                    <button class="px-4 py-2 border border-zinc-300 text-zinc-700 rounded-lg text-sm font-medium hover:bg-zinc-50 transition-colors">
-                        <i data-lucide="message-circle" class="w-4 h-4 inline mr-2"></i>
-                        Message Restaurant
-                    </button>
-                    <button class="px-4 py-2 bg-zinc-900 text-white rounded-lg text-sm font-medium hover:bg-zinc-800 transition-colors">
-                        <i data-lucide="phone" class="w-4 h-4 inline mr-2"></i>
-                        Call Restaurant
-                    </button>
+                    {{-- Action buttons based on status --}}
+                    @if($status == 'approved' && $pickupScheduledAt && $pickupScheduledAt <= now())
+                        <button onclick="openVerificationModal('{{ $restaurantName }}', {{ $match->id }})"
+                                class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors">
+                            <i data-lucide="scan-line" class="w-4 h-4 inline mr-2"></i>
+                            Verify Pickup
+                        </button>
+                    @endif
+
+                    @if($status != 'completed')
+                        <button class="px-4 py-2 bg-white border border-zinc-300 text-zinc-700 rounded-lg text-sm font-medium hover:bg-zinc-50 transition-colors">
+                            <i data-lucide="message-circle" class="w-4 h-4 inline mr-2"></i>
+                            Message Restaurant
+                        </button>
+                        <button class="px-4 py-2 border border-zinc-300 text-zinc-700 rounded-lg text-sm font-medium hover:bg-zinc-50 transition-colors">
+                            <i data-lucide="phone" class="w-4 h-4 inline mr-2"></i>
+                            Call Restaurant
+                        </button>
+                    @else
+                        <button class="px-4 py-2 bg-green-100 text-green-700 rounded-lg text-sm font-medium hover:bg-green-200 transition-colors">
+                            <i data-lucide="eye" class="w-4 h-4 inline mr-2"></i>
+                            View Details
+                        </button>
+                        <button class="px-4 py-2 bg-white border border-zinc-300 text-zinc-700 rounded-lg text-sm font-medium hover:bg-zinc-50 transition-colors">
+                            <i data-lucide="repeat" class="w-4 h-4 inline mr-2"></i>
+                            Request Again
+                        </button>
+                    @endif
                 </div>
             </div>
+            @endforeach
 
-            <!-- Match Item 2 -->
-            <div class="bg-white rounded-xl border border-zinc-200 shadow-sm p-6">
-                <div class="flex items-start justify-between mb-4">
-                    <div class="flex gap-4">
-                        <div class="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <i data-lucide="check-circle" class="w-6 h-6 text-emerald-600"></i>
-                        </div>
-                        <div class="flex-1">
-                            <div class="flex items-center gap-3 mb-1">
-                                <h3 class="font-semibold text-zinc-900">Burger Palace</h3>
-                                <span class="bg-emerald-100 text-emerald-800 text-xs font-medium px-2 py-1 rounded-full">Scheduled</span>
-                            </div>
-                            <p class="text-sm text-zinc-600 mb-2">20 Cheeseburgers & Fries</p>
-                            <div class="flex items-center gap-4 text-xs text-zinc-500">
-                                <span class="flex items-center gap-1">
-                                    <i data-lucide="calendar" class="w-3 h-3"></i>
-                                    Tomorrow, 2:00 PM
-                                </span>
-                                <span class="flex items-center gap-1">
-                                    <i data-lucide="map-pin" class="w-3 h-3"></i>
-                                    2.5 km away
-                                </span>
-                                <span class="flex items-center gap-1">
-                                    <i data-lucide="package" class="w-3 h-3"></i>
-                                    Quantity: 20
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="flex gap-3">
-                    <button onclick="openVerificationModal('Burger Palace', 1247)" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors">
-                        <i data-lucide="scan-line" class="w-4 h-4 inline mr-2"></i>
-                        Verify Pickup
-                    </button>
-                    <button class="px-4 py-2 bg-white border border-zinc-300 text-zinc-700 rounded-lg text-sm font-medium hover:bg-zinc-50 transition-colors">
-                        <i data-lucide="message-circle" class="w-4 h-4 inline mr-2"></i>
-                        Message Restaurant
-                    </button>
-                </div>
-            </div>
-
-            <!-- Match Item 3 -->
-            <div class="bg-white rounded-xl border border-zinc-200 shadow-sm p-6">
-                <div class="flex items-start justify-between mb-4">
-                    <div class="flex gap-4">
-                        <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <i data-lucide="utensils" class="w-6 h-6 text-green-600"></i>
-                        </div>
-                        <div class="flex-1">
-                            <div class="flex items-center gap-3 mb-1">
-                                <h3 class="font-semibold text-zinc-900">Thai Garden Restaurant</h3>
-                                <span class="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">Completed</span>
-                            </div>
-                            <p class="text-sm text-zinc-600 mb-2">Pad Thai & Spring Rolls</p>
-                            <div class="flex items-center gap-4 text-xs text-zinc-500">
-                                <span class="flex items-center gap-1">
-                                    <i data-lucide="calendar" class="w-3 h-3"></i>
-                                    Dec 28, 2023
-                                </span>
-                                <span class="flex items-center gap-1">
-                                    <i data-lucide="map-pin" class="w-3 h-3"></i>
-                                    3.1 km away
-                                </span>
-                                <span class="flex items-center gap-1">
-                                    <i data-lucide="star" class="w-3 h-3 text-amber-500"></i>
-                                    Rated 5/5
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="flex gap-3">
-                    <button class="px-4 py-2 bg-green-100 text-green-700 rounded-lg text-sm font-medium">
-                        <i data-lucide="eye" class="w-4 h-4 inline mr-2"></i>
-                        View Details
-                    </button>
-                    <button class="px-4 py-2 bg-white border border-zinc-300 text-zinc-700 rounded-lg text-sm font-medium hover:bg-zinc-50 transition-colors">
-                        <i data-lucide="repeat" class="w-4 h-4 inline mr-2"></i>
-                        Request Again
-                    </button>
-                </div>
-            </div>
-
-            <!-- Empty State -->
+            {{-- Empty state --}}
+            @if ($matches->isEmpty())
             <div class="text-center py-12">
                 <i data-lucide="link" class="w-16 h-16 text-zinc-300 mx-auto mb-4"></i>
-                <h3 class="text-lg font-medium text-zinc-900 mb-2">No more matches</h3>
-                <p class="text-zinc-500 mb-6">You've caught up on all your current matches.</p>
+                <h3 class="text-lg font-medium text-zinc-900 mb-2">No matches found</h3>
+                <p class="text-zinc-500 mb-6">You haven't matched with any food listings yet.</p>
                 <div class="flex justify-center gap-3">
                     <a href="{{ route('recipient.available-food') }}" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
                         <i data-lucide="search" class="w-4 h-4 inline mr-2"></i>
-                        Browse More Food
+                        Browse Food
                     </a>
                 </div>
             </div>
+            @endif
         </div>
     </div>
 </div>

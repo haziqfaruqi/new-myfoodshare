@@ -324,130 +324,163 @@
     let userLocation = null;
     let foodMarkers = [];
 
-    // Initialize the map
-    function initMap() {
-        // Default location (will be overridden if user location is available)
-        const defaultLocation = { lat: 40.7128, lng: -74.0060 }; // New York
+    // Load Leaflet CSS and JS
+    function loadLeaflet() {
+        // Add Font Awesome for icons
+        const fontAwesomeLink = document.createElement('link');
+        fontAwesomeLink.rel = 'stylesheet';
+        fontAwesomeLink.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';
+        document.head.appendChild(fontAwesomeLink);
 
-        map = new google.maps.Map(document.getElementById('map'), {
-            zoom: 12,
-            center: defaultLocation,
-            styles: [
-                {
-                    featureType: 'poi',
-                    elementType: 'labels',
-                    stylers: [{ visibility: 'off' }]
-                }
-            ]
-        });
+        // Add Leaflet CSS
+        const cssLink = document.createElement('link');
+        cssLink.rel = 'stylesheet';
+        cssLink.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+        document.head.appendChild(cssLink);
 
-        // Try to get user location
-            if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    userLocation = {
-                        lat: position.coords.latitude,
-                        lng: position.coords.longitude
-                    };
-                    updateUserLocation();
-                },
-                (error) => {
-                    console.log('Geolocation error:', error);
-                    useDefaultLocation();
-                }
-            );
-        } else {
-            useDefaultLocation();
-        }
-
-        // Add food listings to map if they exist
-        @json($nearbyFoodListings)
-        if (foodListings && foodListings.length > 0) {
-            addFoodMarkersToMap(foodListings);
-        }
+        // Add Leaflet JS
+        const script = document.createElement('script');
+        script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+        script.async = true;
+        script.defer = true;
+        script.onload = initLeafletMap;
+        document.head.appendChild(script);
     }
 
-    function useDefaultLocation() {
-        userLocation = { lat: 40.7128, lng: -74.0060 };
-        updateUserLocation();
+    // Initialize Leaflet map
+    function initLeafletMap() {
+        const mapContainer = document.getElementById('map');
+
+        // Use pinned location if available, otherwise default location (Kuala Lumpur)
+        let initialLocation = [3.1390, 101.6869]; // Default Kuala Lumpur
+
+        // Check if we have pinned location data from PHP
+        @if(isset($pinnedLocation))
+            initialLocation = [{{ $pinnedLocation['latitude'] }}, {{ $pinnedLocation['longitude'] }}];
+            userLocation = [{{ $pinnedLocation['latitude'] }}, {{ $pinnedLocation['longitude'] }}];
+        @endif
+
+        // Initialize the map
+        map = L.map('map').setView(initialLocation, 12);
+
+        // Add tile layer (OpenStreetMap)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // If no pinned location, try to get user's current location
+        @if(!isset($pinnedLocation))
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        userLocation = [position.coords.latitude, position.coords.longitude];
+                        updateUserLocation();
+                        loadFoodMarkers();
+                    },
+                    (error) => {
+                        console.log('Geolocation error:', error);
+                        userLocation = initialLocation;
+                        updateUserLocation();
+                        loadFoodMarkers();
+                    }
+                );
+            } else {
+                userLocation = initialLocation;
+                updateUserLocation();
+                loadFoodMarkers();
+            }
+        @else
+            // Use pinned location, don't try to get current location
+            updateUserLocation();
+            loadFoodMarkers();
+        @endif
     }
 
     function updateUserLocation() {
         if (userLocation) {
             // Add user location marker
-            new google.maps.Marker({
-                position: userLocation,
-                map: map,
-                title: 'Your Location',
-                icon: {
-                    url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAiIGhlaWdodD0iMzAiIHZpZXdCb3g9IjAgMCAzIDMwIiBmaWxsPSIjZTVlN2ViIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMyIgaGVpZ2h0PSIyIiBmaWxsPSIjNWFhN2RiIi8+Cjx0ZXh0IHg9IjUiIHk9IjUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iI2MxYzNjMyI+PC90ZXh0Pgo8L3N2Zz4=',
-                    scaledSize: new google.maps.Size(24, 24)
-                }
-            });
+            const userMarker = L.marker(userLocation, {
+                icon: L.divIcon({
+                    className: 'user-location-marker',
+                    html: '<div style="background-color: #3B82F6; width: 24px; height: 24px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>',
+                    iconSize: [24, 24],
+                    iconAnchor: [12, 12]
+                })
+            }).addTo(map);
+
+            // Show appropriate popup text based on location type
+            @if(isset($pinnedLocation))
+                userMarker.bindPopup('{{ $pinnedLocation['name'] }}').openPopup();
+            @else
+                userMarker.bindPopup('Your Location').openPopup();
+            @endif
 
             // Center map on user location
-            map.setCenter(userLocation);
+            map.setView(userLocation, 12);
+        }
+    }
 
-            // Add sample food locations if none from database
-            if (foodMarkers.length === 0) {
-                addSampleFoodLocations();
+    function loadFoodMarkers() {
+        @json($nearbyFoodListings)
+        // Add markers for each food location
+        if (foodListings && foodListings.length > 0) {
+            foodListings.forEach(listing => {
+                if (listing.latitude && listing.longitude) {
+                    const marker = L.marker([parseFloat(listing.latitude), parseFloat(listing.longitude)], {
+                        icon: L.divIcon({
+                            className: 'food-marker',
+                            html: `<div style="background-color: #10b981; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
+                            iconSize: [20, 20],
+                            iconAnchor: [10, 10]
+                        })
+                    }).addTo(map);
+
+                    marker.bindPopup(`
+                        <div style="min-width: 200px;">
+                            <h3 style="margin: 0 0 8px 0; font-weight: 600; color: #1f2937;">${listing.restaurantProfile?.restaurant_name || listing.creator?.name}</h3>
+                            <p style="margin: 0 0 8px 0; color: #6b7280;">${listing.food_type || 'Food'} • ${listing.quantity}</p>
+                            <p style="margin: 0 0 8px 0; color: #374151; font-size: 14px;">
+                                <i class="fas fa-location-arrow" style="margin-right: 4px;"></i>
+                                ${listing.distance} km away
+                            </p>
+                            <button onclick="requestFood(${listing.id})" style="background-color: #3b82f6; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                                Request Food
+                            </button>
+                        </div>
+                    `);
+
+                    foodMarkers.push(marker);
+                }
+            });
+        } else {
+            // Add sample markers if no real data
+            if (userLocation) {
+                const sampleLocations = [
+                    { lat: userLocation[0] + 0.01, lng: userLocation[1] + 0.01, name: 'Sample Restaurant 1' },
+                    { lat: userLocation[0] - 0.01, lng: userLocation[1] + 0.01, name: 'Sample Restaurant 2' },
+                    { lat: userLocation[0] + 0.01, lng: userLocation[1] - 0.01, name: 'Sample Restaurant 3' }
+                ];
+
+                sampleLocations.forEach(location => {
+                    const marker = L.marker([location.lat, location.lng], {
+                        icon: L.divIcon({
+                            className: 'food-marker',
+                            html: `<div style="background-color: #10b981; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
+                            iconSize: [20, 20],
+                            iconAnchor: [10, 10]
+                        })
+                    }).addTo(map);
+
+                    marker.bindPopup(`<div style="min-width: 150px;"><h4 style="margin: 0 0 5px 0; font-weight: 600;">${location.name}</h4><p style="margin: 0; font-size: 12px; color: #666;">Sample food location</p></div>`);
+                    foodMarkers.push(marker);
+                });
             }
         }
     }
 
-    function addFoodMarkersToMap(foodListings) {
-        foodListings.forEach(listing => {
-            if (listing.latitude && listing.longitude) {
-                const marker = new google.maps.Marker({
-                    position: { lat: parseFloat(listing.latitude), lng: parseFloat(listing.longitude) },
-                    map: map,
-                    title: listing.restaurantProfile?.restaurant_name || listing.creator?.name,
-                    icon: {
-                        url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAiIGhlaWdodD0iMzAiIHZpZXdCb3g9IjAgMCAzIDMwIiBmaWxsPSIjOTdmZGE4IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMyIgaGVpZ2h0PSIyIiBmaWxsPSIjM2MxODNlIi8+Cjx0ZXh0IHg9IjUiIHk9IjUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iI2ZmZiI+PC90ZXh0Pgo8L3N2Zz4=',
-                        scaledSize: new google.maps.Size(24, 24)
-                    }
-                });
-
-                // Add info window
-                const infoWindow = new google.maps.InfoWindow({
-                    content: `
-                        <div style="padding: 10px;">
-                            <h4 style="margin: 0 0 5px 0; font-weight: 600;">${listing.restaurantProfile?.restaurant_name || listing.creator?.name}</h4>
-                            <p style="margin: 0 0 5px 0; font-size: 14px;">${listing.food_type || 'Food'} • ${listing.quantity}</p>
-                            <p style="margin: 0; font-size: 12px; color: #666;">${listing.distance} km away</p>
-                        </div>
-                    `
-                });
-
-                marker.addListener('click', () => {
-                    infoWindow.open(map, marker);
-                });
-
-                foodMarkers.push(marker);
-            }
-        });
-    }
-
-    function addSampleFoodLocations() {
-        const sampleLocations = [
-            { lat: userLocation.lat + 0.01, lng: userLocation.lng + 0.01, name: 'Sample Restaurant 1' },
-            { lat: userLocation.lat - 0.01, lng: userLocation.lng + 0.01, name: 'Sample Restaurant 2' },
-            { lat: userLocation.lat + 0.01, lng: userLocation.lng - 0.01, name: 'Sample Restaurant 3' }
-        ];
-
-        sampleLocations.forEach(location => {
-            const marker = new google.maps.Marker({
-                position: location,
-                map: map,
-                title: location.name,
-                icon: {
-                    url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAiIGhlaWdodD0iMzAiIHZpZXdCb3g9IjAgMCAzIDMwIiBmaWxsPSIjOTdmZGE4IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMyIgaGVpZ2h0PSIyIiBmaWxsPSIjM2MxODNlIi8+Cjx0ZXh0IHg9IjUiIHk9IjUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iI2ZmZiI+PC90ZXh0Pgo8L3N2Zz4=',
-                    scaledSize: new google.maps.Size(24, 24)
-                }
-            });
-
-            foodMarkers.push(marker);
-        });
+    function requestFood(foodId) {
+        // Navigate to request page
+        window.location.href = `/recipient/available-food`;
     }
 
     function openVerificationModal(restaurantName, orderId) {
@@ -456,8 +489,8 @@
     }
 
     function openFullMap() {
-        // Placeholder for full map functionality
-        alert('Full map view would open here');
+        // Navigate to full map view
+        window.location.href = '/recipient/map-view';
     }
 
     // Initialize Lucide icons with enhanced retry logic
@@ -515,15 +548,6 @@
         tryInitializeIcons();
     }
 
-    // Load Google Maps script
-    function loadGoogleMaps() {
-        const script = document.createElement('script');
-        script.src = 'https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap&libraries=places';
-        script.async = true;
-        script.defer = true;
-        document.head.appendChild(script);
-    }
-
     // Initialize everything when DOM is loaded
     document.addEventListener('DOMContentLoaded', function() {
         console.log('DOM loaded, initializing...');
@@ -536,7 +560,8 @@
         setTimeout(() => initializeIcons(), 1000);
         setTimeout(() => initializeIcons(), 2000);
 
-        loadGoogleMaps();
+        // Load Leaflet map
+        loadLeaflet();
     });
 
     // Also initialize when the page is fully loaded

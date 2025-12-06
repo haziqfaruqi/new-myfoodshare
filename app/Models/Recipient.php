@@ -14,6 +14,9 @@ class Recipient extends Model
         'organization_name',
         'contact_person',
         'address',
+        'latitude',
+        'longitude',
+        'location_name',
         'capacity',
         'dietary_requirements',
         'rating',
@@ -25,6 +28,8 @@ class Recipient extends Model
 
     protected $casts = [
         'rating' => 'decimal:1',
+        'latitude' => 'decimal:8',
+        'longitude' => 'decimal:8',
         'dietary_requirements' => 'array',
         'needs_preferences' => 'array',
         'created_at' => 'datetime',

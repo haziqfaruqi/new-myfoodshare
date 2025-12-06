@@ -128,7 +128,7 @@ return new class extends Migration
             if (!$existingRecipient) {
                 \App\Models\Recipient::create([
                     'user_id' => $user->id,
-                    'email' => $user->email,
+                    'email' => $user->email ?? $user->name . '@example.com', // Provide default email if null
                     'phone' => $user->phone ?? '',
                     'organization_name' => $user->organization_name ?? $user->name . ' Organization',
                     'contact_person' => $user->contact_person ?? $user->name,

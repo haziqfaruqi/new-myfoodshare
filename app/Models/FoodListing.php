@@ -32,6 +32,8 @@ class FoodListing extends Model
         'approved_by',
         'admin_notes',
         'qr_code_data',
+        'estimated_value',
+        'estimated_co2_saved',
         'created_at',
         'updated_at',
     ];
@@ -45,6 +47,8 @@ class FoodListing extends Model
         'longitude' => 'decimal:8',
         'approved_at' => 'datetime',
         'qr_code_data' => 'json',
+        'estimated_value' => 'decimal:2',
+        'estimated_co2_saved' => 'decimal:2',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
