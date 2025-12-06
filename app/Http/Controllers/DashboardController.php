@@ -363,23 +363,70 @@ class DashboardController extends Controller
     /**
      * Recipient dashboard.
      */
+    /**
+     * Calculate distance between two coordinates.
+     */
+    private function calculateDistance($lat1, $lon1, $lat2, $lon2)
+    {
+        $earthRadius = 6371; // Earth's radius in kilometers
+
+        $dLat = deg2rad($lat2 - $lat1);
+        $dLon = deg2rad($lon2 - $lat1);
+
+        $a = sin($dLat/2) * sin($dLat/2) + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($dLon/2) * sin($dLon/2);
+        $c = 2 * atan2(sqrt($a), sqrt(1-$a));
+
+        return $earthRadius * $c;
+    }
+
     public function recipientDashboard()
     {
         $user = auth()->user();
 
-        $stats = [
-            'active_matches' => $user->recipient ? $user->recipient->matches()->where('status', 'confirmed')->count() : 0,
-            'completed_pickups' => $user->recipient ? $user->recipient->matches()->where('status', 'completed')->count() : 0,
-            'total_food_received' => $user->recipient ? $user->recipient->matches()->where('status', 'completed')->count() : 0,
-        ];
+        // Get user's location
+        $userLat = $user->latitude;
+        $userLon = $user->longitude;
 
-        $recentMatches = $user->recipient ? $user->recipient->matches()
-            ->with('foodListing')
-            ->orderBy('created_at', 'desc')
-            ->take(5)
+        // Get available food listings within 5km radius
+        $nearbyFoodListings = collect();
+        if ($userLat && $userLon) {
+            $allListings = FoodListing::with(['restaurantProfile', 'creator'])
+                ->where('status', 'active')
+                ->where('approval_status', 'approved')
+                ->where('expiry_date', '>=', now()->toDateString())
+                ->orWhere(function ($q) {
+                    $q->where('expiry_date', '=', now()->toDateString())
+                      ->where('expiry_time', '>=', now()->format('H:i'));
+                })
+                ->get();
+
+            foreach ($allListings as $listing) {
+                if ($listing->latitude && $listing->longitude) {
+                    $distance = $this->calculateDistance($userLat, $userLon, $listing->latitude, $listing->longitude);
+                    if ($distance <= 5) {
+                        $listing->distance = round($distance, 1);
+                        $nearbyFoodListings->push($listing);
+                    }
+                }
+            }
+        }
+
+        // Get upcoming pickups (matches that are confirmed or scheduled)
+        $upcomingPickups = $user->recipient ? $user->recipient->matches()
+            ->with(['foodListing.restaurantProfile', 'foodListing.creator'])
+            ->whereIn('status', ['approved', 'scheduled'])
+            ->orderBy('pickup_scheduled_at', 'asc')
             ->get() : collect();
 
-        return view('recipient.dashboard', compact('stats', 'recentMatches'));
+        // Get stats
+        $stats = [
+            'active_matches' => $user->recipient ? $user->recipient->matches()->whereIn('status', ['approved', 'scheduled'])->count() : 0,
+            'completed_pickups' => $user->recipient ? $user->recipient->matches()->where('status', 'completed')->count() : 0,
+            'total_food_received' => $user->recipient ? $user->recipient->matches()->where('status', 'completed')->count() : 0,
+            'pending_requests' => $user->recipient ? $user->recipient->matches()->where('status', 'pending')->count() : 0,
+        ];
+
+        return view('recipient.dashboard', compact('stats', 'nearbyFoodListings', 'upcomingPickups'));
     }
 
     /**

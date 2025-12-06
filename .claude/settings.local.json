@@ -18,7 +18,8 @@
       "Bash(php:*)",
       "Bash(find:*)",
       "Bash(taskkill:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(pkill:*)"
     ],
     "deny": [],
     "ask": []
