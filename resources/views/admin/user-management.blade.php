@@ -9,7 +9,7 @@
 
 @section('content')
 
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<div class="px-4 sm:px-6 lg:px-8 py-8 w-full">
     <!-- Header -->
     <div class="space-y-2">
         <h1 class="text-2xl font-semibold tracking-tight text-zinc-900">User Management</h1>

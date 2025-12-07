@@ -9,7 +9,7 @@
 
 @section('content')
 
-<div class="max-w-6xl mx-auto space-y-8">
+<div class="space-y-8 w-full">
     <div class="p-6 md:p-8 scroll-smooth">
         <!-- Header -->
         <div class="space-y-2">

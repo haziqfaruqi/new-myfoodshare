@@ -8,16 +8,24 @@
     </div>
 
     <div class="flex-1 overflow-y-auto py-6 px-3 space-y-8">
+        <!-- Dashboard -->
+        <div>
+            <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 px-3 py-2 text-sm font-medium {{ request()->is('admin/dashboard') || request()->is('admin') ? 'text-emerald-600 bg-emerald-50' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50' }} rounded-md transition-colors">
+                <i data-lucide="layout-dashboard" class="w-4 h-4 text-emerald-600"></i>
+                Dashboard
+            </a>
+        </div>
+
         <!-- Approvals -->
         <div>
             <h3 class="px-3 text-xs font-medium text-zinc-400 uppercase tracking-wider mb-2">Approvals</h3>
             <nav class="space-y-0.5">
-                <a href="{{ route('admin.user-approvals') }}" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50 rounded-md transition-colors">
+                <a href="{{ route('admin.user-approvals') }}" class="flex items-center gap-3 px-3 py-2 text-sm font-medium {{ request()->is('admin/user-approvals*') ? 'text-emerald-600 bg-emerald-50' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50' }} rounded-md transition-colors">
                     <i data-lucide="user-check" class="w-4 h-4 text-zinc-400"></i>
                     User Approvals
                     <span class="ml-auto bg-amber-100 text-amber-700 py-0.5 px-2 rounded-full text-[10px] font-medium">{{ App\Models\User::where('status', 'pending')->count() }}</span>
                 </a>
-                <a href="{{ route('admin.food-listings') }}" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50 rounded-md transition-colors">
+                <a href="{{ route('admin.food-listings') }}" class="flex items-center gap-3 px-3 py-2 text-sm font-medium {{ request()->is('admin/food-listings*') ? 'text-emerald-600 bg-emerald-50' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50' }} rounded-md transition-colors">
                     <i data-lucide="package" class="w-4 h-4 text-zinc-400"></i>
                     Listing Approvals
                     <span class="ml-auto bg-amber-100 text-amber-700 py-0.5 px-2 rounded-full text-[10px] font-medium">{{ App\Models\FoodListing::where('approval_status', 'pending')->count() }}</span>
@@ -29,11 +37,11 @@
         <div>
             <h3 class="px-3 text-xs font-medium text-zinc-400 uppercase tracking-wider mb-2">Management</h3>
             <nav class="space-y-0.5">
-                <a href="{{ route('admin.user-management') }}" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50 rounded-md transition-colors">
+                <a href="{{ route('admin.user-management') }}" class="flex items-center gap-3 px-3 py-2 text-sm font-medium {{ request()->is('admin/user-management*') ? 'text-emerald-600 bg-emerald-50' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50' }} rounded-md transition-colors">
                     <i data-lucide="users" class="w-4 h-4 text-zinc-400"></i>
                     User Management
                 </a>
-                <a href="{{ route('admin.active-listings') }}" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50 rounded-md transition-colors">
+                <a href="{{ route('admin.active-listings') }}" class="flex items-center gap-3 px-3 py-2 text-sm font-medium {{ request()->is('admin/active-listings*') ? 'text-emerald-600 bg-emerald-50' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50' }} rounded-md transition-colors">
                     <i data-lucide="package-2" class="w-4 h-4 text-zinc-400"></i>
                     Active Listings
                 </a>
@@ -44,7 +52,7 @@
         <div>
             <h3 class="px-3 text-xs font-medium text-zinc-400 uppercase tracking-wider mb-2">Monitoring</h3>
             <nav class="space-y-0.5">
-                <a href="{{ route('admin.pickup-monitoring') }}" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50 rounded-md transition-colors">
+                <a href="{{ route('admin.pickup-monitoring') }}" class="flex items-center gap-3 px-3 py-2 text-sm font-medium {{ request()->is('admin/pickup-monitoring*') ? 'text-emerald-600 bg-emerald-50' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50' }} rounded-md transition-colors">
                     <i data-lucide="qr-code" class="w-4 h-4 text-zinc-400"></i>
                     Pickup Verification
                     <span class="ml-auto bg-emerald-100 text-emerald-700 py-0.5 px-2 rounded-full text-[10px] font-medium">

@@ -80,6 +80,35 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         lucide.createIcons();
+
+        // Set active state for sidebar navigation
+        const currentPath = window.location.pathname;
+        const sidebarLinks = document.querySelectorAll('aside a[href]');
+
+        sidebarLinks.forEach(link => {
+            const linkPath = new URL(link.href).pathname;
+            if (currentPath === linkPath || currentPath.startsWith(linkPath + '/')) {
+                link.classList.add('text-emerald-600', 'bg-emerald-50');
+                link.classList.remove('text-zinc-600');
+
+                // Update icon color for active links
+                const icon = link.querySelector('i');
+                if (icon) {
+                    icon.classList.remove('text-zinc-400');
+                    icon.classList.add('text-emerald-600');
+                }
+            } else {
+                link.classList.remove('text-emerald-600', 'bg-emerald-50');
+                link.classList.add('text-zinc-600');
+
+                // Reset icon color for inactive links
+                const icon = link.querySelector('i');
+                if (icon && !link.closest('.h-16')) { // Don't reset the logo icon
+                    icon.classList.remove('text-emerald-600');
+                    icon.classList.add('text-zinc-400');
+                }
+            }
+        });
     });
 
     function toggleSidebar() {

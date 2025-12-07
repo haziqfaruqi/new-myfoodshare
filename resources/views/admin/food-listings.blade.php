@@ -12,7 +12,7 @@
 
 @section('content')
 
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<div class="px-4 sm:px-6 lg:px-8 py-8 w-full">
 
     <!-- Header -->
         <div class="space-y-2">

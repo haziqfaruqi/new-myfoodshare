@@ -13,7 +13,7 @@
 
 <div class="flex-1 overflow-y-auto p-6 md:p-8 scroll-smooth">
 
-    <div class="max-w-6xl mx-auto space-y-8">
+    <div class="space-y-8 w-full">
 
         <!-- Welcome & Stats -->
         <div class="space-y-6">

@@ -56,7 +56,7 @@ class DashboardController extends Controller
     {
         $pendingUsers = User::where('status', 'pending')
             ->orderBy('created_at', 'desc')
-            ->paginate(20);
+            ->paginate(4);
 
         $recentlyApproved = User::where('status', 'active')
             ->whereNotNull('approved_at')
