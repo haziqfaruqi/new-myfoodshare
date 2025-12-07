@@ -423,23 +423,22 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
 
-        // Get recipient profile for pinned location
-        $recipientProfile = $user->recipient;
+        // Get user's profile for pinned location (since they are the recipient/NGO)
         $pinnedLocation = null;
 
-        if ($recipientProfile && $recipientProfile->latitude && $recipientProfile->longitude) {
-            // Use NGO's pinned location
-            $userLat = $recipientProfile->latitude;
-            $userLon = $recipientProfile->longitude;
-            $pinnedLocation = [
-                'latitude' => $recipientProfile->latitude,
-                'longitude' => $recipientProfile->longitude,
-                'name' => $recipientProfile->location_name ?? 'Organization Location'
-            ];
-        } else {
-            // Fallback to user's current location
+        if ($user->latitude && $user->longitude) {
+            // Use user's pinned location
             $userLat = $user->latitude;
             $userLon = $user->longitude;
+            $pinnedLocation = [
+                'latitude' => $user->latitude,
+                'longitude' => $user->longitude,
+                'name' => json_decode($user->profile_data)->location_name ?? 'Organization Location'
+            ];
+        } else {
+            // Fallback to default location
+            $userLat = 3.1390; // Kuala Lumpur
+            $userLon = 101.6869;
         }
 
         // Get available food listings within 5km radius
@@ -704,15 +703,14 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
 
-        // Get recipient profile for pinned location
-        $recipientProfile = $user->recipient;
+        // Get user's profile for pinned location
         $pinnedLocation = null;
 
-        if ($recipientProfile && $recipientProfile->latitude && $recipientProfile->longitude) {
+        if ($user->latitude && $user->longitude) {
             $pinnedLocation = [
-                'latitude' => $recipientProfile->latitude,
-                'longitude' => $recipientProfile->longitude,
-                'name' => $recipientProfile->location_name ?? 'Organization Location'
+                'latitude' => $user->latitude,
+                'longitude' => $user->longitude,
+                'name' => json_decode($user->profile_data)->location_name ?? 'Organization Location'
             ];
         }
 
@@ -927,8 +925,8 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
 
-        // Get user's recipient profile if it exists
-        $recipientProfile = $user->recipient;
+        // Get user's profile data (since they are the recipient/NGO)
+        $recipientProfile = $user;
 
         // Get available food count for sidebar
         $availableFoodCount = $this->getAvailableFoodCount();
@@ -1034,5 +1032,51 @@ class DashboardController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Update NGO Profile
+     */
+    public function updateNgoProfile(Request $request)
+    {
+        $user = auth()->user();
+
+        // Validate the input
+        $validated = $request->validate([
+            'organization_name' => 'required|string|max:255',
+            'contact_person' => 'required|string|max:255',
+            'phone' => 'required|string|max:20',
+            'address' => 'required|string|max:500',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
+            'description' => 'nullable|string',
+            'ngo_registration' => 'nullable|string|max:255',
+            'location_name' => 'nullable|string|max:255',
+        ]);
+
+        // Update the user's profile
+        $user->update([
+            'organization_name' => $validated['organization_name'],
+            'contact_person' => $validated['contact_person'],
+            'phone' => $validated['phone'],
+            'address' => $validated['address'],
+            'latitude' => $validated['latitude'],
+            'longitude' => $validated['longitude'],
+            'description' => $validated['description'],
+            'ngo_registration' => $validated['ngo_registration'],
+        ]);
+
+        // Update location name if provided (stored in user profile as extra data)
+        if (isset($validated['location_name'])) {
+            // You might want to store this in a separate profile table
+            // For now, we'll store it in the description or create a JSON field
+            $user->profile_data = json_encode([
+                'location_name' => $validated['location_name']
+            ]);
+            $user->save();
+        }
+
+        return redirect()->route('recipient.ngo-profile')
+            ->with('success', 'NGO profile updated successfully!');
     }
 }

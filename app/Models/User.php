@@ -43,6 +43,7 @@ class User extends Authenticatable
         'fcm_token',
         'push_notifications_enabled',
         'notification_preferences',
+        'profile_data',
         'created_at',
         'updated_at',
     ];
@@ -57,6 +58,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'profile_data' => 'json',
             'dietary_requirements' => 'array',
             'approved_at' => 'datetime',
             'created_at' => 'datetime',

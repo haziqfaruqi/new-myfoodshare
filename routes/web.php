@@ -94,6 +94,10 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/matches/{match}/cancel', [FoodMatchController::class, 'cancel'])->name('recipient.matches.cancel');
         Route::post('/matches/{match}/confirm', [FoodMatchController::class, 'confirmPickup'])->name('recipient.matches.confirmPickup');
         Route::get('/matches/{match}/complete', [FoodMatchController::class, 'complete'])->name('recipient.matches.complete');
+
+        // NGO Profile routes
+        Route::get('/ngo-profile', [DashboardController::class, 'ngoProfile'])->name('recipient.ngo-profile');
+        Route::put('/ngo-profile', [DashboardController::class, 'updateNgoProfile'])->name('recipient.ngo-profile.update');
     });
 
     // Restaurant owner matching routes
