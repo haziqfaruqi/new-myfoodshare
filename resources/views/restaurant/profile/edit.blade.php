@@ -3,7 +3,7 @@
 @section('title', 'Edit Restaurant Profile - Restaurant Portal')
 
 @section('content')
-<div class="max-w-4xl mx-auto space-y-6">
+<div class="space-y-6 w-full max-w-4xl mx-auto">
     <!-- Page Header -->
     <div>
         <h1 class="text-2xl font-bold tracking-tight text-zinc-900">Edit Restaurant Profile</h1>

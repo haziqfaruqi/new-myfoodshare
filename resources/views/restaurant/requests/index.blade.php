@@ -3,7 +3,7 @@
 @section('title', 'Manage Requests - Restaurant Portal')
 
 @section('content')
-<div class="max-w-6xl mx-auto space-y-6">
+<div class="space-y-6 w-full">
     <!-- Page Header -->
     <div>
         <h1 class="text-2xl font-bold tracking-tight text-zinc-900">Manage Requests</h1>

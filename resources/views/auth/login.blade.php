@@ -12,7 +12,7 @@
     <div class="relative min-h-screen flex flex-col">
         <!-- Header -->
 <header class="bg-white/80 backdrop-blur-md border-b border-emerald-100/50 sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="px-4 sm:px-6 lg:px-8 w-full">
             <div class="flex justify-between items-center py-4">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center">

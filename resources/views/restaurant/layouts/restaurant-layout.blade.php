@@ -106,7 +106,7 @@
         @include('restaurant.partials.restaurant-header')
 
         <!-- Dashboard Content -->
-        <div class="flex-1 overflow-y-auto p-6 md:p-8 scroll-smooth">
+        <div class="flex-1 overflow-y-auto p-4 md:p-6 scroll-smooth">
             @yield('content')
         </div>
     </main>

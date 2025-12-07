@@ -3,7 +3,7 @@
 @section('title', 'Restaurant Profile - Restaurant Portal')
 
 @section('content')
-<div class="max-w-6xl mx-auto space-y-8">
+<div class="space-y-8 w-full">
     <!-- Welcome Section -->
     <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
