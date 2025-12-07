@@ -596,6 +596,8 @@ class DashboardController extends Controller
             'website' => 'nullable|url|max:255',
             'business_hours' => 'nullable|string|max:255',
             'description' => 'nullable|string',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
         ]);
 
         // Debug: Log validated data

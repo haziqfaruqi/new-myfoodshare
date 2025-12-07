@@ -79,6 +79,35 @@
                     <textarea name="address" rows="3" class="w-full mt-1 px-3 py-2 bg-white border border-zinc-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 resize-none">{{ $profile->address }}</textarea>
                 </div>
 
+                <!-- Location Settings -->
+                <div>
+                    <label class="text-xs font-medium text-zinc-700">Restaurant Location</label>
+                    <div class="mt-1 space-y-3">
+                        <!-- Location Map -->
+                        <div class="relative">
+                            <div id="map" class="w-full rounded-lg border border-zinc-200" style="height: 400px;"></div>
+                            <div class="absolute top-4 left-4 bg-white px-3 py-1.5 rounded-lg shadow-sm border border-zinc-200 z-10">
+                                <p class="text-xs font-medium text-zinc-700">
+                                    <i data-lucide="map-pin" class="w-3 h-3 inline mr-1"></i>
+                                    Click anywhere to pin your restaurant location
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Hidden form fields for coordinates -->
+                        <input type="hidden" name="latitude" value="{{ $profile->latitude }}">
+                        <input type="hidden" name="longitude" value="{{ $profile->longitude }}">
+
+                        <!-- Location info display -->
+                        <div id="location-info" class="hidden p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
+                            <p class="text-xs text-emerald-800">
+                                <i data-lucide="map-pin" class="w-3 h-3 inline mr-1"></i>
+                                Location pinned: <span id="location-coords"></span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="text-xs font-medium text-zinc-700">City</label>
@@ -144,9 +173,88 @@
 @endsection
 
 @section('scripts')
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         lucide.createIcons();
+
+        // Initialize map
+        let map;
+        let marker;
+        let currentLat = {{ $profile->latitude ?? 3.1390 }};
+        let currentLng = {{ $profile->longitude ?? 101.6869 }};
+
+        // Initialize map
+        function initMap() {
+            map = L.map('map').setView([currentLat, currentLng], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(map);
+
+            // If there's a saved location, place a marker
+            if (currentLat && currentLng) {
+                placeMarker(currentLat, currentLng);
+                updateLocationDisplay(currentLat, currentLng);
+            }
+
+            // Add click event to place marker
+            map.on('click', function(e) {
+                const lat = e.latlng.lat;
+                const lng = e.latlng.lng;
+                placeMarker(lat, lng);
+                updateHiddenInputs(lat, lng);
+                updateLocationDisplay(lat, lng);
+            });
+        }
+
+        // Place marker on map
+        function placeMarker(lat, lng) {
+            // Remove existing marker
+            if (marker) {
+                map.removeLayer(marker);
+            }
+
+            // Add new marker
+            marker = L.marker([lat, lng], {
+                draggable: false,
+                autoPan: true
+            }).addTo(map);
+
+            // Center map on marker
+            map.setView([lat, lng], 15);
+        }
+
+        // Update hidden form inputs
+        function updateHiddenInputs(lat, lng) {
+            const latInput = document.querySelector('input[name="latitude"]');
+            const lngInput = document.querySelector('input[name="longitude"]');
+
+            if (latInput) latInput.value = lat.toFixed(6);
+            if (lngInput) lngInput.value = lng.toFixed(6);
+        }
+
+        // Update location info display
+        function updateLocationDisplay(lat, lng) {
+            const locationInfo = document.getElementById('location-info');
+            const locationCoords = document.getElementById('location-coords');
+
+            if (locationCoords) {
+                locationCoords.textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+            }
+
+            if (locationInfo) {
+                locationInfo.classList.remove('hidden');
+            }
+        }
+
+        // Initialize map when page loads
+        setTimeout(initMap, 100);
     });
 </script>
 @endsection
