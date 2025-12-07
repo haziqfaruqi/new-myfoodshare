@@ -69,21 +69,25 @@
     <div class="bg-white rounded-xl border border-zinc-200">
         <div class="border-b border-zinc-200">
             <nav class="flex -mb-px">
-                <a href="{{ route('restaurant.requests') }}?status=pending" class="py-4 px-6 border-b-2 border-emerald-500 text-sm font-medium text-emerald-600">
+                <a href="{{ route('restaurant.requests') }}?status=pending"
+                   class="py-4 px-6 border-b-2 text-sm font-medium {{ request('status') == 'pending' || !request('status') ? 'border-emerald-500 text-emerald-600' : 'border-transparent text-zinc-500 hover:text-zinc-700 hover:border-gray-300' }}">
                     Pending Requests
                     <span class="ml-2 bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded-full">{{ $pendingRequests }}</span>
                 </a>
-                <a href="{{ route('restaurant.requests') }}?status=approved" class="py-4 px-6 border-b-2 border-transparent text-sm font-medium text-zinc-500 hover:text-zinc-700 hover:border-gray-300">
+                <a href="{{ route('restaurant.requests') }}?status=approved"
+                   class="py-4 px-6 border-b-2 text-sm font-medium {{ request('status') == 'approved' ? 'border-emerald-500 text-emerald-600' : 'border-transparent text-zinc-500 hover:text-zinc-700 hover:border-gray-300' }}">
                     Approved
-                    <span class="ml-2 bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-full">{{ $approvedRequests }}</span>
+                    <span class="ml-2 bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded-full">{{ $approvedRequests }}</span>
                 </a>
-                <a href="{{ route('restaurant.requests') }}?status=rejected" class="py-4 px-6 border-b-2 border-transparent text-sm font-medium text-zinc-500 hover:text-zinc-700 hover:border-gray-300">
+                <a href="{{ route('restaurant.requests') }}?status=rejected"
+                   class="py-4 px-6 border-b-2 text-sm font-medium {{ request('status') == 'rejected' ? 'border-emerald-500 text-emerald-600' : 'border-transparent text-zinc-500 hover:text-zinc-700 hover:border-gray-300' }}">
                     Rejected
-                    <span class="ml-2 bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-full">{{ $rejectedRequests }}</span>
+                    <span class="ml-2 bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded-full">{{ $rejectedRequests }}</span>
                 </a>
-                <a href="{{ route('restaurant.requests') }}?status=completed" class="py-4 px-6 border-b-2 border-transparent text-sm font-medium text-zinc-500 hover:text-zinc-700 hover:border-gray-300">
+                <a href="{{ route('restaurant.requests') }}?status=completed"
+                   class="py-4 px-6 border-b-2 text-sm font-medium {{ request('status') == 'completed' ? 'border-emerald-500 text-emerald-600' : 'border-transparent text-zinc-500 hover:text-zinc-700 hover:border-gray-300' }}">
                     Completed
-                    <span class="ml-2 bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-full">{{ $completedRequests }}</span>
+                    <span class="ml-2 bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded-full">{{ $completedRequests }}</span>
                 </a>
             </nav>
         </div>

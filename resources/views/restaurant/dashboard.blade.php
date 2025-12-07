@@ -15,10 +15,10 @@
                         <p class="text-sm text-zinc-500 mt-1">Here's what's happening with your donations today.</p>
                     </div>
                     <div class="flex gap-3">
-                         <button onclick="document.getElementById('pickup-modal').classList.remove('hidden')" class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-zinc-200 shadow-sm rounded-lg text-sm font-medium text-zinc-700 hover:bg-zinc-50 transition-all">
+                         {{-- <button onclick="document.getElementById('pickup-modal').classList.remove('hidden')" class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-zinc-200 shadow-sm rounded-lg text-sm font-medium text-zinc-700 hover:bg-zinc-50 transition-all">
                             <i data-lucide="scan-line" class="w-4 h-4"></i>
                             Scan QR
-                        </button>
+                        </button> --}}
                         <button onclick="document.getElementById('post-modal').classList.remove('hidden')" class="inline-flex items-center gap-2 px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-white shadow-lg shadow-zinc-900/20 rounded-lg text-sm font-medium transition-all">
                             <i data-lucide="plus" class="w-4 h-4"></i>
                             Post Donation
@@ -209,30 +209,25 @@
                                 <button class="text-xs text-emerald-600 hover:underline">Mark all read</button>
                             </div>
                             <div class="space-y-0">
+                                @forelse ($notifications as $notification)
                                 <div class="relative pl-6 pb-6 border-l border-zinc-200 last:pb-0">
-                                    <div class="absolute left-[-5px] top-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-4 ring-white"></div>
+                                    <div class="absolute left-[-5px] top-0 w-2.5 h-2.5 rounded-full {{ $notification['color'] }} ring-4 ring-white"></div>
                                     <div class="text-sm">
-                                        <p class="font-medium text-zinc-900">Match Found!</p>
-                                        <p class="text-zinc-500 text-xs mt-0.5">"Event Catering Trays" was reserved by <span class="font-medium text-zinc-700">City Shelter</span>.</p>
-                                        <p class="text-zinc-400 text-[10px] mt-1">2 mins ago</p>
+                                        <p class="font-medium text-zinc-900">{{ $notification['message'] }}</p>
+                                        @if($notification['details'])
+                                            <p class="text-zinc-500 text-xs mt-0.5">{{ $notification['details'] }}</p>
+                                        @endif
+                                        <p class="text-zinc-400 text-[10px] mt-1">{{ $notification['time'] }}</p>
                                     </div>
                                 </div>
-                                <div class="relative pl-6 pb-6 border-l border-zinc-200 last:pb-0">
-                                    <div class="absolute left-[-5px] top-0 w-2.5 h-2.5 rounded-full bg-blue-500 ring-4 ring-white"></div>
-                                    <div class="text-sm">
-                                        <p class="font-medium text-zinc-900">Pickup Completed</p>
-                                        <p class="text-zinc-500 text-xs mt-0.5">Volunteer Mark verified pickup for Order #442.</p>
-                                        <p class="text-zinc-400 text-[10px] mt-1">2 hours ago</p>
+                                @empty
+                                <div class="text-center py-8">
+                                    <div class="w-16 h-16 bg-zinc-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <i data-lucide="bell" class="w-8 h-8 text-zinc-400"></i>
                                     </div>
+                                    <p class="text-sm text-zinc-500">No notifications yet</p>
                                 </div>
-                                <div class="relative pl-6 border-l border-zinc-200 last:border-l-0">
-                                    <div class="absolute left-[-5px] top-0 w-2.5 h-2.5 rounded-full bg-zinc-300 ring-4 ring-white"></div>
-                                    <div class="text-sm">
-                                        <p class="font-medium text-zinc-900">New Rating Received</p>
-                                        <p class="text-zinc-500 text-xs mt-0.5">You received 5 stars for your donation on Monday.</p>
-                                        <p class="text-zinc-400 text-[10px] mt-1">Yesterday</p>
-                                    </div>
-                                </div>
+                                @endforelse
                             </div>
                         </div>
 

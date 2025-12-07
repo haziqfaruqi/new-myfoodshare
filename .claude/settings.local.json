@@ -22,7 +22,8 @@
       "Bash(pkill:*)",
       "Bash(findstr:*)",
       "Bash(tasklist:*)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(start:*)"
     ],
     "deny": [],
     "ask": []

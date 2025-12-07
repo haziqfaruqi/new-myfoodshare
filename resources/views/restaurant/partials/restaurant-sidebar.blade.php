@@ -1,5 +1,5 @@
 <!-- Sidebar Navigation -->
-<aside id="restaurant-sidebar" class="w-64 border-r border-zinc-200 bg-white fixed md:static inset-y-0 left-0 transform z-30 transition-transform duration-300 ease-in-out md:transform-none -translate-x-full md:translate-x-0">
+<aside id="restaurant-sidebar" class="w-64 border-r border-zinc-200 bg-white fixed md:static inset-y-0 left-0 transform z-30 transition-transform duration-300 ease-in-out md:transform-none -translate-x-full md:translate-x-0 flex flex-col">
     <div class="h-16 flex items-center px-6 border-b border-zinc-100">
         <div class="flex items-center gap-2 text-emerald-600">
             <i data-lucide="leaf" class="w-6 h-6 fill-current"></i>
@@ -27,8 +27,8 @@
                 </a>
                 <a href="{{ route('restaurant.requests') }}"
                    class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors
-                   {{ request()->is('restaurant/requests*') ? 'text-zinc-900 bg-zinc-100' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50' }}">
-                    <i data-lucide="clipboard-list" class="w-4 h-4 {{ request()->is('restaurant/requests*') ? 'text-zinc-500' : 'text-zinc-400' }}"></i>
+                   {{ request()->is('restaurant/requests') && !request()->is('restaurant/requests/*') ? 'text-zinc-900 bg-zinc-100' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50' }}">
+                    <i data-lucide="clipboard-list" class="w-4 h-4 {{ request()->is('restaurant/requests') && !request()->is('restaurant/requests/*') ? 'text-zinc-500' : 'text-zinc-400' }}"></i>
                     Manage Requests
                 </a>
                 <a href="{{ route('restaurant.schedule') }}"

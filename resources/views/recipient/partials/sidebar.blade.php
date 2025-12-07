@@ -1,5 +1,5 @@
 <!-- Sidebar Navigation -->
-<aside id="recipient-sidebar" class="w-64 border-r border-zinc-200 bg-white fixed md:static inset-y-0 left-0 transform z-30 transition-transform duration-300 ease-in-out md:transform-none -translate-x-full md:translate-x-0">
+<aside id="recipient-sidebar" class="w-64 border-r border-zinc-200 bg-white fixed md:static inset-y-0 left-0 transform z-30 transition-transform duration-300 ease-in-out md:transform-none -translate-x-full md:translate-x-0 flex flex-col">
     <div class="h-16 flex items-center px-6 border-b border-zinc-100">
         <a href="{{ route('recipient.dashboard') }}" class="flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors">
             <i data-lucide="heart-handshake" class="w-6 h-6 fill-current"></i>

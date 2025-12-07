@@ -265,7 +265,46 @@ class DashboardController extends Controller
             ->take(5)
             ->get() : collect();
 
-        return view('restaurant.dashboard', compact('stats', 'recentListings'));
+        // Get latest 3 notifications for the restaurant user
+        $notifications = $user->notifications()
+            ->orderBy('created_at', 'desc')
+            ->take(3)
+            ->get()
+            ->map(function ($notification) {
+                $data = json_decode($notification->data, true);
+                return [
+                    'id' => $notification->id,
+                    'type' => $notification->type,
+                    'message' => $data['message'] ?? 'New notification',
+                    'details' => $data['details'] ?? null,
+                    'time' => $notification->created_at->diffForHumans(),
+                    'read_at' => $notification->read_at,
+                    'color' => $this->getNotificationColor($notification->type),
+                ];
+            });
+
+        return view('restaurant.dashboard', compact('stats', 'recentListings', 'notifications'));
+    }
+
+    /**
+     * Get notification color based on type.
+     */
+    private function getNotificationColor($type)
+    {
+        switch ($type) {
+            case 'App\Notifications\MatchFound':
+                return 'bg-emerald-500';
+            case 'App\Notifications\PickupCompleted':
+                return 'bg-blue-500';
+            case 'App\Notifications\NewRating':
+                return 'bg-zinc-300';
+            case 'App\Notifications\ListingApproved':
+                return 'bg-emerald-500';
+            case 'App\Notifications\ListingRejected':
+                return 'bg-red-500';
+            default:
+                return 'bg-zinc-300';
+        }
     }
 
     /**
