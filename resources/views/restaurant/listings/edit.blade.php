@@ -158,9 +158,11 @@
                 </div>
 
                 <div class="flex gap-3 pt-4 border-t border-zinc-100">
-                    <a href="{{ route('restaurant.listings') }}" type="button" class="flex-1 py-2.5 border border-zinc-200 text-zinc-700 rounded-lg font-medium hover:bg-zinc-50 transition-all">
+                    <a href="{{ route('restaurant.listings') }}" 
+                    class="flex-1 py-2.5 border border-zinc-200 text-zinc-700 rounded-lg font-medium hover:bg-zinc-50 transition-all flex items-center justify-center">
                         Cancel
                     </a>
+
                     <button type="submit" class="flex-1 py-2.5 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-all flex items-center justify-center gap-2">
                         <i data-lucide="save" class="w-4 h-4"></i>
                         Update Listing
