@@ -81,10 +81,10 @@
                         <option>inactive</option>
                         <option>pending</option>
                     </select>
-                    <button class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm font-medium">
+                    {{-- <button class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm font-medium">
                         <i data-lucide="plus" class="w-4 h-4 inline mr-2"></i>
                         Add User
-                    </button>
+                    </button> --}}
                 </div>
             </div>
         </div>

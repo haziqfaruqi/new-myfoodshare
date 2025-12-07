@@ -192,14 +192,11 @@
                                                 <i data-lucide="eye" class="w-4 h-4"></i>
                                             </a>
                                             @if($listing->status === 'active')
-                                                <button class="text-zinc-400 hover:text-blue-600 transition-colors" title="Manage Matches">
+                                                <a href="{{ route('admin.matches.index') }}?food_listing_id={{ $listing->id }}" class="text-zinc-400 hover:text-blue-600 transition-colors" title="Manage Matches">
                                                     <i data-lucide="users" class="w-4 h-4"></i>
-                                                </button>
+                                                </a>
                                             @endif
-                                            <button class="text-zinc-400 hover:text-amber-600 transition-colors" title="Edit">
-                                                <i data-lucide="edit-2" class="w-4 h-4"></i>
-                                            </button>
-                                            <form action="#" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to deactivate this listing?')">
+                                            <form action="{{ route('admin.food-listings.reject', $listing) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to deactivate this listing?')">
                                                 @csrf
                                                 <button type="submit" class="text-zinc-400 hover:text-red-600 transition-colors" title="Deactivate">
                                                     <i data-lucide="x" class="w-4 h-4"></i>

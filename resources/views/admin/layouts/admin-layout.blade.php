@@ -87,6 +87,53 @@
 
         sidebarLinks.forEach(link => {
             const linkPath = new URL(link.href).pathname;
+
+            // Special handling for pickup monitoring routes
+            if (linkPath.includes('/pickup-monitoring')) {
+                if (linkPath.includes('/pickup-monitoring/report')) {
+                    // Only highlight report link when on report page
+                    if (currentPath === '/admin/pickup-monitoring/report' || currentPath.startsWith('/admin/pickup-monitoring/report/')) {
+                        link.classList.add('text-emerald-600', 'bg-emerald-50');
+                        link.classList.remove('text-zinc-600');
+                        const icon = link.querySelector('i');
+                        if (icon) {
+                            icon.classList.remove('text-zinc-400');
+                            icon.classList.add('text-emerald-600');
+                        }
+                    } else {
+                        link.classList.remove('text-emerald-600', 'bg-emerald-50');
+                        link.classList.add('text-zinc-600');
+                        const icon = link.querySelector('i');
+                        if (icon) {
+                            icon.classList.remove('text-emerald-600');
+                            icon.classList.add('text-zinc-400');
+                        }
+                    }
+                } else {
+                    // Only highlight main pickup monitoring link when not on report subpage
+                    if (currentPath === '/admin/pickup-monitoring' &&
+                        !currentPath.startsWith('/admin/pickup-monitoring/report')) {
+                        link.classList.add('text-emerald-600', 'bg-emerald-50');
+                        link.classList.remove('text-zinc-600');
+                        const icon = link.querySelector('i');
+                        if (icon) {
+                            icon.classList.remove('text-zinc-400');
+                            icon.classList.add('text-emerald-600');
+                        }
+                    } else {
+                        link.classList.remove('text-emerald-600', 'bg-emerald-50');
+                        link.classList.add('text-zinc-600');
+                        const icon = link.querySelector('i');
+                        if (icon) {
+                            icon.classList.remove('text-emerald-600');
+                            icon.classList.add('text-zinc-400');
+                        }
+                    }
+                }
+                return; // Skip the general logic for pickup monitoring links
+            }
+
+            // General logic for all other links
             if (currentPath === linkPath || currentPath.startsWith(linkPath + '/')) {
                 link.classList.add('text-emerald-600', 'bg-emerald-50');
                 link.classList.remove('text-zinc-600');

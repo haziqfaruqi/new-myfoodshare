@@ -29,6 +29,8 @@
                     <label class="text-xs font-medium text-zinc-700">Status</label>
                     <select name="status" class="w-full px-3 py-2 bg-white border border-zinc-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
                         <option value="">All Status</option>
+                        <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending Approval</option>
+                        <option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>Rejected</option>
                         <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
                         <option value="reserved" {{ request('status') == 'reserved' ? 'selected' : '' }}>Reserved</option>
                         <option value="expired" {{ request('status') == 'expired' ? 'selected' : '' }}>Expired</option>
@@ -113,7 +115,17 @@
                             <div class="text-xs text-zinc-500">{{ $listing->expiry_time?->format('g:i A') }}</div>
                         </td>
                         <td class="px-6 py-4">
-                            @if($listing->status === 'expired')
+                            @if($listing->approval_status === 'pending')
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                                    <i data-lucide="clock" class="w-3 h-3 mr-1"></i>
+                                    Pending Approval
+                                </span>
+                            @elseif($listing->approval_status === 'rejected')
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                    <i data-lucide="x" class="w-3 h-3 mr-1"></i>
+                                    Rejected
+                                </span>
+                            @elseif($listing->status === 'expired')
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                                     Expired
                                 </span>

@@ -132,20 +132,20 @@
             <div class="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl p-5 text-white shadow-lg">
                 <h3 class="text-sm font-medium mb-3">Quick Actions</h3>
                 <div class="space-y-2">
-                    <button class="w-full flex items-center justify-between text-sm font-medium bg-white/20 hover:bg-white/30 rounded-md p-2 transition-colors">
+                    {{-- <button class="w-full flex items-center justify-between text-sm font-medium bg-white/20 hover:bg-white/30 rounded-md p-2 transition-colors">
                         <span class="flex items-center gap-2">
                             <i data-lucide="qr-code-scanner" class="w-4 h-4"></i>
                             Scan QR Code
                         </span>
                         <i data-lucide="chevron-right" class="w-4 h-4"></i>
-                    </button>
-                    <button class="w-full flex items-center justify-between text-sm font-medium bg-white/20 hover:bg-white/30 rounded-md p-2 transition-colors">
+                    </button> --}}
+                    <a href="{{ route('admin.pickup-monitoring.report') }}" class="w-full flex items-center justify-between text-sm font-medium bg-white/20 hover:bg-white/30 rounded-md p-2 transition-colors">
                         <span class="flex items-center gap-2">
                             <i data-lucide="file-text" class="w-4 h-4"></i>
                             Generate Report
                         </span>
                         <i data-lucide="chevron-right" class="w-4 h-4"></i>
-                    </button>
+                    </a>
                 </div>
             </div>
 

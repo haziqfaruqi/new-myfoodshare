@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\FoodListing;
+use App\Models\PickupVerification;
 
 class DashboardController extends Controller
 {
@@ -895,5 +896,104 @@ class DashboardController extends Controller
         view()->share('availableFoodCount', $availableFoodCount);
 
         return view('recipient.ngo-profile', compact('recipientProfile'));
+    }
+
+    /**
+     * Generate pickup monitoring report
+     */
+    public function pickupMonitoringReport(Request $request)
+    {
+        $startDate = $request->input('start_date', now()->subDays(30)->format('Y-m-d'));
+        $endDate = $request->input('end_date', now()->format('Y-m-d'));
+
+        // Get pickup verifications for the date range
+        $pickupVerifications = PickupVerification::with(['match.foodListing', 'match.recipient', 'match.restaurant'])
+            ->whereDate('scanned_at', '>=', $startDate)
+            ->whereDate('scanned_at', '<=', $endDate)
+            ->orderBy('scanned_at', 'desc')
+            ->get();
+
+        // Calculate report statistics
+        $totalPickups = $pickupVerifications->count();
+        $verifiedPickups = $pickupVerifications->where('verification_status', 'verified')->count();
+        $failedPickups = $pickupVerifications->where('verification_status', 'failed')->count();
+        $pendingPickups = $pickupVerifications->where('verification_status', 'pending')->count();
+
+        $successRate = $totalPickups > 0 ? ($verifiedPickups / $totalPickups) * 100 : 0;
+
+        // Group by date
+        $dailyStats = $pickupVerifications->groupBy(function($item) {
+            return $item->scanned_at->format('Y-m-d');
+        });
+
+        // Group by recipient
+        $recipientStats = $pickupVerifications->groupBy(function($item) {
+            return $item->match->recipient->organization_name ?? $item->match->recipient->name;
+        });
+
+        // Generate CSV for download
+        if ($request->has('export')) {
+            return $this->exportPickupReport($pickupVerifications, $startDate, $endDate);
+        }
+
+        return view('admin.pickup-monitoring-report', compact(
+            'pickupVerifications',
+            'startDate',
+            'endDate',
+            'totalPickups',
+            'verifiedPickups',
+            'failedPickups',
+            'pendingPickups',
+            'successRate',
+            'dailyStats',
+            'recipientStats'
+        ));
+    }
+
+    /**
+     * Export pickup monitoring report as CSV
+     */
+    private function exportPickupReport($pickupVerifications, $startDate, $endDate)
+    {
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="pickup-monitoring-report-' . $startDate . '-to-' . $endDate . '.csv"',
+        ];
+
+        $callback = function() use ($pickupVerifications) {
+            $file = fopen('php://output', 'w');
+
+            // Add CSV headers
+            fputcsv($file, [
+                'Pickup ID',
+                'Food Item',
+                'Restaurant',
+                'Recipient',
+                'Scheduled Date',
+                'Scanned Date',
+                'Verification Status',
+                'QR Code',
+                'Notes'
+            ]);
+
+            // Add data rows
+            foreach ($pickupVerifications as $verification) {
+                fputcsv($file, [
+                    $verification->match->id,
+                    $verification->match->foodListing->food_name,
+                    $verification->match->restaurant->restaurant_name ?? $verification->match->foodListing->creator->name,
+                    $verification->match->recipient->organization_name ?? $verification->match->recipient->name,
+                    $verification->match->pickup_scheduled_at->format('Y-m-d H:i:s'),
+                    $verification->scanned_at->format('Y-m-d H:i:s'),
+                    $verification->verification_status,
+                    $verification->qr_code,
+                    $verification->notes ?? ''
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }

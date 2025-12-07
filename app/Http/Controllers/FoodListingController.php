@@ -38,6 +38,18 @@ class FoodListingController extends Controller
             $query->where('category', $request->category);
         }
 
+        // Filter by status
+        $status = $request->input('status');
+        if ($status && $status !== '') {
+            if ($status === 'pending') {
+                $query->where('approval_status', 'pending');
+            } elseif ($status === 'rejected') {
+                $query->where('approval_status', 'rejected');
+            } else {
+                $query->where('status', $status);
+            }
+        }
+
         // Filter by distance (if location data is available)
         if ($request->has('distance') && !empty($request->distance) && $request->user()) {
             $lat = $request->user()->latitude;
@@ -288,7 +300,7 @@ class FoodListingController extends Controller
             'admin_notes' => null,
         ]);
 
-        return redirect()->route('admin.food-listings.index')
+        return redirect()->route('admin.food-listings')
             ->with('success', 'Food listing approved successfully!');
     }
 
@@ -309,7 +321,7 @@ class FoodListingController extends Controller
             'admin_notes' => $request->admin_notes,
         ]);
 
-        return redirect()->route('admin.food-listings.index')
+        return redirect()->route('admin.food-listings')
             ->with('success', 'Food listing rejected successfully!');
     }
 

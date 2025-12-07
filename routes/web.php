@@ -128,6 +128,7 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/users/{user}', [DashboardController::class, 'deleteUser'])->name('admin.users.delete');
         Route::get('/active-listings', [DashboardController::class, 'activeListings'])->name('admin.active-listings');
         Route::get('/pickup-monitoring', [DashboardController::class, 'pickupMonitoring'])->name('admin.pickup-monitoring');
+        Route::get('/pickup-monitoring/report', [DashboardController::class, 'pickupMonitoringReport'])->name('admin.pickup-monitoring.report');
 
         Route::get('/food-listings', [FoodListingController::class, 'adminIndex'])->name('admin.food-listings');
         Route::get('/food-listings/{foodListing}', [FoodListingController::class, 'adminShow'])->name('admin.food-listings.show');

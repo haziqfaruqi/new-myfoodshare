@@ -8,7 +8,7 @@
 
 @section('content')
 
-<div class="max-w-6xl mx-auto space-y-8 p-6 md:p-8">
+<div class="space-y-8 p-6 md:p-8 w-full">
 
     <!-- Header -->
     <div class="space-y-2">
@@ -138,13 +138,13 @@
                             <i data-lucide="chevron-right" class="w-4 h-4"></i>
                         </button>
                     </form>
-                    <button class="w-full flex items-center justify-between text-sm font-medium bg-white/20 hover:bg-white/30 rounded-md p-2 transition-colors">
+                    {{-- <button class="w-full flex items-center justify-between text-sm font-medium bg-white/20 hover:bg-white/30 rounded-md p-2 transition-colors">
                         <span class="flex items-center gap-2">
                             <i data-lucide="edit-3" class="w-4 h-4"></i>
                             Edit Details
                         </span>
                         <i data-lucide="chevron-right" class="w-4 h-4"></i>
-                    </button>
+                    </button> --}}
                 </div>
             </div>
 

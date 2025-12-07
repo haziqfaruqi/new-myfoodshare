@@ -162,7 +162,7 @@
                             </div>
                             <div class="flex-1 min-w-0">
                                 <p class="text-xs font-medium text-zinc-900 truncate">{{ $user->name }}</p>
-                                <p class="text-xs text-zinc-400">{{ $user->approved_at->diffForHumans() }}</p>
+                                <p class="text-xs text-zinc-400">{{ $user->approved_at && is_object($user->approved_at) ? $user->approved_at->diffForHumans() : ($user->approved_at ? \Carbon\Carbon::parse($user->approved_at)->diffForHumans() : 'Never') }}</p>
                             </div>
                         </div>
                         @empty
@@ -210,10 +210,10 @@
 
             <div class="flex gap-3 mt-6">
                 <button type="button" onclick="document.getElementById('reject-modal').classList.add('hidden')"
-                        class="flex-1 py-2 border border-zinc-200 text-zinc-700 rounded-md font-medium hover:bg-zinc-50 transition-colors">
+                        class="px-8 py-2.5 border border-zinc-200 text-zinc-700 rounded-md font-medium hover:bg-zinc-50 transition-colors">
                     Cancel
                 </button>
-                <button type="submit" class="flex-1 py-2 bg-red-600 text-white rounded-md font-medium hover:bg-red-500 transition-colors">
+                <button type="submit" class="px-8 py-2.5 bg-red-600 text-white rounded-md font-medium hover:bg-red-500 transition-colors">
                     Reject User
                 </button>
             </div>
