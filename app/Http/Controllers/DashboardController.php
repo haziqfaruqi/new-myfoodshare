@@ -546,6 +546,19 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
         $profile = $user->restaurantProfile;
+
+        // If no restaurant profile exists, create one with default values
+        if (!$profile) {
+            $profile = new \App\Models\RestaurantProfile([
+                'user_id' => $user->id,
+                'restaurant_name' => $user->name . ' Restaurant',
+                'cuisine_type' => 'other',
+                'status' => 'pending',
+                'email' => $user->email,
+            ]);
+            $profile->save();
+        }
+
         return view('restaurant.profile.edit', compact('user', 'profile'));
     }
 
@@ -557,23 +570,41 @@ class DashboardController extends Controller
         $user = auth()->user();
         $profile = $user->restaurantProfile;
 
+        // If no restaurant profile exists, create one
         if (!$profile) {
-            return back()->withErrors(['error' => 'Restaurant profile not found.']);
+            $profile = new \App\Models\RestaurantProfile([
+                'user_id' => $user->id,
+                'restaurant_name' => 'New Restaurant',
+                'cuisine_type' => 'other',
+                'status' => 'pending'
+            ]);
+            $profile->save();
         }
+
+        // Debug: Log the incoming request data
+        \Log::info('Restaurant profile update request:', $request->all());
 
         $validated = $request->validate([
             'restaurant_name' => 'required|string|max:255',
+            'cuisine_type' => 'required|string|max:50',
             'address' => 'required|string|max:255',
             'city' => 'required|string|max:100',
             'state' => 'required|string|max:100',
             'zip_code' => 'required|string|max:20',
             'phone' => 'nullable|string|max:20',
+            'email' => 'required|email|max:255',
             'website' => 'nullable|url|max:255',
             'business_hours' => 'nullable|string|max:255',
             'description' => 'nullable|string',
         ]);
 
-        $profile->update($validated);
+        // Debug: Log validated data
+        \Log::info('Validated restaurant profile data:', $validated);
+
+        $updated = $profile->update($validated);
+
+        // Debug: Log update result
+        \Log::info('Restaurant profile update result:', ['updated' => $updated, 'profile_id' => $profile->id]);
 
         return redirect()->route('restaurant.profile')
             ->with('success', 'Restaurant profile updated successfully!');
