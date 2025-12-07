@@ -77,7 +77,7 @@
 
     <!-- Navigation -->
     <nav class="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-zinc-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="px-4 sm:px-6 lg:px-8 w-full">
             <div class="flex justify-between h-16 items-center">
                 <!-- Logo -->
                 <div class="flex-shrink-0 flex items-center gap-2 cursor-pointer">
@@ -122,9 +122,9 @@
 
     <!-- Main Content -->
     <main class="flex-grow pt-24 pb-12 px-4 sm:px-6 lg:px-8">
-        
+
         <!-- Hero Section -->
-        <div class="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center mb-24">
+        <div class="grid lg:grid-cols-2 gap-12 items-center mb-24 w-full">
             <div class="space-y-6 animate-fade-in-up">
                 <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-medium">
                     <span class="relative flex h-2 w-2">
@@ -221,7 +221,7 @@
                 <p class="text-zinc-500">Select your role to access your dedicated dashboard.</p>
             </div>
 
-            <div class="max-w-4xl mx-auto grid md:grid-cols-2 gap-6">
+            <div class="grid md:grid-cols-2 gap-6 max-w-6xl mx-auto">
 
                 <!-- Card 1: Restaurant Owner -->
                 <div class="group relative bg-white border border-zinc-200 rounded-2xl p-8 hover:border-emerald-500 hover:shadow-xl hover:shadow-emerald-900/5 transition-all duration-300">
@@ -271,7 +271,7 @@
                 <div class="absolute bottom-0 right-1/4 w-64 h-64 bg-zinc-700/20 rounded-full blur-3xl"></div>
             </div>
 
-            <div class="relative z-10 max-w-4xl mx-auto">
+            <div class="relative z-10 max-w-6xl mx-auto">
                 <h2 class="text-2xl md:text-3xl font-bold mb-12">Our Collective Impact</h2>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
                     <div>
@@ -298,7 +298,7 @@
 
     <!-- Footer -->
     <footer class="bg-white border-t border-zinc-200">
-        <div class="max-w-7xl mx-auto px-6 py-12 flex flex-col md:flex-row justify-between items-center gap-6">
+        <div class="px-6 py-12 flex flex-col md:flex-row justify-between items-center gap-6 w-full max-w-7xl mx-auto">
             <div class="flex items-center gap-2">
                 <div class="bg-emerald-100 p-1.5 rounded-md">
                     <i data-lucide="leaf" class="w-4 h-4 text-emerald-600"></i>
