@@ -64,10 +64,13 @@
     </style>
 </head>
 <body class="bg-zinc-50 text-zinc-900 flex h-screen overflow-hidden selection:bg-emerald-100 selection:text-emerald-900">
+    <!-- Mobile Sidebar Overlay -->
+    <div id="admin-sidebar-overlay" class="fixed inset-0 bg-black/50 z-20 hidden md:hidden" onclick="toggleSidebar()"></div>
+
     @include('admin.partials.admin-sidebar')
 
     <!-- Main Content Area -->
-    <div class="flex-1 flex flex-col overflow-hidden">
+    <div class="flex-1 flex flex-col overflow-hidden md:ml-0">
         @include('admin.partials.admin-header')
 
         <!-- Main Content -->
@@ -80,6 +83,15 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         lucide.createIcons();
+
+        // Mobile Sidebar Toggle
+        function toggleSidebar() {
+            const sidebar = document.getElementById('admin-sidebar');
+            const overlay = document.getElementById('admin-sidebar-overlay');
+
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
 
         // Set active state for sidebar navigation
         const currentPath = window.location.pathname;

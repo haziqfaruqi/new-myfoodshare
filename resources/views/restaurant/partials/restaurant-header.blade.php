@@ -1,9 +1,9 @@
 <!-- Restaurant Header -->
 <header class="h-16 border-b border-zinc-200 bg-white/80 backdrop-blur-md sticky top-0 z-10 flex items-center justify-between px-6">
-    <div class="md:hidden flex items-center gap-2">
-        <i data-lucide="menu" class="w-5 h-5 text-zinc-600"></i>
+    <button onclick="toggleSidebar()" class="md:hidden flex items-center gap-2 text-zinc-600 hover:text-zinc-900 transition-colors">
+        <i data-lucide="menu" class="w-5 h-5"></i>
         <span class="font-semibold text-zinc-900">MyFoodshare</span>
-    </div>
+    </button>
 
     <div class="hidden md:flex items-center text-sm breadcrumbs text-zinc-500">
         <span>Partner Portal</span>

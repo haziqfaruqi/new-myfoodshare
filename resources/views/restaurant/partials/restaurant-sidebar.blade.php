@@ -1,5 +1,5 @@
 <!-- Sidebar Navigation -->
-<aside class="w-64 border-r border-zinc-200 bg-white hidden md:flex flex-col z-20">
+<aside id="restaurant-sidebar" class="w-64 border-r border-zinc-200 bg-white fixed md:static inset-y-0 left-0 transform z-30 transition-transform duration-300 ease-in-out md:transform-none -translate-x-full md:translate-x-0">
     <div class="h-16 flex items-center px-6 border-b border-zinc-100">
         <div class="flex items-center gap-2 text-emerald-600">
             <i data-lucide="leaf" class="w-6 h-6 fill-current"></i>

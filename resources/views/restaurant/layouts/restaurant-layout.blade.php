@@ -99,10 +99,13 @@
     </style>
 </head>
 <body class="bg-zinc-50 text-zinc-900 flex h-screen overflow-hidden">
+    <!-- Mobile Sidebar Overlay -->
+    <div id="restaurant-sidebar-overlay" class="fixed inset-0 bg-black/50 z-20 hidden md:hidden" onclick="toggleSidebar()"></div>
+
     @include('restaurant.partials.restaurant-sidebar')
 
     <!-- Main Content -->
-    <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
+    <main class="flex-1 flex flex-col h-screen overflow-hidden relative md:ml-0">
         @include('restaurant.partials.restaurant-header')
 
         <!-- Dashboard Content -->
@@ -116,6 +119,15 @@
     <script>
         // Initialize Icons
         lucide.createIcons();
+
+        // Mobile Sidebar Toggle
+        function toggleSidebar() {
+            const sidebar = document.getElementById('restaurant-sidebar');
+            const overlay = document.getElementById('restaurant-sidebar-overlay');
+
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
     </script>
 
     @yield('scripts')

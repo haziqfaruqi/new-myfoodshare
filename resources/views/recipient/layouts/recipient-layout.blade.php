@@ -13,6 +13,15 @@
             if (typeof lucide !== 'undefined') {
                 lucide.createIcons();
             }
+
+            // Mobile Sidebar Toggle
+            function toggleSidebar() {
+                const sidebar = document.getElementById('recipient-sidebar');
+                const overlay = document.getElementById('recipient-sidebar-overlay');
+
+                sidebar.classList.toggle('-translate-x-full');
+                overlay.classList.toggle('hidden');
+            }
         });
     </script>
     <style>
@@ -64,12 +73,14 @@
     </style>
 </head>
 <body class="bg-zinc-50 text-zinc-900 flex h-screen overflow-hidden">
+    <!-- Mobile Sidebar Overlay -->
+    <div id="recipient-sidebar-overlay" class="fixed inset-0 bg-black/50 z-20 hidden md:hidden" onclick="toggleSidebar()"></div>
 
     <!-- Sidebar Navigation -->
     @include('recipient.partials.sidebar')
 
     <!-- Main Content -->
-    <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
+    <main class="flex-1 flex flex-col h-screen overflow-hidden relative md:ml-0">
 
         <!-- Header -->
         @include('recipient.partials.header')
