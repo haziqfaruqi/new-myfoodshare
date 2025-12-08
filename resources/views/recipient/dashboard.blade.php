@@ -159,10 +159,16 @@
                             </div>
                             <div class="flex items-center justify-between pt-2 border-t border-zinc-100">
                                 <span class="text-xs text-zinc-500">{{ $listing->quantity }} {{ $listing->unit ?? 'units' }}</span>
-                                <form action="{{ route('recipient.matches.store', $listing->id) }}" method="POST" class="inline">
-                                    @csrf
-                                    <button type="submit" class="text-xs bg-zinc-900 text-white px-3 py-1 rounded-lg hover:bg-zinc-700 transition-colors">Request</button>
-                                </form>
+                                @if ($userMatches->has($listing->id))
+                                    <span class="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-lg cursor-not-allowed">
+                                        Requested
+                                    </span>
+                                @else
+                                    <form action="{{ route('recipient.matches.store', $listing->id) }}" method="POST" class="inline">
+                                        @csrf
+                                        <button type="submit" class="text-xs bg-zinc-900 text-white px-3 py-1 rounded-lg hover:bg-zinc-700 transition-colors">Request</button>
+                                    </form>
+                                @endif
                             </div>
                         </div>
                     </div>

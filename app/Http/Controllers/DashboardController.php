@@ -496,29 +496,61 @@ class DashboardController extends Controller
             }
         }
 
+        // Get user's existing matches for all food listings
+        $userMatches = collect();
+        if (auth()->user()->isRecipient()) {
+            $userMatches = FoodMatch::where('recipient_id', auth()->id())
+                ->whereIn('food_listing_id', FoodListing::pluck('id'))
+                ->get()
+                ->keyBy('food_listing_id');
+        }
+
         // Get upcoming pickups (matches that are confirmed or scheduled)
-        $upcomingPickups = $user->recipient ? $user->recipient->matches()
-            ->with(['foodListing.restaurantProfile', 'foodListing.creator'])
-            ->whereIn('status', ['approved', 'scheduled'])
-            ->orderBy('pickup_scheduled_at', 'asc')
-            ->get() : collect();
+        $upcomingPickups = collect();
+        if ($user->recipient) {
+            $upcomingPickups = $user->recipient->matches()
+                ->with(['foodListing.restaurantProfile', 'foodListing.creator'])
+                ->whereIn('status', ['approved', 'scheduled'])
+                ->orderBy('pickup_scheduled_at', 'asc')
+                ->get();
+        } else {
+            // Fallback: Try to get matches directly from user ID if recipient profile doesn't exist
+            $upcomingPickups = \App\Models\FoodMatch::where('recipient_id', $user->id)
+                ->with(['foodListing.restaurantProfile', 'foodListing.creator'])
+                ->whereIn('status', ['approved', 'scheduled'])
+                ->orderBy('pickup_scheduled_at', 'asc')
+                ->get();
+        }
 
         // Calculate available food count for sidebar
         $availableFoodCount = $this->getAvailableFoodCount();
 
         // Get stats
         $stats = [
-            'active_matches' => $user->recipient ? $user->recipient->matches()->whereIn('status', ['approved', 'scheduled'])->count() : 0,
-            'completed_pickups' => $user->recipient ? $user->recipient->matches()->where('status', 'completed')->count() : 0,
-            'total_food_received' => $user->recipient ? $user->recipient->matches()->where('status', 'completed')->count() : 0,
-            'pending_requests' => $user->recipient ? $user->recipient->matches()->where('status', 'pending')->count() : 0,
+            'active_matches' => 0,
+            'completed_pickups' => 0,
+            'total_food_received' => 0,
+            'pending_requests' => 0,
             'available_food_count' => $availableFoodCount,
         ];
+
+        if ($user->recipient) {
+            $stats['active_matches'] = $user->recipient->matches()->whereIn('status', ['approved', 'scheduled'])->count();
+            $stats['completed_pickups'] = $user->recipient->matches()->where('status', 'completed')->count();
+            $stats['total_food_received'] = $user->recipient->matches()->where('status', 'completed')->count();
+            $stats['pending_requests'] = $user->recipient->matches()->where('status', 'pending')->count();
+        } else {
+            // Fallback: Calculate directly from FoodMatch table
+            $stats['active_matches'] = FoodMatch::where('recipient_id', $user->id)->whereIn('status', ['approved', 'scheduled'])->count();
+            $stats['completed_pickups'] = FoodMatch::where('recipient_id', $user->id)->where('status', 'completed')->count();
+            $stats['total_food_received'] = FoodMatch::where('recipient_id', $user->id)->where('status', 'completed')->count();
+            $stats['pending_requests'] = FoodMatch::where('recipient_id', $user->id)->where('status', 'pending')->count();
+        }
 
         // Share available food count with all recipient views
         view()->share('availableFoodCount', $availableFoodCount);
 
-        return view('recipient.dashboard', compact('stats', 'nearbyFoodListings', 'upcomingPickups', 'pinnedLocation'));
+        return view('recipient.dashboard', compact('stats', 'nearbyFoodListings', 'upcomingPickups', 'userMatches', 'pinnedLocation'));
     }
 
     /**
@@ -716,11 +748,11 @@ class DashboardController extends Controller
         // Share available food count with sidebar
         view()->share('availableFoodCount', $nearbyFoodListings->count());
 
-        // Get user's existing matches for these food listings
+        // Get user's existing matches for all food listings
         $userMatches = collect();
         if (auth()->user()->isRecipient()) {
             $userMatches = FoodMatch::where('recipient_id', auth()->id())
-                ->whereIn('food_listing_id', $nearbyFoodListings->pluck('id'))
+                ->whereIn('food_listing_id', FoodListing::pluck('id'))
                 ->get()
                 ->keyBy('food_listing_id');
         }
