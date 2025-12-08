@@ -1,19 +1,70 @@
-/.phpunit.cache
-/node_modules
-/public/build
-/public/hot
-/public/storage
-/storage/*.key
-/vendor
+# Laravel
 .env
 .env.backup
 .env.production
-.phpunit.result.cache
-Homestead.json
-Homestead.yaml
-auth.json
+storage/*.key
+/public/hot
+/public/build
+/public/storage
+
+# Composer
+/vendor/
+composer.lock
+
+# Node
+node_modules/
 npm-debug.log
 yarn-error.log
-/.fleet
+.yarn-integrity
+
+# IDE
 /.idea
 /.vscode
+/.fleet
+*.sublime-project
+*.sublime-workspace
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Testing
+.phpunit.cache
+.phpunit.result.cache
+coverage/
+.php_coverage/
+
+# Logs
+*.log
+storage/logs/*.log
+
+# Cache
+bootstrap/cache/*
+!.gitkeep
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+
+# Database
+database/database.sqlite
+
+# Deploy keys
+*.pem
+
+# Claude AI
+.claude/settings.local.json
+
+# Windows specific
+Desktop.ini
+laragon_session.txt
+
+# Laravel Sail
+vendor/sail/bin/sail

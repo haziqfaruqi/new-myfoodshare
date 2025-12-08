@@ -110,7 +110,7 @@
                             @csrf
                             <button type="submit" class="px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 transition-colors">Request Now</button>
                         </form>
-                        <button class="px-3 py-1.5 bg-white text-blue-600 border border-blue-200 text-xs font-medium rounded-lg hover:bg-blue-50">View Details</button>
+                        <a href="{{ route('recipient.available-food') }}" class="px-3 py-1.5 bg-white text-blue-600 border border-blue-200 text-xs font-medium rounded-lg hover:bg-blue-50 inline-block">View Details</a>
                     </div>
                 </div>
                 <i data-lucide="zap" class="absolute right-[-10px] top-[-10px] w-32 h-32 text-blue-100 opacity-50 rotate-12"></i>
@@ -123,10 +123,18 @@
                     @foreach ($nearbyFoodListings as $listing)
                     <div class="bg-white rounded-xl border border-zinc-200 overflow-hidden shadow-sm group hover:border-blue-300 transition-all">
                         <div class="h-32 bg-zinc-100 relative">
-                            <img src="https://images.unsplash.com/photo-1584345604476-8ec5e12e42dd?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" class="w-full h-full object-cover">
+                            @if($listing->images && isset($listing->images[0]))
+                                <img src="{{ asset('storage/' . $listing->images[0]) }}"
+                                     class="w-full h-full object-cover"
+                                     alt="{{ $listing->food_name }}">
+                            @else
+                                <img src="https://images.unsplash.com/photo-1584345604476-8ec5e12e42dd?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+                                     class="w-full h-full object-cover"
+                                     alt="{{ $listing->food_name }}">
+                            @endif
                             <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
                             <div class="absolute bottom-3 left-3 text-white">
-                                <p class="font-semibold text-sm">{{ $listing->food_type ?? 'Food' }}</p>
+                                <p class="font-semibold text-sm">{{ $listing->food_name ?? $listing->food_type ?? 'Food' }}</p>
                                 <p class="text-xs opacity-90">{{ $listing->quantity ?? 'N/A' }}</p>
                             </div>
                             <span class="absolute top-3 right-3 bg-white/90 backdrop-blur text-zinc-800 text-[10px] font-bold px-2 py-0.5 rounded shadow-sm">{{ $listing->distance }} km</span>

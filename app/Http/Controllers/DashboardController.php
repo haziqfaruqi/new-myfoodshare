@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use App\Models\User;
 use App\Models\FoodListing;
 use App\Models\PickupVerification;
+use App\Models\FoodMatch;
 
 class DashboardController extends Controller
 {
@@ -431,7 +433,7 @@ class DashboardController extends Controller
         $earthRadius = 6371; // Earth's radius in kilometers
 
         $dLat = deg2rad($lat2 - $lat1);
-        $dLon = deg2rad($lon2 - $lat1);
+        $dLon = deg2rad($lon2 - $lon1);
 
         $a = sin($dLat/2) * sin($dLat/2) + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($dLon/2) * sin($dLon/2);
         $c = 2 * atan2(sqrt($a), sqrt(1-$a));
@@ -453,7 +455,7 @@ class DashboardController extends Controller
             $pinnedLocation = [
                 'latitude' => $user->latitude,
                 'longitude' => $user->longitude,
-                'name' => json_decode($user->profile_data)->location_name ?? 'Organization Location'
+                'name' => json_decode($user->profile_data ?: '{}')->location_name ?? 'Organization Location'
             ];
         } else {
             // Fallback to default location
@@ -475,8 +477,17 @@ class DashboardController extends Controller
                 ->get();
 
             foreach ($allListings as $listing) {
-                if ($listing->latitude && $listing->longitude) {
-                    $distance = $this->calculateDistance($userLat, $userLon, $listing->latitude, $listing->longitude);
+                // Get coordinates from listing or restaurant profile
+                $listingLat = $listing->latitude;
+                $listingLon = $listing->longitude;
+
+                if ((!$listingLat || !$listingLon) && $listing->restaurantProfile) {
+                    $listingLat = $listing->restaurantProfile->latitude;
+                    $listingLon = $listing->restaurantProfile->longitude;
+                }
+
+                if ($listingLat && $listingLon) {
+                    $distance = $this->calculateDistance($userLat, $userLon, $listingLat, $listingLon);
                     if ($distance <= 5) {
                         $listing->distance = round($distance, 1);
                         $nearbyFoodListings->push($listing);
@@ -653,9 +664,8 @@ class DashboardController extends Controller
         }
 
         // Get available food listings within 5km radius
-        $nearbyFoodListings = collect();
         if ($userLat && $userLon) {
-            $allListings = FoodListing::with(['restaurantProfile', 'creator'])
+            $allActiveListings = FoodListing::with(['restaurantProfile', 'creator'])
                 ->where('status', 'active')
                 ->where('approval_status', 'approved')
                 ->where(function ($q) {
@@ -667,9 +677,21 @@ class DashboardController extends Controller
                 })
                 ->get();
 
-            foreach ($allListings as $listing) {
-                if ($listing->latitude && $listing->longitude) {
-                    $distance = $this->calculateDistance($userLat, $userLon, $listing->latitude, $listing->longitude);
+            $nearbyFoodListings = collect();
+
+            foreach ($allActiveListings as $listing) {
+                // Get coordinates from listing or restaurant profile
+                $listingLat = $listing->latitude;
+                $listingLon = $listing->longitude;
+
+                if ((!$listingLat || !$listingLon) && $listing->restaurantProfile) {
+                    $listingLat = $listing->restaurantProfile->latitude;
+                    $listingLon = $listing->restaurantProfile->longitude;
+                }
+
+                if ($listingLat && $listingLon) {
+                    $distance = $this->calculateDistance($userLat, $userLon, $listingLat, $listingLon);
+
                     if ($distance <= 5) {
                         $listing->distance = round($distance, 1);
                         $nearbyFoodListings->push($listing);
@@ -677,7 +699,7 @@ class DashboardController extends Controller
                 }
             }
         } else {
-            // If user doesn't have coordinates, get all active approved listings (same logic as getAvailableFoodCount)
+            // If user doesn't have coordinates, get all active approved listings
             $nearbyFoodListings = FoodListing::with(['restaurantProfile', 'creator'])
                 ->where('status', 'active')
                 ->where('approval_status', 'approved')
@@ -694,11 +716,29 @@ class DashboardController extends Controller
         // Share available food count with sidebar
         view()->share('availableFoodCount', $nearbyFoodListings->count());
 
-        $foodListings = FoodListing::where('status', 'available')
-            ->orderBy('expiry_datetime', 'asc')
-            ->paginate(12);
+        // Get user's existing matches for these food listings
+        $userMatches = collect();
+        if (auth()->user()->isRecipient()) {
+            $userMatches = FoodMatch::where('recipient_id', auth()->id())
+                ->whereIn('food_listing_id', $nearbyFoodListings->pluck('id'))
+                ->get()
+                ->keyBy('food_listing_id');
+        }
 
-        return view('recipient.available-food', compact('foodListings'));
+        // Paginate the nearby food listings
+        $page = request()->get('page', 1);
+        $perPage = 12;
+        $offset = ($page - 1) * $perPage;
+
+        $paginatedListings = new \Illuminate\Pagination\LengthAwarePaginator(
+            $nearbyFoodListings->slice($offset, $perPage),
+            $nearbyFoodListings->count(),
+            $perPage,
+            $page,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
+
+        return view('recipient.available-food', compact('paginatedListings', 'userMatches'));
     }
 
     /**
@@ -763,7 +803,7 @@ class DashboardController extends Controller
             $pinnedLocation = [
                 'latitude' => $user->latitude,
                 'longitude' => $user->longitude,
-                'name' => json_decode($user->profile_data)->location_name ?? 'Organization Location'
+                'name' => json_decode($user->profile_data ?: '{}')->location_name ?? 'Organization Location'
             ];
         }
 
@@ -1018,7 +1058,7 @@ class DashboardController extends Controller
 
         // Group by recipient
         $recipientStats = $pickupVerifications->groupBy(function($item) {
-            return $item->match->recipient->organization_name ?? $item->match->recipient->name;
+            return $item->match->recipient ? ($item->match->recipient->organization_name ?? $item->match->recipient->name) : 'Unknown Recipient';
         });
 
         // Generate CSV for download
@@ -1072,7 +1112,7 @@ class DashboardController extends Controller
                     $verification->match->id,
                     $verification->match->foodListing->food_name,
                     $verification->match->restaurant->restaurant_name ?? $verification->match->foodListing->creator->name,
-                    $verification->match->recipient->organization_name ?? $verification->match->recipient->name,
+                    $verification->match->recipient ? ($verification->match->recipient->organization_name ?? $verification->match->recipient->name) : 'Unknown Recipient',
                     $verification->match->pickup_scheduled_at->format('Y-m-d H:i:s'),
                     $verification->scanned_at->format('Y-m-d H:i:s'),
                     $verification->verification_status,

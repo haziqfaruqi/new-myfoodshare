@@ -54,11 +54,18 @@
     <!-- Food Listings Grid -->
     <div class="flex-1 overflow-y-auto px-6 md:px-8 pb-6">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            @foreach ($foodListings as $listing)
+            @foreach ($paginatedListings as $listing)
             <div class="bg-white rounded-xl border border-zinc-200 overflow-hidden shadow-sm group hover:border-blue-300 transition-all">
                 <div class="h-48 bg-zinc-100 relative">
-                    <img src="https://images.unsplash.com/photo-1584345604476-8ec5e12e42dd?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
-                         class="w-full h-full object-cover">
+                    @if($listing->images && isset($listing->images[0]))
+                        <img src="{{ asset('storage/' . $listing->images[0]) }}"
+                             class="w-full h-full object-cover"
+                             alt="{{ $listing->food_name }}">
+                    @else
+                        <img src="https://images.unsplash.com/photo-1584345604476-8ec5e12e42dd?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+                             class="w-full h-full object-cover"
+                             alt="{{ $listing->food_name }}">
+                    @endif
                     <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
                     <div class="absolute bottom-3 left-3 text-white">
                         <p class="font-semibold text-lg">{{ $listing->food_name ?? $listing->food_type ?? 'Food' }}</p>
@@ -104,12 +111,18 @@
                                 <span class="text-xs text-amber-600 font-medium">{{ $listing->dietary_info['type'] ?? 'Dietary' }}</span>
                             @endif
                         </div>
-                        <form action="{{ route('recipient.matches.store', $listing->id) }}" method="POST" class="inline">
-                            @csrf
-                            <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
-                                Request Food
-                            </button>
-                        </form>
+                        @if ($userMatches->has($listing->id))
+                            <span class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg cursor-not-allowed">
+                                Requested
+                            </span>
+                        @else
+                            <form action="{{ route('recipient.matches.store', $listing->id) }}" method="POST" class="inline" onsubmit="handleRequestFood(this)">
+                                @csrf
+                                <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
+                                    Request Food
+                                </button>
+                            </form>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -117,7 +130,7 @@
         </div>
 
         <!-- Empty State -->
-        @if ($foodListings->isEmpty())
+        @if ($paginatedListings->isEmpty())
         <div class="text-center py-12">
             <i data-lucide="search-x" class="w-16 h-16 text-zinc-300 mx-auto mb-4"></i>
             <h3 class="text-lg font-medium text-zinc-900 mb-2">No food available</h3>
@@ -133,14 +146,14 @@
     </div>
 
     <!-- Pagination -->
-    @if ($foodListings->hasPages())
+    @if ($paginatedListings->hasPages())
     <div class="px-6 md:px-8 py-4 border-t border-zinc-200">
         <div class="flex items-center justify-between">
             <p class="text-sm text-zinc-500">
-                Showing {{ $foodListings->firstItem() }}-{{ $foodListings->lastItem() }} of {{ $foodListings->total() }} results
+                Showing {{ $paginatedListings->firstItem() }}-{{ $paginatedListings->lastItem() }} of {{ $paginatedListings->total() }} results
             </p>
             <div class="flex gap-2">
-                {{ $foodListings->links() }}
+                {{ $paginatedListings->links() }}
             </div>
         </div>
     </div>
@@ -242,7 +255,48 @@
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();
         }
+
+        // Global error handler
+        document.addEventListener('DOMContentLoaded', function() {
+            const originalFetch = window.fetch;
+            window.fetch = function(...args) {
+                return originalFetch.apply(this, args).catch(function(error) {
+                    document.body.classList.add('error-shown');
+                    throw error;
+                });
+            };
+        });
     });
+
+    // Handle food request button state
+    function handleRequestFood(form) {
+        const button = form.querySelector('button[type="submit"]');
+        const originalText = button.textContent;
+
+        // Change button state
+        button.disabled = true;
+        button.textContent = 'Requesting...';
+        button.classList.add('opacity-75', 'cursor-not-allowed');
+
+        // Listen for form submission response
+        form.addEventListener('submit', function(e) {
+            // If server returns an error (like validation error), restore button
+            setTimeout(function() {
+                if (!document.body.classList.contains('error-shown')) {
+                    button.disabled = false;
+                    button.textContent = originalText;
+                    button.classList.remove('opacity-75', 'cursor-not-allowed');
+                }
+            }, 100);
+        });
+
+        // If form submission fails (network error), restore original state
+        form.addEventListener('error', function() {
+            button.disabled = false;
+            button.textContent = originalText;
+            button.classList.remove('opacity-75', 'cursor-not-allowed');
+        });
+    }
 
     // Filters Modal Functions
     function openFiltersModal() {

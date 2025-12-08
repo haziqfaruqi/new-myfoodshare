@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Notification;
 use App\Notifications\MatchCreatedNotification;
 use App\Notifications\MatchApprovedNotification;
 use App\Notifications\MatchScheduledNotification;
+use App\Notifications\MatchRejectedNotification;
+use App\Notifications\AutoMatchNotification;
 use App\Events\MatchStatusUpdated;
 
 class FoodMatchController extends Controller
@@ -43,12 +45,27 @@ class FoodMatchController extends Controller
         // Calculate distance if user has coordinates
         $distance = null;
         if (Auth::user()->latitude && Auth::user()->longitude) {
-            $distance = $this->calculateDistance(
-                $foodListing->latitude,
-                $foodListing->longitude,
-                Auth::user()->latitude,
-                Auth::user()->longitude
-            );
+            // Get food listing coordinates, fallback to restaurant profile
+            $listingLat = $foodListing->latitude;
+            $listingLon = $foodListing->longitude;
+
+            // If food listing has no coordinates, use restaurant profile coordinates
+            if (!$listingLat || !$listingLon) {
+                if ($foodListing->restaurantProfile) {
+                    $listingLat = $foodListing->restaurantProfile->latitude;
+                    $listingLon = $foodListing->restaurantProfile->longitude;
+                }
+            }
+
+            // Only calculate distance if we have valid coordinates for both
+            if ($listingLat && $listingLon) {
+                $distance = $this->calculateDistance(
+                    $listingLat,
+                    $listingLon,
+                    Auth::user()->latitude,
+                    Auth::user()->longitude
+                );
+            }
         }
 
         $match = FoodMatch::create([
@@ -136,12 +153,17 @@ class FoodMatchController extends Controller
             ->count();
 
         // Get paginated matches for the list
-        $requests = FoodMatch::with(['recipient', 'foodListing'])
+        $status = request('status');
+        $requestsQuery = FoodMatch::with(['recipient', 'foodListing'])
             ->whereHas('foodListing', function($query) {
                 $query->where('created_by', Auth::id());
-            })
-            ->latest()
-            ->paginate(10);
+            });
+
+        if ($status) {
+            $requestsQuery->where('status', $status);
+        }
+
+        $requests = $requestsQuery->latest()->paginate(10);
 
         return view('restaurant.requests.index', compact('pendingRequests', 'approvedRequests', 'rejectedRequests', 'completedRequests', 'requests'));
     }
@@ -186,8 +208,10 @@ class FoodMatchController extends Controller
             // Generate QR code
             $match->generateQrCode();
 
-            // Notify recipient
-            $match->recipient->notify(new MatchApprovedNotification($match));
+            // Notify recipient if they exist
+            if ($match->recipient) {
+                $match->recipient->notify(new MatchApprovedNotification($match));
+            }
 
             // Broadcast real-time update
             event(new MatchStatusUpdated($match));
@@ -216,8 +240,10 @@ class FoodMatchController extends Controller
             'notes' => $request->input('notes', ''),
         ]);
 
-        // Notify recipient
-        $match->recipient->notify(new \App\Notifications\MatchRejectedNotification($match));
+        // Notify recipient if they exist
+        if ($match->recipient) {
+            $match->recipient->notify(new MatchRejectedNotification($match));
+        }
 
         // Broadcast real-time update
         event(new MatchStatusUpdated($match));
@@ -256,8 +282,10 @@ class FoodMatchController extends Controller
             'notes' => $validated['notes'],
         ]);
 
-        // Notify recipient about scheduled pickup
-        $match->recipient->notify(new MatchScheduledNotification($match));
+        // Notify recipient about scheduled pickup if they exist
+        if ($match->recipient) {
+            $match->recipient->notify(new MatchScheduledNotification($match));
+        }
 
         // Broadcast real-time update
         event(new MatchStatusUpdated($match));
@@ -372,9 +400,26 @@ class FoodMatchController extends Controller
         $newMatches = [];
 
         foreach ($recipients as $recipient) {
+            // Get food listing coordinates, fallback to restaurant profile
+            $listingLat = $foodListing->latitude;
+            $listingLon = $foodListing->longitude;
+
+            // If food listing has no coordinates, use restaurant profile coordinates
+            if (!$listingLat || !$listingLon) {
+                if ($foodListing->restaurantProfile) {
+                    $listingLat = $foodListing->restaurantProfile->latitude;
+                    $listingLon = $foodListing->restaurantProfile->longitude;
+                }
+            }
+
+            // Only create match if we have valid coordinates for both
+            if (!$listingLat || !$listingLon || !$recipient->latitude || !$recipient->longitude) {
+                continue;
+            }
+
             $distance = $this->calculateDistance(
-                $foodListing->latitude,
-                $foodListing->longitude,
+                $listingLat,
+                $listingLon,
                 $recipient->latitude,
                 $recipient->longitude
             );
@@ -396,8 +441,10 @@ class FoodMatchController extends Controller
 
                     $newMatches[] = $match;
 
-                    // Notify recipient about auto-match
-                    $recipient->notify(new \App\Notifications\AutoMatchNotification($match));
+                    // Notify recipient about auto-match if they exist
+                    if ($recipient) {
+                        $recipient->notify(new AutoMatchNotification($match));
+                    }
 
                     // Broadcast real-time event
                     event(new MatchStatusUpdated($match));

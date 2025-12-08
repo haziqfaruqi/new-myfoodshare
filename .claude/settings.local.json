@@ -23,7 +23,10 @@
       "Bash(findstr:*)",
       "Bash(tasklist:*)",
       "Bash(dir:*)",
-      "Bash(start:*)"
+      "Bash(start:*)",
+      "Bash(composer require:*)",
+      "Bash(composer show:*)",
+      "Bash(composer dump-autoload:*)"
     ],
     "deny": [],
     "ask": []

@@ -44,7 +44,7 @@ class MatchStatusUpdated implements ShouldBroadcast
             'food_name' => $this->match->foodListing->food_name,
             'quantity' => $this->match->foodListing->quantity,
             'restaurant_name' => $this->match->foodListing->restaurantProfile->restaurant_name,
-            'recipient_name' => $this->match->recipient->name,
+            'recipient_name' => $this->match->recipient ? ($this->match->recipient->organization_name ?? $this->match->recipient->name) : 'Unknown Recipient',
             'status' => $this->match->status,
             'qr_code' => $this->match->qr_code,
             'pickup_scheduled_at' => $this->match->pickup_scheduled_at?->format('Y-m-d H:i:s'),

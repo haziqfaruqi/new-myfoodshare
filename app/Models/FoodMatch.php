@@ -91,8 +91,10 @@ class FoodMatch extends Model
         $this->qr_code = $verification->verification_code;
         $this->save();
 
-        // Notify recipient about pickup confirmation
-        $this->recipient->notify(new PickupConfirmedNotification($this));
+        // Notify recipient about pickup confirmation if they exist
+        if ($this->recipient) {
+            $this->recipient->notify(new PickupConfirmedNotification($this));
+        }
 
         // Broadcast real-time update
         event(new MatchStatusUpdated($this));
@@ -107,8 +109,10 @@ class FoodMatch extends Model
             'pickup_scheduled_at' => $scheduledAt,
         ]);
 
-        // Notify recipient about the scheduled pickup
-        $this->recipient->notify(new PickupScheduledNotification($this));
+        // Notify recipient about the scheduled pickup if they exist
+        if ($this->recipient) {
+            $this->recipient->notify(new PickupScheduledNotification($this));
+        }
 
         // Broadcast real-time update
         event(new MatchStatusUpdated($this));
@@ -123,8 +127,10 @@ class FoodMatch extends Model
             'completed_at' => now(),
         ]);
 
-        // Notify donor about completed pickup
-        $this->foodListing->creator->notify(new PickupCompletedNotification($this));
+        // Notify donor about completed pickup if they exist
+        if ($this->foodListing->creator) {
+            $this->foodListing->creator->notify(new PickupCompletedNotification($this));
+        }
 
         // Update food listing status if this was the last active match
         $activeMaches = FoodMatch::where('food_listing_id', $this->food_listing_id)
@@ -146,5 +152,39 @@ class FoodMatch extends Model
         ]);
 
         return $this;
+    }
+
+    /**
+     * Get CSS class for status badge
+     */
+    public function getStatusColorClass()
+    {
+        return match($this->status) {
+            'pending' => 'bg-amber-100 text-amber-800',
+            'approved' => 'bg-emerald-100 text-emerald-800',
+            'rejected' => 'bg-red-100 text-red-800',
+            'scheduled' => 'bg-blue-100 text-blue-800',
+            'in_progress' => 'bg-purple-100 text-purple-800',
+            'completed' => 'bg-green-100 text-green-800',
+            'cancelled' => 'bg-gray-100 text-gray-800',
+            default => 'bg-gray-100 text-gray-800',
+        };
+    }
+
+    /**
+     * Get user-friendly status label
+     */
+    public function getStatusLabelAttribute()
+    {
+        return match($this->status) {
+            'pending' => 'Pending',
+            'approved' => 'Approved',
+            'rejected' => 'Rejected',
+            'scheduled' => 'Scheduled',
+            'in_progress' => 'In Progress',
+            'completed' => 'Completed',
+            'cancelled' => 'Cancelled',
+            default => ucfirst($this->status),
+        };
     }
 }

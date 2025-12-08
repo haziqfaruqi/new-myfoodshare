@@ -99,9 +99,15 @@
                 <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                     <div class="flex-1">
                         <div class="flex items-start gap-4">
-                            <div class="w-12 h-12 bg-zinc-100 rounded-lg flex items-center justify-center">
-                                <i data-lucide="package" class="w-6 h-6 text-zinc-600"></i>
-                            </div>
+                            @if($request->foodListing->images && isset($request->foodListing->images[0]))
+                                <img src="{{ asset('storage/' . $request->foodListing->images[0]) }}"
+                                     class="w-12 h-12 rounded-lg object-cover"
+                                     alt="{{ $request->foodListing->food_name }}">
+                            @else
+                                <div class="w-12 h-12 bg-zinc-100 rounded-lg flex items-center justify-center">
+                                    <i data-lucide="package" class="w-6 h-6 text-zinc-600"></i>
+                                </div>
+                            @endif
                             <div class="flex-1">
                                 <div class="flex items-start justify-between">
                                     <div>
@@ -116,7 +122,7 @@
                                 <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                                     <div>
                                         <span class="text-xs text-zinc-500">Recipient:</span>
-                                        <span class="font-medium text-zinc-900 ml-1">{{ $request->recipient->organization_name ?? $request->recipient->name }}</span>
+                                        <span class="font-medium text-zinc-900 ml-1">{{ $request->recipient ? ($request->recipient->organization_name ?? $request->recipient->name) : 'Unknown Recipient' }}</span>
                                     </div>
                                     <div>
                                         <span class="text-xs text-zinc-500">Requested:</span>
