@@ -102,7 +102,7 @@
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-zinc-200">
-                    @foreach(User::take(10) as $user)
+                    @foreach($users as $user)
                     <tr class="hover:bg-zinc-50">
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-3">
@@ -167,11 +167,10 @@
 
         <div class="px-6 py-4 border-t border-zinc-200 bg-zinc-50">
             <div class="flex items-center justify-between">
-                <p class="text-sm text-zinc-500">Showing 1-10 of {{ User::count() }} users</p>
-                <div class="flex items-center gap-2">
-                    <button class="px-3 py-1 text-sm text-zinc-600 hover:text-zinc-900 bg-white border border-zinc-200 rounded-md">Previous</button>
-                    <button class="px-3 py-1 text-sm text-zinc-600 hover:text-zinc-900 bg-white border border-zinc-200 rounded-md">Next</button>
-                </div>
+                <p class="text-sm text-zinc-500">
+                    Showing {{ $users->firstItem() }}-{{ $users->lastItem() }} of {{ $users->total() }} users
+                </p>
+                {{ $users->links() }}
             </div>
         </div>
     </div>

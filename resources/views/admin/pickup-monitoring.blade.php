@@ -86,7 +86,7 @@
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-center gap-2">
                                         <h3 class="text-sm font-medium text-zinc-900">{{ $activePickup->foodListing->food_name }}</h3>
-                                        @if($activePickup->pickup_scheduled_at->diffInHours(now()) <= 2)
+                                        @if($activePickup->pickup_scheduled_at && $activePickup->pickup_scheduled_at->diffInHours(now()) <= 2)
                                             <span class="text-xs font-medium bg-red-100 text-red-700 px-2 py-0.5 rounded-full pulse-slow">URGENT</span>
                                         @endif
                                     </div>
@@ -98,7 +98,7 @@
                                         </div>
                                         <div class="flex items-center gap-1 text-xs text-zinc-600">
                                             <i data-lucide="truck" class="w-3 h-3"></i>
-                                            {{ $activePickup->pickup_scheduled_at->format('M j, g:i A') }}
+                                            {{ $activePickup->pickup_scheduled_at?->format('M j, g:i A') ?? 'No schedule' }}
                                         </div>
                                     </div>
                                 </div>
@@ -249,7 +249,7 @@
                 </div>
                 <div class="flex justify-between text-sm">
                     <span class="text-zinc-600">Scheduled:</span>
-                    <span class="font-medium text-zinc-900">{{ $activePickups->first()->pickup_scheduled_at->format('M j, Y g:i A') }}</span>
+                    <span class="font-medium text-zinc-900">{{ $activePickups->first()->pickup_scheduled_at?->format('M j, Y g:i A') ?? 'No schedule' }}</span>
                 </div>
                 @else
                 <div class="text-center text-sm text-zinc-500">
