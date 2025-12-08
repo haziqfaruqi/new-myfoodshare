@@ -283,7 +283,27 @@ class DashboardController extends Controller
                 ];
             });
 
-        return view('restaurant.dashboard', compact('stats', 'recentListings', 'notifications'));
+        // Count active recipients within 5km
+        $activeRecipientsNearby = 0;
+        $restaurantLat = $restaurantProfile->latitude;
+        $restaurantLng = $restaurantProfile->longitude;
+
+        if ($restaurantLat && $restaurantLng) {
+            // Get all users with recipient profiles that have location data
+            $recipientsWithLocation = User::whereHas('recipient')
+                ->whereNotNull('latitude')
+                ->whereNotNull('longitude')
+                ->get();
+
+            foreach ($recipientsWithLocation as $recipient) {
+                $distance = $this->calculateDistance($restaurantLat, $restaurantLng, $recipient->latitude, $recipient->longitude);
+                if ($distance <= 5) {
+                    $activeRecipientsNearby++;
+                }
+            }
+        }
+
+        return view('restaurant.dashboard', compact('stats', 'recentListings', 'notifications', 'activeRecipientsNearby'));
     }
 
     /**

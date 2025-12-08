@@ -238,7 +238,7 @@
                                 <div class="flex items-start justify-between">
                                     <div>
                                         <h3 class="font-medium">Local Reach</h3>
-                                        <p class="text-xs text-zinc-400 mt-1">Your donations help people within 3 miles.</p>
+                                        <p class="text-xs text-zinc-400 mt-1">Your donations help people within 5 kilometers.</p>
                                     </div>
                                     <div class="bg-white/10 p-2 rounded-lg backdrop-blur-sm">
                                         <i data-lucide="map" class="w-4 h-4"></i>
@@ -247,7 +247,7 @@
                                 <div class="mt-8">
                                     <div class="flex items-center gap-2 text-xs">
                                         <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                                        <span>4 Active Shelters nearby</span>
+                                        <span>{{ $activeRecipientsNearby }} Active Recipient{{ $activeRecipientsNearby !== 1 ? 's' : '' }} nearby</span>
                                     </div>
                                 </div>
                             </div>
