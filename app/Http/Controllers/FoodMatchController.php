@@ -152,6 +152,12 @@ class FoodMatchController extends Controller
             ->where('status', 'completed')
             ->count();
 
+        $scheduledRequests = FoodMatch::whereHas('foodListing', function($query) {
+                $query->where('created_by', Auth::id());
+            })
+            ->where('status', 'scheduled')
+            ->count();
+
         // Get paginated matches for the list
         $status = request('status');
         $requestsQuery = FoodMatch::with(['recipient', 'foodListing'])
@@ -165,7 +171,7 @@ class FoodMatchController extends Controller
 
         $requests = $requestsQuery->latest()->paginate(10);
 
-        return view('restaurant.requests.index', compact('pendingRequests', 'approvedRequests', 'rejectedRequests', 'completedRequests', 'requests'));
+        return view('restaurant.requests.index', compact('pendingRequests', 'approvedRequests', 'rejectedRequests', 'completedRequests', 'scheduledRequests', 'requests'));
     }
 
     /**
@@ -217,7 +223,7 @@ class FoodMatchController extends Controller
             event(new MatchStatusUpdated($match));
         });
 
-        return redirect()->route('restaurant.matches.index')
+        return redirect()->route('restaurant.requests')
             ->with('success', 'Match approved successfully! QR code generated for pickup verification.');
     }
 
@@ -248,7 +254,7 @@ class FoodMatchController extends Controller
         // Broadcast real-time update
         event(new MatchStatusUpdated($match));
 
-        return redirect()->route('restaurant.matches.index')
+        return redirect()->route('restaurant.requests')
             ->with('success', 'Match rejected successfully.');
     }
 
@@ -290,7 +296,7 @@ class FoodMatchController extends Controller
         // Broadcast real-time update
         event(new MatchStatusUpdated($match));
 
-        return redirect()->route('restaurant.matches.index')
+        return redirect()->route('restaurant.requests')
             ->with('success', 'Pickup scheduled successfully!');
     }
 

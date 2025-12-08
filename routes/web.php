@@ -100,14 +100,7 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/ngo-profile', [DashboardController::class, 'updateNgoProfile'])->name('recipient.ngo-profile.update');
     });
 
-    // Restaurant owner matching routes
-    Route::middleware(['role:restaurant_owner'])->prefix('restaurant')->group(function () {
-        Route::get('/matches', [FoodMatchController::class, 'restaurantIndex'])->name('restaurant.matches.index');
-        Route::get('/matches/{match}', [FoodMatchController::class, 'restaurantShow'])->name('restaurant.matches.show');
-        Route::post('/matches/{match}/approve', [FoodMatchController::class, 'approve'])->name('restaurant.matches.approve');
-        Route::post('/matches/{match}/reject', [FoodMatchController::class, 'reject'])->name('restaurant.matches.reject');
-        Route::post('/matches/{match}/schedule', [FoodMatchController::class, 'schedule'])->name('restaurant.matches.schedule');
-    });
+    // Restaurant owner matching routes are already defined above
 
     // Admin matching routes
     Route::middleware(['role:admin'])->prefix('admin')->group(function () {

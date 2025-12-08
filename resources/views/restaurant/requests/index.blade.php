@@ -60,7 +60,7 @@
             </div>
             <div class="flex items-baseline gap-2">
                 <span class="text-2xl font-bold text-zinc-900">{{ $completedRequests }}</span>
-                <span class="text-xs font-medium text-blue-600">this month</span>
+                <span class="text-xs font-medium text-blue-600">completed</span>
             </div>
         </div>
     </div>
@@ -69,8 +69,13 @@
     <div class="bg-white rounded-xl border border-zinc-200">
         <div class="border-b border-zinc-200">
             <nav class="flex -mb-px">
+                <a href="{{ route('restaurant.requests') }}"
+                   class="py-4 px-6 border-b-2 text-sm font-medium {{ !request('status') ? 'border-emerald-500 text-emerald-600' : 'border-transparent text-zinc-500 hover:text-zinc-700 hover:border-gray-300' }}">
+                    All
+                    <span class="ml-2 bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded-full">{{ $pendingRequests + $approvedRequests + $rejectedRequests + $completedRequests + $scheduledRequests }}</span>
+                </a>
                 <a href="{{ route('restaurant.requests') }}?status=pending"
-                   class="py-4 px-6 border-b-2 text-sm font-medium {{ request('status') == 'pending' || !request('status') ? 'border-emerald-500 text-emerald-600' : 'border-transparent text-zinc-500 hover:text-zinc-700 hover:border-gray-300' }}">
+                   class="py-4 px-6 border-b-2 text-sm font-medium {{ request('status') == 'pending' ? 'border-emerald-500 text-emerald-600' : 'border-transparent text-zinc-500 hover:text-zinc-700 hover:border-gray-300' }}">
                     Pending Requests
                     <span class="ml-2 bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded-full">{{ $pendingRequests }}</span>
                 </a>
@@ -78,6 +83,11 @@
                    class="py-4 px-6 border-b-2 text-sm font-medium {{ request('status') == 'approved' ? 'border-emerald-500 text-emerald-600' : 'border-transparent text-zinc-500 hover:text-zinc-700 hover:border-gray-300' }}">
                     Approved
                     <span class="ml-2 bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded-full">{{ $approvedRequests }}</span>
+                </a>
+                <a href="{{ route('restaurant.requests') }}?status=scheduled"
+                   class="py-4 px-6 border-b-2 text-sm font-medium {{ request('status') == 'scheduled' ? 'border-emerald-500 text-emerald-600' : 'border-transparent text-zinc-500 hover:text-zinc-700 hover:border-gray-300' }}">
+                    Scheduled
+                    <span class="ml-2 bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded-full">{{ $scheduledRequests }}</span>
                 </a>
                 <a href="{{ route('restaurant.requests') }}?status=rejected"
                    class="py-4 px-6 border-b-2 text-sm font-medium {{ request('status') == 'rejected' ? 'border-emerald-500 text-emerald-600' : 'border-transparent text-zinc-500 hover:text-zinc-700 hover:border-gray-300' }}">
@@ -152,30 +162,41 @@
                     </div>
 
                     <!-- Action Buttons -->
-                    <div class="flex items-center gap-2">
-                        <a href="{{ route('restaurant.requests.show', $request->id) }}" class="text-xs font-medium text-zinc-600 hover:text-zinc-900 px-3 py-1.5 rounded-lg hover:bg-zinc-50 transition-colors">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <a href="{{ route('restaurant.requests.show', $request->id) }}" class="text-xs font-medium text-zinc-600 hover:text-zinc-900 px-3 py-1.5 rounded-lg hover:bg-zinc-50 transition-colors flex items-center gap-1">
+                            <i data-lucide="eye" class="w-3 h-3"></i>
                             View Details
                         </a>
 
                         @if($request->status === 'pending')
                         <form action="{{ route('restaurant.requests.approve', $request->id) }}" method="POST" class="inline">
                             @csrf
-                            <button type="submit" class="text-xs font-medium bg-emerald-600 text-white px-3 py-1.5 rounded-lg hover:bg-emerald-700 transition-colors">
+                            <button type="submit" class="text-xs font-medium bg-emerald-600 text-white px-3 py-1.5 rounded-lg hover:bg-emerald-700 transition-colors flex items-center gap-1">
+                                <i data-lucide="check" class="w-3 h-3"></i>
                                 Approve
                             </button>
                         </form>
                         <form action="{{ route('restaurant.requests.reject', $request->id) }}" method="POST" class="inline">
                             @csrf
-                            <button type="submit" class="text-xs font-medium bg-red-600 text-white px-3 py-1.5 rounded-lg hover:bg-red-700 transition-colors">
+                            <button type="submit" class="text-xs font-medium bg-red-600 text-white px-3 py-1.5 rounded-lg hover:bg-red-700 transition-colors flex items-center gap-1">
+                                <i data-lucide="x" class="w-3 h-3"></i>
                                 Reject
                             </button>
                         </form>
                         @endif
 
                         @if($request->status === 'approved')
-                        <a href="{{ route('restaurant.schedule') }}" class="text-xs font-medium text-blue-600 hover:text-blue-700">
-                            <i data-lucide="clock" class="w-4 h-4"></i>
-                        </a>
+                            <button type="button" onclick="openScheduleModal({{ $request->id }})" class="text-xs font-medium bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1">
+                                <i data-lucide="calendar" class="w-3 h-3"></i>
+                                Schedule
+                            </button>
+                        @endif
+
+                        @if($request->status === 'scheduled')
+                            <button class="text-xs font-medium bg-green-600 text-white px-3 py-1.5 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-1">
+                                <i data-lucide="check-circle" class="w-3 h-3"></i>
+                                Scheduled
+                            </button>
                         @endif
                     </div>
                 </div>
@@ -204,12 +225,146 @@
         </div>
     </div>
 </div>
+
+    <!-- Schedule Modal -->
+    <div id="scheduleModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-6 w-full max-w-md mx-4">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-zinc-900">Schedule Pickup</h3>
+                <button onclick="closeScheduleModal()" class="text-zinc-400 hover:text-zinc-600">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form id="scheduleForm" action="{{ route('restaurant.requests.schedule', '__MATCH_ID__') }}" method="POST">
+                @csrf
+                <input type="hidden" name="_token" value="{{ csrf_token() }}">
+
+                <div class="space-y-4">
+                    <div>
+                        <label for="pickup_date" class="block text-sm font-medium text-zinc-700 mb-1">
+                            Pickup Date
+                        </label>
+                        <input type="date"
+                               id="pickup_date"
+                               name="pickup_date"
+                               required
+                               class="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                               min="{{ date('Y-m-d') }}">
+                    </div>
+
+                    <div>
+                        <label for="pickup_time" class="block text-sm font-medium text-zinc-700 mb-1">
+                            Pickup Time
+                        </label>
+                        <input type="time"
+                               id="pickup_time"
+                               name="pickup_time"
+                               required
+                               class="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+
+                    <div>
+                        <label for="notes" class="block text-sm font-medium text-zinc-700 mb-1">
+                            Notes (Optional)
+                        </label>
+                        <textarea id="notes"
+                                  name="notes"
+                                  rows="3"
+                                  maxlength="500"
+                                  placeholder="Any special instructions for the pickup..."
+                                  class="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"></textarea>
+                        <p class="text-xs text-zinc-500 mt-1">{{ 500 - (strlen(request('notes') ?? '')) }} characters remaining</p>
+                    </div>
+                </div>
+
+                <div class="flex gap-3 mt-6">
+                    <button type="submit" class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                        Schedule Pickup
+                    </button>
+                    <button type="button" onclick="closeScheduleModal()" class="flex-1 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors font-medium">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 @endsection
 
 @section('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         lucide.createIcons();
+
+        // Set minimum date to today
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('pickup_date').setAttribute('min', today);
+    });
+
+    // Schedule Modal Functions
+    function openScheduleModal(matchId) {
+        // Set the form action with the correct match ID
+        const form = document.getElementById('scheduleForm');
+        form.action = form.action.replace('__MATCH_ID__', matchId);
+
+        // Show modal
+        document.getElementById('scheduleModal').classList.remove('hidden');
+        document.getElementById('scheduleModal').classList.add('flex');
+
+        // Reset form
+        form.reset();
+
+        // Set default time to current time + 1 hour
+        const now = new Date();
+        now.setHours(now.getHours() + 1);
+        const timeString = now.toTimeString().slice(0, 5);
+        document.getElementById('pickup_time').value = timeString;
+
+        // Set default date to today
+        document.getElementById('pickup_date').value = new Date().toISOString().split('T')[0];
+    }
+
+    function closeScheduleModal() {
+        document.getElementById('scheduleModal').classList.add('hidden');
+        document.getElementById('scheduleModal').classList.remove('flex');
+    }
+
+    // Handle character count for notes
+    document.getElementById('notes')?.addEventListener('input', function() {
+        const remaining = 500 - this.value.length;
+        const counter = this.parentElement.querySelector('.text-xs');
+        if (counter) {
+            counter.textContent = `${remaining} characters remaining`;
+            if (remaining < 0) {
+                counter.classList.add('text-red-500');
+                counter.classList.remove('text-zinc-500');
+            } else {
+                counter.classList.add('text-zinc-500');
+                counter.classList.remove('text-red-500');
+            }
+        }
+    });
+
+    // Close modal when clicking outside
+    document.getElementById('scheduleModal')?.addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeScheduleModal();
+        }
+    });
+
+    // Handle form submission
+    document.getElementById('scheduleForm')?.addEventListener('submit', function(e) {
+        // Add loading state to button
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.textContent;
+        submitBtn.textContent = 'Scheduling...';
+        submitBtn.disabled = true;
+
+        // Restore button state on error
+        this.addEventListener('error', function() {
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+        });
     });
 </script>
 @endsection
