@@ -106,28 +106,25 @@
         <div class="p-6">
             @forelse ($requests as $request)
             <div class="border border-zinc-200 rounded-xl p-6 mb-4 hover:shadow-md transition-shadow">
-                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                    <div class="flex-1">
-                        <div class="flex items-start gap-4">
+                <div class="flex items-center justify-between">
+                    <!-- Left Side: Info -->
+                    <div class="flex-1 mr-6">
+                        <div class="flex gap-4">
+                            <!-- Image -->
                             @if($request->foodListing->images && isset($request->foodListing->images[0]))
                                 <img src="{{ asset('storage/' . $request->foodListing->images[0]) }}"
-                                     class="w-12 h-12 rounded-lg object-cover"
+                                     class="w-12 h-12 rounded-lg object-cover flex-shrink-0"
                                      alt="{{ $request->foodListing->food_name }}">
                             @else
-                                <div class="w-12 h-12 bg-zinc-100 rounded-lg flex items-center justify-center">
+                                <div class="w-12 h-12 bg-zinc-100 rounded-lg flex items-center justify-center flex-shrink-0">
                                     <i data-lucide="package" class="w-6 h-6 text-zinc-600"></i>
                                 </div>
                             @endif
-                            <div class="flex-1">
-                                <div class="flex items-start justify-between">
-                                    <div>
-                                        <h3 class="font-semibold text-zinc-900">{{ $request->foodListing->food_name }}</h3>
-                                        <p class="text-sm text-zinc-500 mt-1">{{ Str::limit($request->foodListing->description, 100) }}</p>
-                                    </div>
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $request->getStatusColorClass() }}">
-                                        {{ $request->status_label }}
-                                    </span>
-                                </div>
+
+                            <!-- Text Content -->
+                            <div class="flex-1 min-w-0">
+                                <h3 class="font-semibold text-zinc-900 truncate">{{ $request->foodListing->food_name }}</h3>
+                                <p class="text-sm text-zinc-500 mt-1 truncate">{{ Str::limit($request->foodListing->description, 100) }}</p>
 
                                 <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                                     <div>
@@ -149,7 +146,7 @@
                                 </div>
 
                                 @if($request->status === 'approved' && $request->pickup_scheduled_at)
-                                <div class="mt-3 p-3 bg-emerald-50 rounded-lg border border-emerald-200">
+                                <div class="mt-4 p-3 bg-emerald-50 rounded-lg border border-emerald-200">
                                     <div class="flex items-center gap-2 text-sm text-emerald-800">
                                         <i data-lucide="calendar-check" class="w-4 h-4"></i>
                                         <span class="font-medium">Pickup Scheduled:</span>
@@ -161,13 +158,19 @@
                         </div>
                     </div>
 
-                    <!-- Action Buttons -->
-                    <div class="flex items-center gap-2 flex-wrap">
+                    <!-- Right Side: Actions -->
+                    <div class="flex items-center gap-4 flex-shrink-0">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $request->getStatusColorClass() }}">
+                            {{ $request->status_label }}
+                        </span>
                         <a href="{{ route('restaurant.requests.show', $request->id) }}" class="text-xs font-medium text-zinc-600 hover:text-zinc-900 px-3 py-1.5 rounded-lg hover:bg-zinc-50 transition-colors flex items-center gap-1">
                             <i data-lucide="eye" class="w-3 h-3"></i>
                             View Details
                         </a>
+                    </div>
 
+                    <!-- Action Buttons -->
+                    <div class="flex items-center gap-2 flex-wrap">
                         @if($request->status === 'pending')
                         <form action="{{ route('restaurant.requests.approve', $request->id) }}" method="POST" class="inline">
                             @csrf

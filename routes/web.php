@@ -131,5 +131,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/food-listings/{foodListing}', [FoodListingController::class, 'adminShow'])->name('admin.food-listings.show');
         Route::post('/food-listings/{foodListing}/approve', [FoodListingController::class, 'approve'])->name('admin.food-listings.approve');
         Route::post('/food-listings/{foodListing}/reject', [FoodListingController::class, 'reject'])->name('admin.food-listings.reject');
+
+        // Logo upload routes
+        Route::get('/settings/logo', [DashboardController::class, 'getLogoSettings'])->name('admin.settings.logo');
+        Route::post('/settings/logo', [DashboardController::class, 'uploadLogo'])->name('admin.settings.logo.upload');
     });
 });

@@ -2,7 +2,7 @@
 <aside id="admin-sidebar" class="w-64 border-r border-zinc-200 bg-white fixed md:static inset-y-0 left-0 transform z-30 transition-transform duration-300 ease-in-out md:transform-none -translate-x-full md:translate-x-0 flex flex-col">
     <div class="h-16 flex items-center px-6 border-b border-zinc-100">
         <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2 text-emerald-600 hover:text-emerald-700 transition-colors">
-            <i data-lucide="leaf" class="w-5 h-5 fill-current"></i>
+            {!! \App\Helpers\LogoHelper::getLogoHtml('h-8') !!}
             <span class="font-semibold tracking-tight text-zinc-900">MyFoodshare</span>
         </a>
     </div>
@@ -62,6 +62,17 @@
                 <a href="{{ route('admin.pickup-monitoring.report') }}" class="flex items-center gap-3 px-3 py-2 text-sm font-medium {{ request()->is('admin/pickup-monitoring/report') ? 'text-emerald-600 bg-emerald-50' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50' }} rounded-md transition-colors">
                     <i data-lucide="file-text" class="w-4 h-4 text-zinc-400"></i>
                     Pickup Report
+                </a>
+            </nav>
+        </div>
+
+        <!-- Settings -->
+        <div>
+            <h3 class="px-3 text-xs font-medium text-zinc-400 uppercase tracking-wider mb-2">Settings</h3>
+            <nav class="space-y-0.5">
+                <a href="{{ route('admin.settings.logo') }}" class="flex items-center gap-3 px-3 py-2 text-sm font-medium {{ request()->is('admin/settings/logo') ? 'text-emerald-600 bg-emerald-50' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50' }} rounded-md transition-colors">
+                    <i data-lucide="settings" class="w-4 h-4 text-zinc-400"></i>
+                    Logo Settings
                 </a>
             </nav>
         </div>

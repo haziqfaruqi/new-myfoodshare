@@ -1204,4 +1204,59 @@ class DashboardController extends Controller
         return redirect()->route('recipient.ngo-profile')
             ->with('success', 'NGO profile updated successfully!');
     }
+
+    /**
+     * Show logo settings page.
+     */
+    public function getLogoSettings()
+    {
+        if (!auth()->user()->isAdmin()) {
+            abort(403, 'Unauthorized action');
+        }
+
+        $currentLogo = \App\Models\Setting::get('site_logo');
+        return view('admin.logo-settings', compact('currentLogo'));
+    }
+
+    /**
+     * Upload logo.
+     */
+    public function uploadLogo(Request $request)
+    {
+        if (!auth()->user()->isAdmin()) {
+            abort(403, 'Unauthorized action');
+        }
+
+        $request->validate([
+            'logo' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        ]);
+
+        if ($request->hasFile('logo')) {
+            // Delete old logo if exists
+            $oldLogo = \App\Models\Setting::get('site_logo');
+            if ($oldLogo && file_exists(public_path('uploads/logo/' . basename($oldLogo)))) {
+                unlink(public_path('uploads/logo/' . basename($oldLogo)));
+            }
+
+            // Create uploads directory if it doesn't exist
+            $uploadPath = public_path('uploads/logo');
+            if (!file_exists($uploadPath)) {
+                mkdir($uploadPath, 0755, true);
+            }
+
+            // Store the new logo
+            $file = $request->file('logo');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $file->move($uploadPath, $filename);
+
+            // Save to database
+            \App\Models\Setting::set('site_logo', 'uploads/logo/' . $filename);
+
+            return redirect()->route('admin.settings.logo')
+                ->with('success', 'Logo uploaded successfully!');
+        }
+
+        return redirect()->route('admin.settings.logo')
+            ->with('error', 'No file uploaded.');
+    }
 }

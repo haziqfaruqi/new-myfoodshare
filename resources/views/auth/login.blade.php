@@ -16,7 +16,7 @@
             <div class="flex justify-between items-center py-4">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center">
-                        <i data-lucide="leaf" class="w-6 h-6 text-white"></i>
+                        {!! \App\Helpers\LogoHelper::getLogoHtml('h-6', 'leaf') !!}
                     </div>
                     <div>
                         <h1 class="text-xl font-bold text-gray-900">MyFoodshare</h1>
@@ -45,9 +45,16 @@
                     <div class="bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-400 px-6 py-6 relative overflow-hidden">
                         <div class="absolute inset-0 bg-black/10"></div>
                         <div class="relative z-10 text-center">
-                            <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mx-auto mb-3">
-                                <i data-lucide="user-circle" class="w-6 h-6 text-white"></i>
-                            </div>
+                            @php
+                                $logo = \App\Models\Setting::get('site_logo');
+                            @endphp
+                            @if($logo)
+                                <img src="{{ asset($logo) }}" alt="Logo" class="h-12 w-auto object-contain mx-auto mb-3 rounded-lg">
+                            @else
+                                <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mx-auto mb-3">
+                                    <i data-lucide="user-circle" class="w-6 h-6 text-white"></i>
+                                </div>
+                            @endif
                             <h3 class="text-xl font-bold text-white">MyFoodshare</h3>
                             <p class="text-emerald-100 text-sm mt-1">Access your dashboard</p>
                             <div class="flex justify-center gap-4 text-xs text-emerald-100 mt-3">

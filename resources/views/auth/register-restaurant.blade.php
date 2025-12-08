@@ -8,9 +8,16 @@
         <div class="px-4 sm:px-6 lg:px-8 w-full">
             <div class="flex justify-between items-center py-4">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center">
-                        <i data-lucide="leaf" class="w-6 h-6 text-white"></i>
-                    </div>
+                    @php
+                        $logo = \App\Models\Setting::get('site_logo');
+                    @endphp
+                    @if($logo)
+                        <img src="{{ asset($logo) }}" alt="Logo" class="h-10 w-auto object-contain">
+                    @else
+                        <div class="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center">
+                            <i data-lucide="leaf" class="w-6 h-6 text-white"></i>
+                        </div>
+                    @endif
                     <div>
                         <h1 class="text-xl font-bold text-gray-900">MyFoodshare</h1>
                         <p class="text-xs text-emerald-600 font-medium">Restaurant Partner Portal</p>

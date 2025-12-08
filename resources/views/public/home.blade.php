@@ -287,7 +287,7 @@
                         <div class="text-sm text-zinc-400">Active NGOs</div>
                     </div>
                     <div>
-                        <div class="text-3xl md:text-4xl font-bold text-emerald-500 mb-2">$40k</div>
+                        <div class="text-3xl md:text-4xl font-bold text-emerald-500 mb-2">RM40k</div>
                         <div class="text-sm text-zinc-400">Costs Saved</div>
                     </div>
                 </div>
