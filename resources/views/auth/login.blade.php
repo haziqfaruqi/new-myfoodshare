@@ -234,6 +234,27 @@
     document.addEventListener('DOMContentLoaded', function() {
         lucide.createIcons();
 
+        // Check if user is authenticated and redirect if they are
+        fetch('{{ route("auth.check") }}', {
+            method: 'GET',
+            credentials: 'same-origin',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.authenticated) {
+                alert('You are already logged in. Redirecting to dashboard...');
+                window.location.href = data.redirect_url || '{{ route("dashboard") }}';
+            }
+        })
+        .catch(error => {
+            // Silent fail - don't break the page if the check fails
+            console.log('Auth check failed:', error);
+        });
+
         // Add smooth scroll behavior
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {

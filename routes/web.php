@@ -23,19 +23,31 @@ Route::get('/', function () {
     return view('public.home');
 })->name('home');
 
+// Authentication check route for client-side JS
+Route::get('/auth/check', function () {
+    if (auth()->check()) {
+        return response()->json([
+            'authenticated' => true,
+            'redirect_url' => route('dashboard')
+        ]);
+    }
+    return response()->json([
+        'authenticated' => false
+    ]);
+})->name('auth.check');
 
-Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 
-Route::post('/login', [AuthController::class, 'login']);
+Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login')->middleware('guest');
+Route::post('/login', [AuthController::class, 'login'])->middleware('guest');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Registration routes
-Route::get('/register', [RegisteredUserController::class, 'showRegistrationForm'])->name('register');
-Route::get('/register/restaurant', [RegisteredUserController::class, 'showRestaurantForm'])->name('register.restaurant');
-Route::get('/register/recipient', [RegisteredUserController::class, 'showRecipientForm'])->name('register.recipient');
-Route::post('/register', [RegisteredUserController::class, 'register']);
-Route::post('/register/restaurant', [RegisteredUserController::class, 'registerRestaurant'])->name('register.restaurant.store');
-Route::post('/register/recipient', [RegisteredUserController::class, 'registerRecipient'])->name('register.recipient.store');
+Route::get('/register', [RegisteredUserController::class, 'showRegistrationForm'])->name('register')->middleware('guest');
+Route::get('/register/restaurant', [RegisteredUserController::class, 'showRestaurantForm'])->name('register.restaurant')->middleware('guest');
+Route::get('/register/recipient', [RegisteredUserController::class, 'showRecipientForm'])->name('register.recipient')->middleware('guest');
+Route::post('/register', [RegisteredUserController::class, 'register'])->middleware('guest');
+Route::post('/register/restaurant', [RegisteredUserController::class, 'registerRestaurant'])->name('register.restaurant.store')->middleware('guest');
+Route::post('/register/recipient', [RegisteredUserController::class, 'registerRecipient'])->name('register.recipient.store')->middleware('guest');
 
 
 // Dashboard routes with role-based middleware
