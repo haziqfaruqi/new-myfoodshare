@@ -49,6 +49,24 @@ Route::post('/register', [RegisteredUserController::class, 'register'])->middlew
 Route::post('/register/restaurant', [RegisteredUserController::class, 'registerRestaurant'])->name('register.restaurant.store')->middleware('guest');
 Route::post('/register/recipient', [RegisteredUserController::class, 'registerRecipient'])->name('register.recipient.store')->middleware('guest');
 
+// Pickup verification routes
+Route::get('/pickup/{code}', [DashboardController::class, 'showVerificationPage'])->name('pickup.verify');
+Route::post('/pickup/verify', [DashboardController::class, 'verifyPickup'])->name('recipient.pickup.verify')->middleware(['auth', 'role:recipient']);
+
+// QR Scanner routes
+Route::get('/recipient/scan', [DashboardController::class, 'showScannerPage'])->name('recipient.scan');
+
+// Broadcasting authentication route (must be accessible to all authenticated users)
+Route::post('/broadcasting/auth', function () {
+    return abort(404, 'Broadcasting auth is handled by BroadcastServiceProvider');
+})->middleware(['auth']);
+
+// Restaurant QR generation routes
+Route::middleware(['auth', 'role:restaurant_owner'])->group(function () {
+    Route::get('/restaurant/matches/{match}/qr-code', [DashboardController::class, 'generateQr'])->name('restaurant.qr.generate');
+    Route::post('/restaurant/pickup-verification/{verification}/cancel', [DashboardController::class, 'cancelVerification'])->name('restaurant.qr.cancel');
+});
+
 
 // Dashboard routes with role-based middleware
 Route::middleware(['auth'])->group(function () {
@@ -77,6 +95,7 @@ Route::middleware(['auth'])->group(function () {
         // Manage Requests (Food Matches)
         Route::get('/requests', [FoodMatchController::class, 'restaurantIndex'])->name('restaurant.requests');
         Route::get('/requests/{match}', [FoodMatchController::class, 'restaurantShow'])->name('restaurant.requests.show');
+        Route::get('/matches/{match}', [FoodMatchController::class, 'restaurantShow'])->name('restaurant.matches.show');
         Route::post('/requests/{match}/approve', [FoodMatchController::class, 'approve'])->name('restaurant.requests.approve');
         Route::post('/requests/{match}/reject', [FoodMatchController::class, 'reject'])->name('restaurant.requests.reject');
         Route::post('/requests/{match}/schedule', [FoodMatchController::class, 'schedule'])->name('restaurant.requests.schedule');
@@ -95,7 +114,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'recipientDashboard'])->name('recipient.dashboard');
         Route::get('/available-food', [DashboardController::class, 'availableFood'])->name('recipient.available-food');
         Route::get('/map-view', [DashboardController::class, 'mapView'])->name('recipient.map-view');
-        Route::get('/my-matches', [DashboardController::class, 'myMatches'])->name('recipient.my-matches');
+        Route::get('/my-matches', [FoodMatchController::class, 'index'])->name('recipient.my-matches');
+        Route::get('/my-matches/verify', [DashboardController::class, 'verificationPage'])->name('recipient.verification');
         Route::get('/impact-report', [DashboardController::class, 'impactReport'])->name('recipient.impact-report');
         Route::get('/ngo-profile', [DashboardController::class, 'ngoProfile'])->name('recipient.ngo-profile');
 
@@ -107,7 +127,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/matches/{match}/confirm', [FoodMatchController::class, 'confirmPickup'])->name('recipient.matches.confirmPickup');
         Route::get('/matches/{match}/complete', [FoodMatchController::class, 'complete'])->name('recipient.matches.complete');
 
-        // NGO Profile routes
+        // Recipient Profile routes
         Route::get('/ngo-profile', [DashboardController::class, 'ngoProfile'])->name('recipient.ngo-profile');
         Route::put('/ngo-profile', [DashboardController::class, 'updateNgoProfile'])->name('recipient.ngo-profile.update');
     });
@@ -135,6 +155,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/user-management', [DashboardController::class, 'userManagement'])->name('admin.user-management');
         Route::put('/users/{user}', [DashboardController::class, 'updateUserStatus'])->name('admin.users.update');
         Route::delete('/users/{user}', [DashboardController::class, 'deleteUser'])->name('admin.users.delete');
+        Route::get('/users/{user}/profile', [DashboardController::class, 'getUserProfile'])->name('admin.users.profile');
         Route::get('/active-listings', [DashboardController::class, 'activeListings'])->name('admin.active-listings');
         Route::get('/pickup-monitoring', [DashboardController::class, 'pickupMonitoring'])->name('admin.pickup-monitoring');
         Route::get('/pickup-monitoring/report', [DashboardController::class, 'pickupMonitoringReport'])->name('admin.pickup-monitoring.report');
@@ -147,5 +168,9 @@ Route::middleware(['auth'])->group(function () {
         // Logo upload routes
         Route::get('/settings/logo', [DashboardController::class, 'getLogoSettings'])->name('admin.settings.logo');
         Route::post('/settings/logo', [DashboardController::class, 'uploadLogo'])->name('admin.settings.logo.upload');
+
+        // Notifications routes
+        Route::get('/notifications', [DashboardController::class, 'getNotifications'])->name('admin.notifications');
+        Route::post('/notifications/{notification}/read', [DashboardController::class, 'markNotificationRead'])->name('admin.notifications.read');
     });
 });

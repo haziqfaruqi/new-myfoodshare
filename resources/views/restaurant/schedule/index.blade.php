@@ -70,10 +70,10 @@
         <div class="bg-white rounded-xl border border-zinc-200">
             <div class="p-6 border-b border-zinc-200">
                 <h2 class="text-lg font-semibold text-zinc-900">Upcoming Pickups</h2>
-                <p class="text-sm text-zinc-500 mt-1">Pickups scheduled for today</p>
+                <p class="text-sm text-zinc-500 mt-1">Next 5 scheduled pickups</p>
             </div>
             <div class="p-6 space-y-4">
-                @forelse($todayPickups as $pickup)
+                @forelse($upcomingPickups as $pickup)
                 <div class="border border-zinc-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                     <div class="flex items-start justify-between">
                         <div class="flex items-start gap-3">
@@ -89,16 +89,20 @@
                                         <span>{{ $pickup->recipient->organization_name ?? $pickup->recipient->name }}</span>
                                     </div>
                                     <div class="flex items-center gap-1 text-zinc-600">
-                                        <i data-lucide="clock" class="w-3 h-3"></i>
-                                        <span>{{ $pickup->pickup_scheduled_at?->format('g:i A') ?? 'Not scheduled' }}</span>
+                                        <i data-lucide="calendar" class="w-3 h-3"></i>
+                                        <span>{{ $pickup->pickup_scheduled_at?->format('M j, g:i A') ?? 'Not scheduled' }}</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div class="text-right">
-                            @if($pickup->pickupVerification)
+                            @if($pickup->status === 'completed')
                                 <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
                                     Completed
+                                </span>
+                            @elseif($pickup->status === 'scheduled')
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    Scheduled
                                 </span>
                             @else
                                 <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
@@ -111,7 +115,7 @@
                 @empty
                 <div class="text-center py-8">
                     <i data-lucide="calendar-check" class="w-8 h-8 text-zinc-400 mx-auto mb-2"></i>
-                    <p class="text-sm text-zinc-500">No pickups scheduled for today</p>
+                    <p class="text-sm text-zinc-500">No upcoming pickups</p>
                 </div>
                 @endforelse
             </div>
@@ -140,33 +144,6 @@
                     <p class="text-sm text-zinc-500">No recent activity</p>
                 </div>
                 @endforelse
-            </div>
-        </div>
-    </div>
-
-    <!-- Simple Calendar View -->
-    <div class="bg-white rounded-xl border border-zinc-200">
-        <div class="p-6 border-b border-zinc-200">
-            <h2 class="text-lg font-semibold text-zinc-900">Pickup Calendar</h2>
-            <p class="text-sm text-zinc-500 mt-1">Simple calendar view (temporary)</p>
-        </div>
-        <div class="p-6">
-            <div class="grid grid-cols-7 gap-1 text-center text-xs">
-                <!-- Week headers -->
-                <div class="p-2 font-medium text-zinc-400">Sun</div>
-                <div class="p-2 font-medium text-zinc-400">Mon</div>
-                <div class="p-2 font-medium text-zinc-400">Tue</div>
-                <div class="p-2 font-medium text-zinc-400">Wed</div>
-                <div class="p-2 font-medium text-zinc-400">Thu</div>
-                <div class="p-2 font-medium text-zinc-400">Fri</div>
-                <div class="p-2 font-medium text-zinc-400">Sat</div>
-
-                <!-- Simple days - just show current week -->
-                @foreach(range(1, 7) as $day)
-                    <div class="p-2 border border-zinc-100 rounded-lg min-h-[60px] bg-white">
-                        <div class="text-sm font-medium text-zinc-900">{{ $day }}</div>
-                    </div>
-                @endforeach
             </div>
         </div>
     </div>

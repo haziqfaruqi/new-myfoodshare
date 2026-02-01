@@ -11,7 +11,7 @@
                 <!-- Welcome Section -->
                 <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
                     <div>
-                        <h1 class="text-2xl font-bold tracking-tight text-zinc-900">Good Evening, {{ auth()->user()->restaurantProfile->restaurant_name ?? 'Restaurant' }}!</h1>
+                        <h1 class="text-2xl font-bold tracking-tight text-zinc-900">Good Evening, {{ auth()->user()->restaurant_name ?? auth()->user()->restaurantProfile?->restaurant_name ?? 'Restaurant' }}!</h1>
                         <p class="text-sm text-zinc-500 mt-1">Here's what's happening with your donations today.</p>
                     </div>
                     <div class="flex gap-3">
@@ -30,53 +30,53 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div class="p-5 bg-white rounded-xl border border-zinc-200 shadow-sm">
                         <div class="flex items-center justify-between mb-4">
-                            <span class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Total Donated</span>
+                            <span class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Active Listings</span>
                             <div class="p-2 bg-emerald-50 rounded-lg">
-                                <i data-lucide="scale" class="w-4 h-4 text-emerald-600"></i>
+                                <i data-lucide="package" class="w-4 h-4 text-emerald-600"></i>
                             </div>
                         </div>
                         <div class="flex items-baseline gap-2">
-                            <span class="text-2xl font-bold text-zinc-900">145 kg</span>
-                            <span class="text-xs font-medium text-emerald-600">+12kg this week</span>
+                            <span class="text-2xl font-bold text-zinc-900">{{ $stats['active_listings'] }}</span>
+                            <span class="text-xs font-medium text-emerald-600">Currently available</span>
                         </div>
                     </div>
-                    
+
                     <div class="p-5 bg-white rounded-xl border border-zinc-200 shadow-sm">
                         <div class="flex items-center justify-between mb-4">
-                            <span class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">People Fed</span>
+                            <span class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Pending Approval</span>
+                            <div class="p-2 bg-amber-50 rounded-lg">
+                                <i data-lucide="clock" class="w-4 h-4 text-amber-600"></i>
+                            </div>
+                        </div>
+                        <div class="flex items-baseline gap-2">
+                            <span class="text-2xl font-bold text-zinc-900">{{ $stats['pending_approval'] }}</span>
+                            <span class="text-xs font-medium text-amber-600">Awaiting admin review</span>
+                        </div>
+                    </div>
+
+                    <div class="p-5 bg-white rounded-xl border border-zinc-200 shadow-sm">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Pending Pickups</span>
                             <div class="p-2 bg-blue-50 rounded-lg">
-                                <i data-lucide="users" class="w-4 h-4 text-blue-600"></i>
+                                <i data-lucide="truck" class="w-4 h-4 text-blue-600"></i>
                             </div>
                         </div>
                         <div class="flex items-baseline gap-2">
-                            <span class="text-2xl font-bold text-zinc-900">320</span>
-                            <span class="text-xs font-medium text-blue-600">Community Members</span>
+                            <span class="text-2xl font-bold text-zinc-900">{{ $stats['pending_pickups'] }}</span>
+                            <span class="text-xs font-medium text-blue-600">Scheduled pickups</span>
                         </div>
                     </div>
 
                     <div class="p-5 bg-white rounded-xl border border-zinc-200 shadow-sm">
                         <div class="flex items-center justify-between mb-4">
-                            <span class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Waste Diverted</span>
-                            <div class="p-2 bg-orange-50 rounded-lg">
-                                <i data-lucide="trash-2" class="w-4 h-4 text-orange-600"></i>
-                            </div>
-                        </div>
-                        <div class="flex items-baseline gap-2">
-                            <span class="text-2xl font-bold text-zinc-900">88%</span>
-                            <span class="text-xs font-medium text-emerald-600">Efficiency Score</span>
-                        </div>
-                    </div>
-
-                    <div class="p-5 bg-white rounded-xl border border-zinc-200 shadow-sm">
-                        <div class="flex items-center justify-between mb-4">
-                            <span class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Trust Score</span>
+                            <span class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Total Donations</span>
                             <div class="p-2 bg-purple-50 rounded-lg">
-                                <i data-lucide="award" class="w-4 h-4 text-purple-600"></i>
+                                <i data-lucide="heart" class="w-4 h-4 text-purple-600"></i>
                             </div>
                         </div>
                         <div class="flex items-baseline gap-2">
-                            <span class="text-2xl font-bold text-zinc-900">Top Rated</span>
-                            <span class="text-xs font-medium text-zinc-500">4.9/5.0</span>
+                            <span class="text-2xl font-bold text-zinc-900">{{ $stats['total_donations'] }}</span>
+                            <span class="text-xs font-medium text-purple-600">All time donations</span>
                         </div>
                     </div>
                 </div>

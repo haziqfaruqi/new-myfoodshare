@@ -19,6 +19,7 @@ class FoodListingController extends Controller
     {
         $query = FoodListing::with(['restaurantProfile', 'creator'])
             ->where('created_by', auth()->id())
+            ->where('status', '!=', 'completed')
             ->where(function ($q) {
                 $q->where('expiry_date', '>', now()->toDateString())
                   ->orWhere(function ($q2) {
@@ -45,6 +46,10 @@ class FoodListingController extends Controller
                 $query->where('approval_status', 'pending');
             } elseif ($status === 'rejected') {
                 $query->where('approval_status', 'rejected');
+            } elseif ($status === 'picked_up') {
+                $query->whereHas('matches', function($q) {
+                    $q->where('status', 'completed');
+                });
             } else {
                 $query->where('status', $status);
             }
@@ -402,6 +407,17 @@ class FoodListingController extends Controller
 
         // Generate QR code
         $foodListing->generateQrCode();
+
+        // Notify all admins about the new food listing
+        $admins = \App\Models\User::where('role', 'admin')->get();
+        foreach ($admins as $admin) {
+            $admin->notify(new \App\Notifications\FoodListingCreatedNotification($foodListing));
+        }
+
+        // Broadcast the event for real-time admin notifications
+        \Log::info('Broadcasting FoodListingCreated event', ['listing_id' => $foodListing->id]);
+        broadcast(new \App\Events\FoodListingCreated($foodListing));
+        \Log::info('FoodListingCreated event broadcasted');
 
         return redirect()->route('restaurant.dashboard')
             ->with('success', 'Food donation posted successfully! It is pending approval.');

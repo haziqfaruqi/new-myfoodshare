@@ -12,13 +12,12 @@
             <p class="text-sm text-zinc-500 mt-1">Manage your pickups and discover food nearby.</p>
         </div>
         <div class="flex gap-3">
-            <button
-                onclick="{{ $upcomingPickups->whereIn('status', ['approved', 'scheduled'])->count() > 0 ? 'document.getElementById(\'verification-modal\').classList.remove(\'hidden\')' : 'return false' }}"
+            <a href="{{ route('recipient.scan') }}"
                 class="inline-flex items-center gap-2 px-4 py-2 {{ $upcomingPickups->whereIn('status', ['approved', 'scheduled'])->count() > 0 ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/20' : 'bg-zinc-400 text-zinc-100 cursor-not-allowed' }} rounded-lg text-sm font-medium transition-all"
                 {{ $upcomingPickups->whereIn('status', ['approved', 'scheduled'])->count() > 0 ? '' : 'disabled' }}>
                 <i data-lucide="scan-line" class="w-4 h-4"></i>
                 Verify Pickup
-            </button>
+            </a>
         </div>
     </div>
 
@@ -192,51 +191,59 @@
                 <div class="space-y-3">
                     @foreach ($upcomingPickups as $pickup)
                     <div class="p-3 rounded-lg
-                        @if($pickup->status == 'approved' && $pickup->pickup_scheduled_at <= now())
-                            bg-emerald-50 border border-emerald-100
-                        @elseif($pickup->status == 'scheduled')
-                            bg-blue-50 border border-blue-100
+                        @if($pickup->status == 'scheduled')
+                            bg-blue-50 border border-blue-200
+                        @elseif($pickup->status == 'approved')
+                            bg-emerald-50 border border-emerald-200
                         @else
-                            bg-zinc-50 border border-zinc-100
+                            bg-zinc-50 border border-zinc-200
                         @endif
                         relative overflow-hidden">
-                        @if($pickup->status == 'approved' && $pickup->pickup_scheduled_at <= now())
+                        @if($pickup->status == 'scheduled')
                         <div class="absolute right-0 top-0 p-1">
-                            <span class="bg-white text-emerald-700 text-[8px] font-bold px-1.5 py-0.5 rounded shadow-sm uppercase">Ready</span>
+                            <span class="bg-blue-600 text-white text-[8px] font-bold px-1.5 py-0.5 rounded shadow-sm uppercase">Scheduled</span>
+                        </div>
+                        @elseif($pickup->status == 'approved')
+                        <div class="absolute right-0 top-0 p-1">
+                            <span class="bg-white text-emerald-700 text-[8px] font-bold px-1.5 py-0.5 rounded shadow-sm uppercase">Approved</span>
                         </div>
                         @endif
                         <div class="flex gap-3">
                             <div class="w-8 h-8 rounded bg-white flex items-center justify-center shrink-0
-                                @if($pickup->status == 'approved' && $pickup->pickup_scheduled_at <= now())
+                                @if($pickup->status == 'scheduled')
+                                    border border-blue-300 text-blue-600
+                                @elseif($pickup->status == 'approved')
                                     shadow-sm text-emerald-600
-                                @elseif($pickup->status == 'scheduled')
-                                    border border-blue-200 text-blue-600
                                 @else
                                     border border-zinc-200 text-zinc-400
                                 @endif">
-                                @if($pickup->status == 'approved' && $pickup->pickup_scheduled_at <= now())
-                                    <i data-lucide="package-check" class="w-4 h-4"></i>
-                                @elseif($pickup->status == 'scheduled')
+                                @if($pickup->status == 'scheduled')
                                     <i data-lucide="calendar" class="w-4 h-4"></i>
+                                @elseif($pickup->status == 'approved')
+                                    <i data-lucide="package-check" class="w-4 h-4"></i>
                                 @else
                                     <i data-lucide="clock" class="w-4 h-4"></i>
                                 @endif
                             </div>
                             <div class="flex-1 min-w-0">
-                                <p class="text-sm font-semibold text-zinc-900 truncate">{{ $pickup->foodListing->restaurantProfile->restaurant_name ?? $pickup->foodListing->creator->name }}</p>
-                                <p class="text-xs text-zinc-500">Code: <span class="font-mono font-bold text-zinc-900">{{ str_pad($pickup->id, 4, '0', STR_PAD_LEFT) }}</span></p>
+                                <p class="text-sm font-semibold text-zinc-900 truncate">{{ $pickup->foodListing?->restaurantProfile?->restaurant_name ?? $pickup->foodListing?->creator?->name ?? 'Unknown Restaurant' }}</p>
+                                <p class="text-xs text-zinc-600 truncate">{{ $pickup->foodListing?->food_name ?? 'Unknown Food Item' }}</p>
                                 @if($pickup->pickup_scheduled_at)
-                                <div class="flex items-center gap-1 mt-1 text-[10px] text-zinc-500">
+                                <div class="flex items-center gap-1 mt-1 text-[10px]
+                                    @if($pickup->status == 'scheduled') text-blue-700 font-semibold @else text-zinc-500 @endif">
                                     <i data-lucide="clock" class="w-3 h-3"></i>
                                     <span>{{ \Carbon\Carbon::parse($pickup->pickup_scheduled_at)->format('M j, Y g:i A') }}</span>
                                 </div>
+                                @else
+                                <p class="text-[10px] text-amber-600 mt-1">Pickup time to be scheduled</p>
                                 @endif
                             </div>
                         </div>
-                        @if($pickup->status == 'approved' && $pickup->pickup_scheduled_at <= now())
-                        <button onclick="openVerificationModal({{ $pickup->foodListing->restaurantProfile->restaurant_name ?? $pickup->foodListing->creator->name }}, {{ $pickup->id }})" class="w-full mt-3 py-1.5 bg-emerald-600 text-white text-xs font-medium rounded hover:bg-emerald-700 transition-colors">
-                            Arrived
-                        </button>
+                        @if($pickup->status == 'approved')
+                        <a href="{{ route('recipient.scan') }}"
+                           class="w-full mt-3 py-1.5 bg-emerald-600 text-white text-xs font-medium rounded hover:bg-emerald-700 transition-colors block text-center">
+                            Verify Pickup
+                        </a>
                         @endif
                     </div>
                     @endforeach
@@ -269,67 +276,6 @@
 @endsection
 
 @section('modals')
-<!-- Verification & Rating Modal -->
-<div id="verification-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
-    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="document.getElementById('verification-modal').classList.add('hidden')"></div>
-    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md relative z-10 overflow-hidden flex flex-col max-h-[90vh]">
-        <div class="p-6 border-b border-zinc-100 text-center">
-            <h3 class="lg font-bold text-zinc-900">Complete Pickup</h3>
-            <p class="text-sm text-zinc-500" id="verification-restaurant-name">Italian Bistro • Order #<span id="verification-order-id">8829</span></p>
-        </div>
-
-        <div class="p-6 overflow-y-auto space-y-6">
-            <!-- Step 1: Scan -->
-            <div class="space-y-3">
-                <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider">1. Verification</label>
-                <div class="bg-zinc-900 rounded-xl p-4 text-center relative overflow-hidden group cursor-pointer">
-                    <i data-lucide="camera" class="w-8 h-8 text-zinc-500 mx-auto mb-2"></i>
-                    <p class="text-sm text-zinc-300">Tap to Scan Restaurant Code</p>
-                    <p class="text-xs text-zinc-500 mt-1">or enter code manually</p>
-                    <!-- Simulated Camera Overlay -->
-                    <div class="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center">
-                         <span class="text-white text-xs font-bold border border-white px-3 py-1 rounded-full">Activate Camera</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Step 2: Quality Check -->
-            <div class="space-y-3">
-                <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider">2. Quality Rating</label>
-                <div class="flex justify-center gap-2">
-                    <button class="w-10 h-10 rounded-full border border-zinc-200 text-zinc-300 hover:text-yellow-400 hover:border-yellow-400 flex items-center justify-center transition-colors"><i data-lucide="star" class="w-5 h-5 fill-current"></i></button>
-                    <button class="w-10 h-10 rounded-full border border-zinc-200 text-zinc-300 hover:text-yellow-400 hover:border-yellow-400 flex items-center justify-center transition-colors"><i data-lucide="star" class="w-5 h-5 fill-current"></i></button>
-                    <button class="w-10 h-10 rounded-full border border-zinc-200 text-zinc-300 hover:text-yellow-400 hover:border-yellow-400 flex items-center justify-center transition-colors"><i data-lucide="star" class="w-5 h-5 fill-current"></i></button>
-                    <button class="w-10 h-10 rounded-full border border-zinc-200 text-zinc-300 hover:text-yellow-400 hover:border-yellow-400 flex items-center justify-center transition-colors"><i data-lucide="star" class="w-5 h-5 fill-current"></i></button>
-                    <button class="w-10 h-10 rounded-full border border-zinc-200 text-zinc-300 hover:text-yellow-400 hover:border-yellow-400 flex items-center justify-center transition-colors"><i data-lucide="star" class="w-5 h-5 fill-current"></i></button>
-                </div>
-            </div>
-
-            <!-- Step 3: Evidence -->
-            <div class="space-y-3">
-                <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider">3. Photo Evidence (Optional)</label>
-                <div class="border-2 border-dashed border-zinc-200 rounded-lg p-4 text-center hover:bg-zinc-50 transition-colors cursor-pointer">
-                    <i data-lucide="image-plus" class="w-5 h-5 text-zinc-400 mx-auto"></i>
-                    <span class="text-xs text-zinc-500 mt-1 block">Upload photo of received food</span>
-                </div>
-            </div>
-
-             <!-- Step 4: Feedback -->
-            <div class="space-y-2">
-                <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider">4. Notes</label>
-                 <textarea rows="2" placeholder="Any issues with quantity or packaging?" class="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 resize-none"></textarea>
-            </div>
-        </div>
-
-        <div class="p-6 pt-2 border-t border-zinc-100 bg-zinc-50">
-            <button class="w-full py-2.5 bg-zinc-900 text-white rounded-lg font-medium shadow-lg shadow-zinc-900/10 hover:bg-zinc-800 transition-all flex items-center justify-center gap-2">
-                <i data-lucide="check-circle" class="w-4 h-4"></i>
-                Confirm Pickup
-            </button>
-            <button onclick="document.getElementById('verification-modal').classList.add('hidden')" class="w-full mt-2 text-xs text-zinc-500 hover:text-zinc-900">Cancel</button>
-        </div>
-    </div>
-</div>
 @endsection
 
 @section('scripts')

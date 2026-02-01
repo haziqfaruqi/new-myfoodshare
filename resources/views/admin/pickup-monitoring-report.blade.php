@@ -153,12 +153,12 @@
                 <tbody class="bg-white divide-y divide-zinc-200">
                     @foreach($pickupVerifications as $verification)
                     <tr class="hover:bg-zinc-50 transition-colors">
-                        <td class="px-6 py-4 text-sm font-medium text-zinc-900">#{{ $verification->match->id }}</td>
-                        <td class="px-6 py-4 text-sm text-zinc-900">{{ $verification->match->foodListing->food_name }}</td>
-                        <td class="px-6 py-4 text-sm text-zinc-600">{{ $verification->match->restaurant->restaurant_name ?? $verification->match->foodListing->creator->name }}</td>
-                        <td class="px-6 py-4 text-sm text-zinc-600">{{ $verification->match->recipient->organization_name ?? $verification->match->recipient->name }}</td>
-                        <td class="px-6 py-4 text-sm text-zinc-900">{{ $verification->match->pickup_scheduled_at->format('M j, Y g:i A') }}</td>
-                        <td class="px-6 py-4 text-sm text-zinc-900">{{ $verification->scanned_at->format('M j, Y g:i A') }}</td>
+                        <td class="px-6 py-4 text-sm font-medium text-zinc-900">#{{ $verification->foodMatch?->id ?? $verification->id }}</td>
+                        <td class="px-6 py-4 text-sm text-zinc-900">{{ $verification->foodListing?->food_name ?? $verification->foodMatch?->foodListing?->food_name ?? 'N/A' }}</td>
+                        <td class="px-6 py-4 text-sm text-zinc-600">{{ $verification->foodMatch?->foodListing?->restaurantProfile?->restaurant_name ?? $verification->foodListing?->restaurantProfile?->restaurant_name ?? $verification->foodListing?->creator?->name ?? 'N/A' }}</td>
+                        <td class="px-6 py-4 text-sm text-zinc-600">{{ $verification->foodMatch?->recipient?->organization_name ?? $verification->foodMatch?->recipient?->name ?? $verification->recipient?->organization_name ?? $verification->recipient?->name ?? 'N/A' }}</td>
+                        <td class="px-6 py-4 text-sm text-zinc-900">{{ $verification->foodMatch?->pickup_scheduled_at?->format('M j, Y g:i A') ?? 'N/A' }}</td>
+                        <td class="px-6 py-4 text-sm text-zinc-900">{{ $verification->scanned_at?->format('M j, Y g:i A') ?? 'N/A' }}</td>
                         <td class="px-6 py-4">
                             @if($verification->verification_status === 'verified')
                                 <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
@@ -177,8 +177,8 @@
                                 </span>
                             @endif
                         </td>
-                        <td class="px-6 py-4 text-sm text-zinc-600 font-mono text-xs">{{ $verification->qr_code }}</td>
-                        <td class="px-6 py-4 text-sm text-zinc-600">{{ $verification->notes ?? '-' }}</td>
+                        <td class="px-6 py-4 text-sm text-zinc-600 font-mono text-xs">{{ $verification->verification_code }}</td>
+                        <td class="px-6 py-4 text-sm text-zinc-600">{{ $verification->recipient_notes ?? $verification->admin_notes ?? '-' }}</td>
                     </tr>
                     @endforeach
                 </tbody>

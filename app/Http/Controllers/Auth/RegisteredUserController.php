@@ -73,6 +73,8 @@ class RegisteredUserController extends Controller
             'address' => ['required', 'string', 'min:10'],
             'business_license' => ['required', 'string', 'max:50'],
             'cuisine_type' => ['required', 'string', 'in:Malaysian,Chinese,Indian,Western,Italian,Japanese,Thai,International,Other'],
+            'latitude' => ['nullable', 'numeric', 'between:-90,90'],
+            'longitude' => ['nullable', 'numeric', 'between:-180,180'],
             'terms' => ['required', 'accepted'],
         ]);
 
@@ -90,10 +92,20 @@ class RegisteredUserController extends Controller
             'role' => 'restaurant_owner',
             'status' => 'pending',
             'phone' => $request->input('phone'),
-            'address' => $request->input('address'),
+            'latitude' => $request->input('latitude'),
+            'longitude' => $request->input('longitude'),
+        ]);
+
+        // Create restaurant profile
+        \App\Models\RestaurantProfile::create([
+            'user_id' => $user->id,
             'restaurant_name' => $request->input('restaurant_name'),
+            'address' => $request->input('address'),
             'business_license' => $request->input('business_license'),
             'cuisine_type' => $request->input('cuisine_type'),
+            'latitude' => $request->input('latitude'),
+            'longitude' => $request->input('longitude'),
+            'status' => 'pending',
         ]);
 
         Auth::login($user);
@@ -125,6 +137,8 @@ class RegisteredUserController extends Controller
             'ngo_registration' => ['required', 'string', 'max:50'],
             'recipient_capacity' => ['required', 'integer', 'min:1'],
             'organization_description' => ['required', 'string', 'min:50'],
+            'latitude' => ['nullable', 'numeric', 'between:-90,90'],
+            'longitude' => ['nullable', 'numeric', 'between:-180,180'],
             'terms' => ['required', 'accepted'],
         ]);
 
@@ -157,6 +171,8 @@ class RegisteredUserController extends Controller
             'organization_description' => $request->input('organization_description'),
             'dietary_requirements' => $request->input('dietary_requirements') ? json_encode($request->input('dietary_requirements')) : null,
             'needs_preferences' => $request->input('needs_preferences'),
+            'latitude' => $request->input('latitude'),
+            'longitude' => $request->input('longitude'),
         ]);
 
         Auth::login($user);

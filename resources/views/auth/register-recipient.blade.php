@@ -20,7 +20,7 @@
                     @endif
                     <div>
                         <h1 class="text-xl font-bold text-gray-900">MyFoodshare</h1>
-                        <p class="text-xs text-emerald-600 font-medium">NGO/Recipient Partner Portal</p>
+                        <p class="text-xs text-emerald-600 font-medium">Recipient Partner Portal</p>
                     </div>
                 </div>
                 <nav class="hidden md:flex items-center gap-6 text-sm">
@@ -44,7 +44,7 @@
             <div class="text-center mb-12">
                 <div class="inline-flex items-center gap-2 bg-emerald-100 text-emerald-800 px-4 py-2 rounded-full text-sm font-medium mb-6">
                     <i data-lucide="heart-handshake" class="w-4 h-4"></i>
-                    NGO/Recipient Registration
+                    Recipient Registration
                 </div>
                 <h2 class="text-4xl font-bold text-gray-900 mb-4">
                     Help Us Fight Hunger in Your Community
@@ -99,7 +99,7 @@
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
         <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
             <div class="bg-gradient-to-r from-emerald-600 to-emerald-700 px-8 py-6">
-                <h3 class="text-2xl font-bold text-white">NGO/Recipient Registration</h3>
+                <h3 class="text-2xl font-bold text-white">Recipient Registration</h3>
                 <p class="text-emerald-100 mt-1">Complete your profile to start receiving food donations</p>
             </div>
 
@@ -279,6 +279,43 @@
                                 @enderror
                             </div>
 
+                            <!-- Location Picker Map -->
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i data-lucide="map" class="w-4 h-4 inline mr-1"></i>
+                                    Organization Location
+                                </label>
+                                <p class="text-xs text-gray-500 mb-2">Click on the map to set your organization's location</p>
+
+                                <!-- Hidden inputs for coordinates -->
+                                <input type="hidden" id="latitude" name="latitude" value="{{ old('latitude') }}">
+                                <input type="hidden" id="longitude" name="longitude" value="{{ old('longitude') }}">
+
+                                <!-- Map Container -->
+                                <div id="location-map" class="w-full h-64 rounded-lg border border-gray-300 relative z-10">
+                                    <div class="absolute inset-0 flex items-center justify-center bg-gray-100 text-gray-500">
+                                        <div class="text-center">
+                                            <i data-lucide="map-pin" class="w-8 h-8 mx-auto mb-2 text-gray-400"></i>
+                                            <p class="text-sm">Click to enable location picker</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Location Info Display -->
+                                <div id="location-info" class="mt-2 p-3 bg-emerald-50 border border-emerald-200 rounded-lg hidden">
+                                    <div class="flex items-center gap-2 text-sm text-emerald-700">
+                                        <i data-lucide="check-circle" class="w-4 h-4"></i>
+                                        <span>Location selected: <span id="coords-display" class="font-medium"></span></span>
+                                    </div>
+                                </div>
+
+                                <!-- Use Current Location Button -->
+                                <button type="button" id="use-current-location" class="mt-2 inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                                    <i data-lucide="navigation" class="w-4 h-4"></i>
+                                    Use My Current Location
+                                </button>
+                            </div>
+
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label for="recipient_capacity" class="block text-sm font-medium text-gray-700 mb-2">
@@ -298,7 +335,7 @@
 
                                 <div>
                                     <label for="ngo_registration" class="block text-sm font-medium text-gray-700 mb-2">
-                                        NGO Registration Number <span class="text-red-500">*</span>
+                                        Recipient Registration Number <span class="text-red-500">*</span>
                                     </label>
                                     <div class="relative">
                                         <i data-lucide="shield-check" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"></i>
@@ -307,7 +344,7 @@
                                                value="{{ old('ngo_registration') }}"
                                                class="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors">
                                     </div>
-                                    <p class="mt-1 text-xs text-gray-500">Required for verification as legitimate non-profit</p>
+                                    {{-- <p class="mt-1 text-xs text-gray-500">Required for verification as legitimate non-profit</p> --}}
                                     @error('ngo_registration')
                                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                     @enderror
@@ -474,8 +511,7 @@
                                         I agree to the terms and conditions <span class="text-red-500">*</span>
                                     </label>
                                     <p class="text-sm text-gray-600 leading-relaxed">
-                                        I confirm that all information provided is accurate and my organization is a legitimate non-profit.
-                                        I understand that MyFoodshare may verify my NGO registration and that I will receive notifications
+                                        I confirm that all information provided is accurate and I will receive notifications
                                         about food matches that align with my organization's needs and capacity.
                                     </p>
                                 </div>
@@ -521,5 +557,112 @@
 <script>
     // Initialize Lucide icons
     lucide.createIcons();
+</script>
+
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+<script>
+// Location Picker Map
+let map;
+let marker;
+const DEFAULT_LAT = 3.1390; // Kuala Lumpur
+const DEFAULT_LNG = 101.6869;
+
+function initLocationMap() {
+    const mapContainer = document.getElementById('location-map');
+    if (!mapContainer) return;
+
+    // Clear the placeholder
+    mapContainer.innerHTML = '';
+
+    // Initialize map
+    map = L.map('location-map').setView([DEFAULT_LAT, DEFAULT_LNG], 12);
+
+    // Add OpenStreetMap tiles
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19
+    }).addTo(map);
+
+    // Add click handler to map
+    map.on('click', function(e) {
+        setMarkerLocation(e.latlng.lat, e.latlng.lng);
+    });
+
+    // Load existing coordinates if available
+    const existingLat = document.getElementById('latitude').value;
+    const existingLng = document.getElementById('longitude').value;
+
+    if (existingLat && existingLng) {
+        setMarkerLocation(parseFloat(existingLat), parseFloat(existingLng));
+    } else {
+        // Add default marker
+        setMarkerLocation(DEFAULT_LAT, DEFAULT_LNG);
+    }
+}
+
+function setMarkerLocation(lat, lng) {
+    // Remove existing marker if any
+    if (marker) {
+        map.removeLayer(marker);
+    }
+
+    // Add new marker
+    marker = L.marker([lat, lng], {
+        draggable: true
+    }).addTo(map);
+
+    // Update hidden inputs
+    document.getElementById('latitude').value = lat.toFixed(8);
+    document.getElementById('longitude').value = lng.toFixed(8);
+
+    // Update display
+    document.getElementById('location-info').classList.remove('hidden');
+    document.getElementById('coords-display').textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+
+    // Center map on new location
+    map.setView([lat, lng], 14);
+
+    // Handle marker drag
+    marker.on('dragend', function(e) {
+        const position = marker.getLatLng();
+        setMarkerLocation(position.lat, position.lng);
+    });
+}
+
+// Use current location button
+document.getElementById('use-current-location')?.addEventListener('click', function() {
+    if (navigator.geolocation) {
+        this.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Getting location...';
+        lucide.createIcons();
+
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                setMarkerLocation(lat, lng);
+
+                document.getElementById('use-current-location').innerHTML = '<i data-lucide="navigation" class="w-4 h-4"></i> Use My Current Location';
+                lucide.createIcons();
+            },
+            function(error) {
+                alert('Unable to get your location. Please click on the map to set your location manually.');
+                document.getElementById('use-current-location').innerHTML = '<i data-lucide="navigation" class="w-4 h-4"></i> Use My Current Location';
+                lucide.createIcons();
+            }
+        );
+    } else {
+        alert('Geolocation is not supported by your browser. Please click on the map to set your location manually.');
+    }
+});
+
+// Initialize map when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    initLocationMap();
+});
 </script>
 @endsection

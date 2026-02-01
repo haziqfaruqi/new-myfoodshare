@@ -81,10 +81,18 @@
             <div class="flex justify-between h-16 items-center">
                 <!-- Logo -->
                 <div class="flex-shrink-0 flex items-center gap-2 cursor-pointer">
-                    <div class="bg-emerald-100 p-2 rounded-lg">
-                        <i data-lucide="leaf" class="w-5 h-5 text-emerald-600"></i>
-                    </div>
-                    <span class="font-bold text-xl tracking-tight text-zinc-900">MyFoodshare</span>
+                    @php
+                        $customLogoUrl = \App\Helpers\LogoHelper::getLogoUrl();
+                    @endphp
+                    @if($customLogoUrl)
+                        <img src="{{ $customLogoUrl }}" alt="MyFoodshare Logo" class="h-10 w-auto">
+                        <span class="font-bold text-xl tracking-tight text-zinc-900">MyFoodshare</span>
+                    @else
+                        <div class="bg-emerald-100 p-2 rounded-lg">
+                            <i data-lucide="leaf" class="w-5 h-5 text-emerald-600"></i>
+                        </div>
+                        <span class="font-bold text-xl tracking-tight text-zinc-900">MyFoodshare</span>
+                    @endif
                 </div>
 
                 <!-- Desktop Menu -->
@@ -240,7 +248,7 @@
                     </a>
                 </div>
 
-                <!-- Card 2: Recipient/NGO -->
+                <!-- Card 2: Recipient -->
                 <div class="group relative bg-white border border-zinc-200 rounded-2xl p-8 hover:border-emerald-500 hover:shadow-xl hover:shadow-emerald-900/5 transition-all duration-300">
                     <div class="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity">
                         <i data-lucide="arrow-up-right" class="text-emerald-500 w-5 h-5"></i>
@@ -248,12 +256,12 @@
                     <div class="w-12 h-12 rounded-xl bg-zinc-100 group-hover:bg-emerald-50 flex items-center justify-center mb-6 transition-colors">
                         <i data-lucide="heart-handshake" class="w-6 h-6 text-zinc-600 group-hover:text-emerald-600 transition-colors"></i>
                     </div>
-                    <h3 class="text-lg font-semibold text-zinc-900 mb-2">Recipient / NGO</h3>
+                    <h3 class="text-lg font-semibold text-zinc-900 mb-2">Recipient</h3>
                     <p class="text-sm text-zinc-500 mb-6 leading-relaxed">
                         Browse available donations, schedule pickups, and distribute to your community.
                     </p>
                     <a href="{{ route('register.recipient') }}" class="w-full py-2.5 rounded-lg border border-emerald-600 text-emerald-600 text-sm font-medium hover:bg-emerald-600 hover:text-white transition-all block text-center">
-                        Register NGO
+                        Register Recipient
                     </a>
                 </div>
             </div>
@@ -300,10 +308,15 @@
     <footer class="bg-white border-t border-zinc-200">
         <div class="px-6 py-12 flex flex-col md:flex-row justify-between items-center gap-6 w-full max-w-7xl mx-auto">
             <div class="flex items-center gap-2">
-                <div class="bg-emerald-100 p-1.5 rounded-md">
-                    <i data-lucide="leaf" class="w-4 h-4 text-emerald-600"></i>
-                </div>
-                <span class="font-bold text-sm tracking-tight text-zinc-900">MyFoodshare</span>
+                @if($customLogoUrl)
+                    <img src="{{ $customLogoUrl }}" alt="MyFoodshare Logo" class="h-8 w-auto">
+                    <span class="font-bold text-sm tracking-tight text-zinc-900">MyFoodshare</span>
+                @else
+                    <div class="bg-emerald-100 p-1.5 rounded-md">
+                        <i data-lucide="leaf" class="w-4 h-4 text-emerald-600"></i>
+                    </div>
+                    <span class="font-bold text-sm tracking-tight text-zinc-900">MyFoodshare</span>
+                @endif
             </div>
             
             <div class="flex gap-8 text-sm text-zinc-500">

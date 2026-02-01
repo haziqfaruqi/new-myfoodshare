@@ -14,10 +14,17 @@
 <header class="bg-white/80 backdrop-blur-md border-b border-emerald-100/50 sticky top-0 z-50">
         <div class="px-4 sm:px-6 lg:px-8 w-full">
             <div class="flex justify-between items-center py-4">
+                @php
+                    $customLogoUrl = \App\Helpers\LogoHelper::getLogoUrl();
+                @endphp
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center">
-                        {!! \App\Helpers\LogoHelper::getLogoHtml('h-6', 'leaf') !!}
-                    </div>
+                    @if($customLogoUrl)
+                        <img src="{{ $customLogoUrl }}" alt="MyFoodshare Logo" class="h-10 w-auto">
+                    @else
+                        <div class="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center">
+                            <i data-lucide="leaf" class="w-6 h-6 text-white"></i>
+                        </div>
+                    @endif
                     <div>
                         <h1 class="text-xl font-bold text-gray-900">MyFoodshare</h1>
                         <p class="text-xs text-emerald-600 font-medium">Login Portal</p>
@@ -64,7 +71,7 @@
                                 </div>
                                 <div class="flex items-center gap-1">
                                     <i data-lucide="heart-handshake" class="w-3 h-3"></i>
-                                    <span>NGO</span>
+                                    <span>Recipient</span>
                                 </div>
                                 <div class="flex items-center gap-1">
                                     <i data-lucide="shield-check" class="w-3 h-3"></i>
@@ -169,7 +176,7 @@
                                     </a>
                                     <a href="{{ route('register.recipient') }}" class="inline-flex items-center justify-center gap-1 px-4 py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-xs font-medium rounded-lg hover:from-emerald-600 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all duration-200">
                                         <i data-lucide="heart-handshake" class="w-3 h-3"></i>
-                                        Register as NGO/Recipient
+                                        Register as Recipient
                                     </a>
                                 </div>
                             </div>

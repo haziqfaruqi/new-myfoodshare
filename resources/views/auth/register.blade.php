@@ -119,7 +119,7 @@
                             <i data-lucide="heart-handshake" class="w-8 h-8 text-white"></i>
                         </div>
                         <div>
-                            <h3 class="text-2xl font-bold text-white">NGO/Recipient</h3>
+                            <h3 class="text-2xl font-bold text-white">Recipient</h3>
                             <p class="text-emerald-100">Community Partner</p>
                         </div>
                     </div>
@@ -148,7 +148,7 @@
                     <div class="mb-6">
                         <h4 class="text-sm font-medium text-gray-900 mb-2">Required Information:</h4>
                         <ul class="text-sm text-gray-600 space-y-1">
-                            <li>• NGO registration number</li>
+                            <li>• Recipient registration number</li>
                             <li>• Organization details</li>
                             <li>• Serving capacity</li>
                             <li>• Dietary requirements</li>
@@ -158,7 +158,7 @@
                     <a href="{{ route('register.recipient') }}"
                        class="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-medium rounded-lg hover:from-emerald-600 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all duration-200">
                         <i data-lucide="heart-handshake" class="w-4 h-4"></i>
-                        Register as NGO/Recipient
+                        Register as Recipient
                     </a>
                 </div>
             </div>

@@ -37,7 +37,7 @@
                 </div>
                 <div class="flex items-baseline gap-2">
                     <span class="text-2xl font-semibold tracking-tight text-zinc-900">{{ User::count() }}</span>
-                    <span class="text-xs font-medium text-emerald-600">+{{ $recentlyApproved->count() }} today</span>
+                    <span class="text-xs font-medium text-emerald-600">+{{ $approvedToday->count() }} today</span>
                 </div>
             </div>
 

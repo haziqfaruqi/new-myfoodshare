@@ -29,6 +29,13 @@ class AuthController extends Controller
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
 
+            // Check if there's a pending verification to redirect to
+            $pendingVerification = session('pending_verification');
+            if ($pendingVerification) {
+                session()->forget('pending_verification');
+                return redirect()->route('pickup.verify', ['code' => $pendingVerification]);
+            }
+
             // Redirect based on user role
             $user = Auth::user();
             if ($user->isAdmin()) {

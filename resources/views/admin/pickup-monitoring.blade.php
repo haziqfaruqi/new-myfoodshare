@@ -85,16 +85,16 @@
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-center gap-2">
-                                        <h3 class="text-sm font-medium text-zinc-900">{{ $activePickup->foodListing->food_name }}</h3>
+                                        <h3 class="text-sm font-medium text-zinc-900">{{ $activePickup->foodListing?->food_name ?? 'Unknown Item' }}</h3>
                                         @if($activePickup->pickup_scheduled_at && $activePickup->pickup_scheduled_at->diffInHours(now()) <= 2)
                                             <span class="text-xs font-medium bg-red-100 text-red-700 px-2 py-0.5 rounded-full pulse-slow">URGENT</span>
                                         @endif
                                     </div>
-                                    <p class="text-xs text-zinc-500 mt-1">{{ $activePickup->foodListing->pickup_location }}</p>
+                                    <p class="text-xs text-zinc-500 mt-1">{{ $activePickup->foodListing?->pickup_location ?? 'Unknown Location' }}</p>
                                     <div class="flex items-center gap-4 mt-2">
                                         <div class="flex items-center gap-1 text-xs text-zinc-600">
                                             <i data-lucide="user" class="w-3 h-3"></i>
-                                            {{ $activePickup->recipient->organization_name ?? $activePickup->recipient->name }}
+                                            {{ $activePickup->recipient?->organization_name ?? $activePickup->recipient?->name ?? 'Unknown Recipient' }}
                                         </div>
                                         <div class="flex items-center gap-1 text-xs text-zinc-600">
                                             <i data-lucide="truck" class="w-3 h-3"></i>
@@ -159,11 +159,11 @@
                             <i data-lucide="check" class="w-4 h-4"></i>
                         </div>
                         <div class="flex-1 min-w-0">
-                            <p class="text-xs font-medium text-zinc-900 truncate">{{ $recentPickup->match->foodListing->food_name }}</p>
+                            <p class="text-xs font-medium text-zinc-900 truncate">{{ $recentPickup->foodMatch?->foodListing?->food_name ?? 'Unknown Item' }}</p>
                             <div class="flex items-center gap-2 text-xs text-zinc-500 mt-0.5">
-                                <span>{{ $recentPickup->match->recipient->organization_name ?? $recentPickup->match->recipient->name }}</span>
+                                <span>{{ $recentPickup->foodMatch?->recipient?->organization_name ?? $recentPickup->foodMatch?->recipient?->name ?? 'Unknown Recipient' }}</span>
                                 <span>•</span>
-                                <span>{{ $recentPickup->scanned_at->diffForHumans() }}</span>
+                                <span>{{ $recentPickup->scanned_at?->diffForHumans() ?? 'Recently' }}</span>
                             </div>
                         </div>
                         <button class="text-zinc-400 hover:text-emerald-600 transition-colors" title="View Details">
@@ -245,7 +245,7 @@
                 </div>
                 <div class="flex justify-between text-sm">
                     <span class="text-zinc-600">Food Item:</span>
-                    <span class="font-medium text-zinc-900">{{ $activePickups->first()->foodListing->food_name }}</span>
+                    <span class="font-medium text-zinc-900">{{ $activePickups->first()->foodListing?->food_name ?? 'Unknown Item' }}</span>
                 </div>
                 <div class="flex justify-between text-sm">
                     <span class="text-zinc-600">Scheduled:</span>

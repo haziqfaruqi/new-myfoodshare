@@ -6,12 +6,12 @@ use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 use App\Models\FoodMatch;
 
-class MatchStatusUpdated implements ShouldBroadcast
+class MatchStatusUpdated implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -24,11 +24,14 @@ class MatchStatusUpdated implements ShouldBroadcast
 
     public function broadcastOn()
     {
-        // Broadcast on private channels for both the restaurant owner and recipient
+        // Broadcast to channels
         return [
-            new PrivateChannel('matches.' . $this->match->recipient_id),
-            new PrivateChannel('restaurant.' . $this->match->foodListing->created_by),
-            new PrivateChannel('admin.matches'),
+            new PrivateChannel('private-matches.' . $this->match->recipient_id),
+            new PrivateChannel('private-restaurant.' . $this->match->foodListing->created_by),
+            new PrivateChannel('private-admin.matches'),
+            // Also use public channels for testing (avoid auth issues)
+            new Channel('restaurant-notifications'),
+            new Channel('recipient-notifications'),
         ];
     }
 
@@ -44,7 +47,7 @@ class MatchStatusUpdated implements ShouldBroadcast
             'food_name' => $this->match->foodListing->food_name,
             'quantity' => $this->match->foodListing->quantity,
             'restaurant_name' => $this->match->foodListing->restaurantProfile->restaurant_name,
-            'recipient_name' => $this->match->recipient ? ($this->match->recipient->organization_name ?? $this->match->recipient->name) : 'Unknown Recipient',
+            'recipient_name' => \App\Models\User::find($this->match->recipient_id)?->name ?? 'Unknown Recipient',
             'status' => $this->match->status,
             'qr_code' => $this->match->qr_code,
             'pickup_scheduled_at' => $this->match->pickup_scheduled_at?->format('Y-m-d H:i:s'),

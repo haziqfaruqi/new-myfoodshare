@@ -67,10 +67,33 @@
                 <i data-lucide="search" class="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
                 <input type="text" placeholder="Search..." class="pl-9 pr-4 py-1.5 text-sm bg-zinc-100 border-none rounded-md focus:ring-2 focus:ring-emerald-500/20 focus:bg-white transition-all w-64 placeholder:text-zinc-400">
             </div>
-            <button class="relative text-zinc-500 hover:text-zinc-900" title="Notifications">
-                <i data-lucide="bell" class="w-5 h-5"></i>
-                <span class="absolute top-0 right-0 w-2 h-2 bg-rose-500 rounded-full border-2 border-white"></span>
-            </button>
+            <!-- Notification Bell with Dropdown -->
+            <div class="relative" id="admin-notification-dropdown">
+                <button onclick="toggleAdminNotificationDropdown()" class="relative text-zinc-500 hover:text-zinc-900 transition-colors" title="Notifications">
+                    <i data-lucide="bell" class="w-5 h-5"></i>
+                    <span id="admin-notification-count" class="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 rounded-full border-2 border-white text-[10px] font-bold text-white flex items-center justify-center hidden">0</span>
+                </button>
+
+                <!-- Notification Dropdown Menu -->
+                <div id="admin-notification-menu" class="hidden absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-zinc-200 overflow-hidden z-50">
+                    <div class="px-4 py-3 border-b border-zinc-100 bg-zinc-50">
+                        <h3 class="text-sm font-semibold text-zinc-900">Notifications</h3>
+                    </div>
+                    <div id="admin-notification-list" class="max-h-64 overflow-y-auto">
+                        <div class="px-4 py-6 text-center text-sm text-zinc-500">
+                            <i data-lucide="bell-off" class="w-8 h-8 mx-auto text-zinc-300 mb-2"></i>
+                            <p>No notifications yet</p>
+                        </div>
+                    </div>
+                    <div class="px-4 py-2 border-t border-zinc-100 bg-zinc-50 flex items-center justify-between">
+                        <a href="/admin/approvals" class="text-xs text-blue-600 hover:text-blue-700 font-medium">View approvals</a>
+                        <div class="flex items-center gap-2">
+                            <button onclick="markAllAdminAsRead()" class="text-xs text-zinc-500 hover:text-zinc-700 font-medium">Mark all read</button>
+                            <button onclick="clearAllAdminNotifications()" class="text-xs text-red-500 hover:text-red-700 font-medium">Clear</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <form action="{{ route('logout') }}" method="POST" class="ml-2">
                 @csrf
                     <button type="submit" class="text-zinc-500 hover:text-red-600 transition-colors" title="Logout">

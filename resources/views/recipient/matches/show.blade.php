@@ -1,29 +1,9 @@
-@extends('layouts.app')
+@extends('recipient.layouts.recipient-layout')
+
+@section('title', 'Match Details')
 
 @section('content')
-<div class="min-h-screen bg-gray-50">
-    <!-- Header -->
-    <header class="bg-white shadow-sm border-b">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center py-4">
-                <div>
-                    <h1 class="text-2xl font-bold text-gray-900">Match Details</h1>
-                    <p class="text-sm text-gray-600">View your food match details</p>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <a href="{{ route('recipient.matches.index') }}"
-                       class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors">
-                        Back to Matches
-                    </a>
-                    <span class="text-sm text-gray-600">Welcome, {{ Auth::user()->name }}</span>
-                    <a href="{{ route('logout') }}" class="px-4 py-2 text-sm text-red-600 hover:text-red-800 transition-colors">Logout</a>
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <!-- Main Content -->
-    <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="flex-1 overflow-y-auto p-6 md:p-8">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <!-- Left Column - Match Details -->
             <div class="lg:col-span-2">
@@ -313,14 +293,18 @@
                     </div>
                 </div>
 
-                <!-- QR Code -->
+                <!-- Pickup Verification Info -->
                 @if ($match->qr_code && in_array($match->status, ['approved', 'scheduled']))
                     <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Pickup QR Code</h3>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Pickup Verification</h3>
                         <div class="text-center">
-                            <div id="qrcode" class="flex justify-center mb-4"></div>
-                            <p class="text-sm text-gray-600 mb-2">Show this QR code to the restaurant staff for pickup verification</p>
-                            <p class="text-xs text-gray-500">Verification code: <span class="font-mono font-bold">{{ $match->qr_code }}</span></p>
+                            <a href="{{ route('recipient.scan') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                                <i data-lucide="scan-line" class="w-5 h-5"></i>
+                                Scan QR Code at Restaurant
+                            </a>
+                            <p class="text-sm text-gray-600 mt-3">
+                                Click this button when you're at the restaurant to scan their QR code for pickup verification
+                            </p>
                         </div>
                     </div>
                 @endif
@@ -367,27 +351,9 @@
                 </div>
             </div>
         </div>
-    </main>
-</div>
+    </div>
+@endsection
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    @if ($match->qr_code)
-        // Generate QR code
-        const qrcodeDiv = document.getElementById('qrcode');
-        qrcodeDiv.innerHTML = '';
-
-        const qrData = window.location.origin + '/recipient/match/' + $match->id + '/verify';
-        new QRCode(qrcodeDiv, {
-            text: qrData,
-            width: 200,
-            height: 200,
-            colorDark: "#000000",
-            colorLight: "#ffffff",
-            correctLevel: QRCode.CorrectLevel.H
-        });
-    @endif
-});
-</script>
+@section('scripts')
+<!-- No scripts needed for recipient - they scan QR codes, don't generate them -->
 @endsection

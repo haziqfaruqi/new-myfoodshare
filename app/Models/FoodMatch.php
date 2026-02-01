@@ -52,7 +52,7 @@ class FoodMatch extends Model
 
     public function recipient()
     {
-        return $this->belongsTo(Recipient::class);
+        return $this->belongsTo(User::class, 'recipient_id');
     }
 
     public function restaurantProfile()

@@ -88,6 +88,7 @@
             @php
                 $foodListing = $match->foodListing;
                 $restaurantName = $foodListing->restaurantProfile->restaurant_name ?? $foodListing->creator->name;
+                $foodName = $foodListing->food_name ?? 'Food Item';
                 $foodType = $foodListing->food_type ?? 'Food';
                 $quantity = $foodListing->quantity ?? 'N/A';
                 $unit = $foodListing->unit ?? 'units';
@@ -95,36 +96,59 @@
                 $distance = $match->distance;
                 $status = $match->status;
                 $rating = $match->rating ?? 0;
+
+                // Get food image
+                $imagesData = $foodListing->images ?? '[]';
+                $foodImages = is_array($imagesData) ? $imagesData : json_decode($imagesData, true);
+                $foodImage = !empty($foodImages) && is_array($foodImages) ? $foodImages[0] : null;
+
+                // Determine status icon and colors
+                $statusIcon = match($status) {
+                    'pending' => 'clock',
+                    'approved' => 'check-circle',
+                    'scheduled' => 'check-circle',
+                    'completed' => 'utensils',
+                    default => 'clock'
+                };
+                $statusIconColor = match($status) {
+                    'pending' => 'text-amber-600',
+                    'approved' => 'text-emerald-600',
+                    'scheduled' => 'text-emerald-600',
+                    'completed' => 'text-green-600',
+                    default => 'text-zinc-600'
+                };
+                $statusBgColor = match($status) {
+                    'pending' => 'bg-amber-100',
+                    'approved' => 'bg-emerald-100',
+                    'scheduled' => 'bg-emerald-100',
+                    'completed' => 'bg-green-100',
+                    default => 'bg-zinc-100'
+                };
+                $statusBadgeColor = match($status) {
+                    'pending' => 'bg-amber-100 text-amber-800',
+                    'approved' => 'bg-emerald-100 text-emerald-800',
+                    'scheduled' => 'bg-emerald-100 text-emerald-800',
+                    'completed' => 'bg-green-100 text-green-800',
+                    default => 'bg-zinc-100 text-zinc-800'
+                };
             @endphp
             <div class="bg-white rounded-xl border border-zinc-200 shadow-sm p-6">
                 <div class="flex items-start justify-between mb-4">
                     <div class="flex gap-4">
-                        {{-- Status Icon --}}
-                        <div class="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0
-                            @if($status == 'pending')
-                                bg-amber-100
-                            @elseif($status == 'approved' || $status == 'scheduled')
-                                bg-emerald-100
-                            @elseif($status == 'completed')
-                                bg-green-100
-                            @else
-                                bg-zinc-100
-                            @endif">
-                            <i data-lucide="@if($status == 'pending') clock @elseif($status == 'approved' || $status == 'scheduled') check-circle @elseif($status == 'completed') utensils @else clock @endif"
-                               class="w-6 h-6
-                                    @if($status == 'pending') text-amber-600
-                                    @elseif($status == 'approved' || $status == 'scheduled') text-emerald-600
-                                    @elseif($status == 'completed') text-green-600
-                                    @else text-zinc-600 @endif"></i>
-                        </div>
+                        {{-- Food Image --}}
+                        @if($foodImage)
+                            <div class="w-16 h-16 rounded-xl flex-shrink-0 overflow-hidden bg-zinc-100">
+                                <img src="{{ asset('storage/' . $foodImage) }}" alt="{{ $foodName }}" class="w-full h-full object-cover">
+                            </div>
+                        @else
+                            <div class="w-16 h-16 rounded-xl flex items-center justify-center flex-shrink-0 {{ $statusBgColor }}">
+                                <i data-lucide="{{ $statusIcon }}" class="w-8 h-8 {{ $statusIconColor }}"></i>
+                            </div>
+                        @endif
                         <div class="flex-1">
                             <div class="flex items-center gap-3 mb-1">
-                                <h3 class="font-semibold text-zinc-900">{{ $restaurantName }}</h3>
-                                <span class="@if($status == 'pending') bg-amber-100 text-amber-800
-                                            @elseif($status == 'approved' || $status == 'scheduled') bg-emerald-100 text-emerald-800
-                                            @elseif($status == 'completed') bg-green-100 text-green-800
-                                            @else bg-zinc-100 text-zinc-800 @endif
-                                            text-xs font-medium px-2 py-1 rounded-full">
+                                <h3 class="font-semibold text-zinc-900">{{ $foodName }}</h3>
+                                <span class="{{ $statusBadgeColor }} text-xs font-medium px-2 py-1 rounded-full">
                                     {{ ucfirst($status) }}
                                 </span>
                                 {{-- Ready badge for approved matches that are due --}}
@@ -132,7 +156,7 @@
                                     <span class="bg-white text-emerald-700 text-[8px] font-bold px-1.5 py-0.5 rounded shadow-sm uppercase">Ready</span>
                                 @endif
                             </div>
-                            <p class="text-sm text-zinc-600 mb-2">{{ $quantity }} {{ $unit }} of {{ $foodType }}</p>
+                            <p class="text-sm text-zinc-600 mb-2">{{ $quantity }} {{ $unit }} from {{ $restaurantName }}</p>
                             <div class="flex items-center gap-4 text-xs text-zinc-500">
                                 @if($pickupScheduledAt)
                                     <span class="flex items-center gap-1">
@@ -171,20 +195,22 @@
                         </button>
                     @endif
 
+                    <a href="{{ route('recipient.matches.show', $match->id) }}"
+                       class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
+                        <i data-lucide="eye" class="w-4 h-4 inline mr-2"></i>
+                        View Details
+                    </a>
+
                     @if($status != 'completed')
-                        <button class="px-4 py-2 bg-white border border-zinc-300 text-zinc-700 rounded-lg text-sm font-medium hover:bg-zinc-50 transition-colors">
+                        {{-- <button class="px-4 py-2 bg-white border border-zinc-300 text-zinc-700 rounded-lg text-sm font-medium hover:bg-zinc-50 transition-colors">
                             <i data-lucide="message-circle" class="w-4 h-4 inline mr-2"></i>
                             Message Restaurant
                         </button>
                         <button class="px-4 py-2 border border-zinc-300 text-zinc-700 rounded-lg text-sm font-medium hover:bg-zinc-50 transition-colors">
                             <i data-lucide="phone" class="w-4 h-4 inline mr-2"></i>
                             Call Restaurant
-                        </button>
+                        </button> --}}
                     @else
-                        <button class="px-4 py-2 bg-green-100 text-green-700 rounded-lg text-sm font-medium hover:bg-green-200 transition-colors">
-                            <i data-lucide="eye" class="w-4 h-4 inline mr-2"></i>
-                            View Details
-                        </button>
                         <button class="px-4 py-2 bg-white border border-zinc-300 text-zinc-700 rounded-lg text-sm font-medium hover:bg-zinc-50 transition-colors">
                             <i data-lucide="repeat" class="w-4 h-4 inline mr-2"></i>
                             Request Again

@@ -2,9 +2,9 @@
 <aside id="recipient-sidebar" class="w-64 border-r border-zinc-200 bg-white fixed md:static inset-y-0 left-0 transform z-30 transition-transform duration-300 ease-in-out md:transform-none -translate-x-full md:translate-x-0 flex flex-col">
     <div class="h-16 flex items-center px-6 border-b border-zinc-100">
         <a href="{{ route('recipient.dashboard') }}" class="flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors">
-            <i data-lucide="heart-handshake" class="w-6 h-6 fill-current"></i>
+            <img src="{{ asset('uploads/logo/1765191361_my-logo.jpg') }}" alt="MyFoodshare" class="h-8 w-auto">
             <span class="font-bold tracking-tight text-zinc-900 text-lg">MyFoodshare</span>
-            <span class="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded ml-1 font-medium">NGO</span>
+            <span class="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded ml-1 font-medium">Recipient</span>
         </a>
     </div>
 
@@ -26,9 +26,13 @@
                     <i data-lucide="map" class="w-4 h-4 {{ request()->is('recipient/map-view*') ? 'text-zinc-500' : 'text-zinc-400' }}"></i>
                     Map View
                 </a>
-                <a href="{{ route('recipient.my-matches') }}" class="flex items-center gap-3 px-3 py-2 text-sm font-medium {{ request()->is('recipient/my-matches*') ? 'text-zinc-900 bg-zinc-100' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50' }} rounded-md transition-colors">
-                    <i data-lucide="clock" class="w-4 h-4 {{ request()->is('recipient/my-matches*') ? 'text-zinc-500' : 'text-zinc-400' }}"></i>
+                <a href="{{ route('recipient.my-matches') }}" class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium {{ request()->is('recipient/my-matches*') || request()->is('recipient/matches*') ? 'text-blue-600 bg-blue-50 border-l-4 border-blue-600' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50' }} rounded-r-md transition-all">
+                    <i data-lucide="clock" class="w-4 h-4 {{ request()->is('recipient/my-matches*') || request()->is('recipient/matches*') ? 'text-blue-600' : 'text-zinc-400' }}"></i>
                     My Matches
+                </a>
+                <a href="{{ route('recipient.scan') }}" class="flex items-center gap-3 px-3 py-2 text-sm font-medium {{ request()->is('recipient/scan*') ? 'text-zinc-900 bg-zinc-100' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50' }} rounded-md transition-colors">
+                    <i data-lucide="scan-line" class="w-4 h-4 {{ request()->is('recipient/scan*') ? 'text-zinc-500' : 'text-zinc-400' }}"></i>
+                    Verify Pickup
                 </a>
             </nav>
         </div>
@@ -43,7 +47,7 @@
                 </a>
                 <a href="{{ route('recipient.ngo-profile') }}" class="flex items-center gap-3 px-3 py-2 text-sm font-medium {{ request()->is('recipient/ngo-profile*') ? 'text-zinc-900 bg-zinc-100' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50' }} rounded-md transition-colors">
                     <i data-lucide="building-2" class="w-4 h-4 {{ request()->is('recipient/ngo-profile*') ? 'text-zinc-500' : 'text-zinc-400' }}"></i>
-                    NGO Profile
+                    Recipient Profile
                 </a>
             </nav>
         </div>

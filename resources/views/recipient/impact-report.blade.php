@@ -268,7 +268,7 @@
         if (!ctx) return;
 
         @if($monthlyRecoveryData->count() > 0)
-            const monthlyData = @json($monthlyRecoveryData);
+            const monthlyData = @json($monthlyRecoveryData->values());
             const labels = monthlyData.map(item => {
                 const date = new Date(item.month + '-01');
                 return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });

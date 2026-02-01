@@ -257,6 +257,43 @@
                                 @enderror
                             </div>
 
+                            <!-- Location Picker Map -->
+                            <div class="col-span-1 md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i data-lucide="map" class="w-4 h-4 inline mr-1"></i>
+                                    Restaurant Location
+                                </label>
+                                <p class="text-xs text-gray-500 mb-2">Click on the map to set your restaurant's location</p>
+
+                                <!-- Hidden inputs for coordinates -->
+                                <input type="hidden" id="latitude" name="latitude" value="{{ old('latitude') }}">
+                                <input type="hidden" id="longitude" name="longitude" value="{{ old('longitude') }}">
+
+                                <!-- Map Container -->
+                                <div id="location-map" class="w-full h-64 rounded-lg border border-gray-300 relative z-10">
+                                    <div class="absolute inset-0 flex items-center justify-center bg-gray-100 text-gray-500">
+                                        <div class="text-center">
+                                            <i data-lucide="map-pin" class="w-8 h-8 mx-auto mb-2 text-gray-400"></i>
+                                            <p class="text-sm">Click to enable location picker</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Location Info Display -->
+                                <div id="location-info" class="mt-2 p-3 bg-emerald-50 border border-emerald-200 rounded-lg hidden">
+                                    <div class="flex items-center gap-2 text-sm text-emerald-700">
+                                        <i data-lucide="check-circle" class="w-4 h-4"></i>
+                                        <span>Location selected: <span id="coords-display" class="font-medium"></span></span>
+                                    </div>
+                                </div>
+
+                                <!-- Use Current Location Button -->
+                                <button type="button" id="use-current-location" class="mt-2 inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                                    <i data-lucide="navigation" class="w-4 h-4"></i>
+                                    Use My Current Location
+                                </button>
+                            </div>
+
                             <div>
                                 <label for="cuisine_type" class="block text-sm font-medium text-gray-700 mb-2">
                                     Cuisine Type <span class="text-red-500">*</span>
@@ -349,7 +386,7 @@
                     <div class="flex flex-col sm:flex-row justify-center items-center gap-4 text-sm">
                         <a href="{{ route('register.recipient') }}" class="flex items-center gap-2 text-emerald-600 hover:text-emerald-700 font-medium">
                             <i data-lucide="heart-handshake" class="w-4 h-4"></i>
-                            Register as NGO/Recipient
+                            Register as Recipient
                         </a>
                         <span class="text-gray-400">•</span>
                         <a href="{{ route('register') }}" class="text-gray-600 hover:text-gray-700">
@@ -366,6 +403,12 @@
     </div>
 </div>
 
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
 <script>
     // Initialize Lucide Icons
     lucide.createIcons();
@@ -375,5 +418,113 @@
         // Simple mobile menu functionality
         alert('Mobile menu would open here');
     });
+
+    // Location Picker Map
+    let map;
+    let marker;
+    const DEFAULT_LAT = 3.1390; // Kuala Lumpur
+    const DEFAULT_LNG = 101.6869;
+
+    function initLocationMap() {
+        const mapContainer = document.getElementById('location-map');
+        if (!mapContainer) return;
+
+        // Clear the placeholder
+        mapContainer.innerHTML = '';
+
+        // Initialize map
+        map = L.map('location-map').setView([DEFAULT_LAT, DEFAULT_LNG], 12);
+
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 19
+        }).addTo(map);
+
+        // Add click handler to map
+        map.on('click', function(e) {
+            setMarkerLocation(e.latlng.lat, e.latlng.lng);
+        });
+
+        // Load existing coordinates if available
+        const existingLat = document.getElementById('latitude').value;
+        const existingLng = document.getElementById('longitude').value;
+
+        if (existingLat && existingLng) {
+            setMarkerLocation(parseFloat(existingLat), parseFloat(existingLng));
+        } else {
+            // Add default marker
+            setMarkerLocation(DEFAULT_LAT, DEFAULT_LNG);
+        }
+    }
+
+    function setMarkerLocation(lat, lng) {
+        // Remove existing marker if any
+        if (marker) {
+            map.removeLayer(marker);
+        }
+
+        // Add new marker
+        marker = L.marker([lat, lng], {
+            draggable: true
+        }).addTo(map);
+
+        // Update hidden inputs
+        document.getElementById('latitude').value = lat.toFixed(8);
+        document.getElementById('longitude').value = lng.toFixed(8);
+
+        // Update display
+        document.getElementById('location-info').classList.remove('hidden');
+        document.getElementById('coords-display').textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+
+        // Center map on new location
+        map.setView([lat, lng], 14);
+
+        // Handle marker drag
+        marker.on('dragend', function(e) {
+            const position = marker.getLatLng();
+            setMarkerLocation(position.lat, position.lng);
+        });
+    }
+
+    // Use current location button
+    document.getElementById('use-current-location')?.addEventListener('click', function() {
+        if (navigator.geolocation) {
+            this.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Getting location...';
+            lucide.createIcons();
+
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    setMarkerLocation(lat, lng);
+
+                    document.getElementById('use-current-location').innerHTML = '<i data-lucide="navigation" class="w-4 h-4"></i> Use My Current Location';
+                    lucide.createIcons();
+                },
+                function(error) {
+                    alert('Unable to get your location. Please click on the map to set your location manually.');
+                    document.getElementById('use-current-location').innerHTML = '<i data-lucide="navigation" class="w-4 h-4"></i> Use My Current Location';
+                    lucide.createIcons();
+                }
+            );
+        } else {
+            alert('Geolocation is not supported by your browser. Please click on the map to set your location manually.');
+        }
+    });
+
+    // Initialize map when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+        initLocationMap();
+    });
 </script>
+
+<style>
+    #location-map {
+        z-index: 1;
+    }
+    .leaflet-container {
+        font-family: inherit;
+    }
+</style>
 @endsection

@@ -78,6 +78,11 @@ class FoodListing extends Model
         return $this->status === 'active';
     }
 
+    public function isUnavailable()
+    {
+        return $this->status === 'unavailable';
+    }
+
     public function isExpired()
     {
         return $this->expiry_date < now()->toDateString() || 

@@ -2,7 +2,7 @@
 <aside id="restaurant-sidebar" class="w-64 border-r border-zinc-200 bg-white fixed md:static inset-y-0 left-0 transform z-30 transition-transform duration-300 ease-in-out md:transform-none -translate-x-full md:translate-x-0 flex flex-col">
     <div class="h-16 flex items-center px-6 border-b border-zinc-100">
         <div class="flex items-center gap-2 text-emerald-600">
-            <i data-lucide="leaf" class="w-6 h-6 fill-current"></i>
+            <img src="{{ asset('uploads/logo/1765191361_my-logo.jpg') }}" alt="MyFoodshare" class="h-8 w-auto">
             <span class="font-bold tracking-tight text-zinc-900 text-lg">MyFoodshare</span>
             <span class="text-[10px] bg-zinc-100 text-zinc-500 px-1.5 py-0.5 rounded ml-1">PARTNER</span>
         </div>

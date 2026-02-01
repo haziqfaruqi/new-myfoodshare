@@ -39,7 +39,11 @@ class DashboardController extends Controller
             'total_restaurants' => User::where('role', 'restaurant_owner')->where('status', 'active')->count(),
             'total_recipients' => User::where('role', 'recipient')->where('status', 'active')->count(),
             'total_food_listings' => FoodListing::count(),
-            'pending_approvals' => FoodListing::where('status', 'pending')->count(),
+            'pending_approvals' => FoodListing::where('approval_status', 'pending')->count(),
+            'active_listings' => FoodListing::where('status', 'active')->count(),
+            'listings_today' => FoodListing::whereDate('created_at', today())->count(),
+            'matches_total' => \App\Models\FoodMatch::count(),
+            'pending_users' => User::where('status', 'pending')->count(),
         ];
 
         // Get pending food listings from restaurant owners
@@ -49,7 +53,83 @@ class DashboardController extends Controller
             ->take(6)
             ->get();
 
-        return view('admin.dashboard', compact('stats', 'pendingFoodListings'));
+        // Get pending user registrations
+        $pendingUsers = User::where('status', 'pending')
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
+
+        // Get recent activity
+        $recentActivity = collect();
+
+        // Get recently approved listings
+        $approvedListings = FoodListing::with(['creator', 'restaurantProfile'])
+            ->where('approval_status', 'approved')
+            ->orderBy('updated_at', 'desc')
+            ->take(3)
+            ->get();
+
+        foreach ($approvedListings as $listing) {
+            $recentActivity->push([
+                'type' => 'listing_approved',
+                'title' => 'Donation Approved',
+                'description' => 'Verified "' . $listing->food_name . '"',
+                'time' => $listing->updated_at->diffForHumans(),
+                'icon' => 'check',
+                'color' => 'emerald',
+            ]);
+        }
+
+        // Get recent matches
+        $recentMatches = \App\Models\FoodMatch::with(['foodListing', 'recipient'])
+            ->orderBy('created_at', 'desc')
+            ->take(3)
+            ->get();
+
+        foreach ($recentMatches as $match) {
+            $recipientName = 'Unknown Recipient';
+            if ($match->recipient) {
+                $recipientName = $match->recipient->organization_name ?? $match->recipient->name ?? 'Unknown Recipient';
+            }
+
+            $recentActivity->push([
+                'type' => 'match_created',
+                'title' => 'Match Found',
+                'description' => 'Linked with ' . $recipientName,
+                'time' => $match->created_at->diffForHumans(),
+                'icon' => 'user-check',
+                'color' => 'blue',
+            ]);
+        }
+
+        // Get recent listings
+        $recentListings = FoodListing::with(['creator', 'restaurantProfile'])
+            ->orderBy('created_at', 'desc')
+            ->take(3)
+            ->get();
+
+        foreach ($recentListings as $listing) {
+            $creatorName = 'Unknown';
+            if ($listing->restaurantProfile) {
+                $creatorName = $listing->restaurantProfile->restaurant_name ?? 'Unknown Restaurant';
+            } elseif ($listing->creator) {
+                $creatorName = $listing->creator->name ?? 'Unknown User';
+            }
+
+            $recentActivity->push([
+                'type' => 'listing_created',
+                'title' => 'Listing Created',
+                'description' => 'By ' . $creatorName,
+                'time' => $listing->created_at->diffForHumans(),
+                'icon' => 'upload-cloud',
+                'color' => 'zinc',
+            ]);
+        }
+
+        // Sort by time and take 5
+        $recentActivity = $recentActivity->take(5);
+
+        return view('admin.dashboard', compact('stats', 'pendingFoodListings', 'recentActivity', 'pendingUsers'));
     }
 
     /**
@@ -61,13 +141,20 @@ class DashboardController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(4);
 
+        // Get users approved today
+        $approvedToday = User::where('status', 'active')
+            ->whereDate('approved_at', today())
+            ->orderBy('approved_at', 'desc')
+            ->get();
+
+        // Get recently approved users (last 5, any time)
         $recentlyApproved = User::where('status', 'active')
             ->whereNotNull('approved_at')
             ->orderBy('approved_at', 'desc')
             ->take(5)
             ->get();
 
-        return view('admin.user-approvals', compact('pendingUsers', 'recentlyApproved'));
+        return view('admin.user-approvals', compact('pendingUsers', 'recentlyApproved', 'approvedToday'));
     }
 
     /**
@@ -124,6 +211,7 @@ class DashboardController extends Controller
             'total_users' => User::count(),
             'active_users' => User::where('status', 'active')->count(),
             'pending_users' => User::where('status', 'pending')->count(),
+            'inactive_users' => User::whereIn('status', ['suspended', 'rejected'])->count(),
             'restaurant_owners' => User::where('role', 'restaurant_owner')->where('status', 'active')->count(),
             'recipients' => User::where('role', 'recipient')->where('status', 'active')->count(),
         ];
@@ -141,7 +229,7 @@ class DashboardController extends Controller
         }
 
         $validated = $request->validate([
-            'status' => 'required|in:active,inactive,pending,rejected',
+            'status' => 'required|in:active,suspended,pending,rejected',
             'role' => 'required|in:admin,restaurant_owner,recipient',
         ]);
 
@@ -167,19 +255,72 @@ class DashboardController extends Controller
     }
 
     /**
+     * Get user profile data for AJAX request.
+     */
+    public function getUserProfile(User $user)
+    {
+        if (!auth()->user()->isAdmin()) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        $userData = [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'role' => $user->role,
+            'status' => $user->status,
+            'created_at' => $user->created_at?->format('M j, Y'),
+            'last_login' => $user->last_login?->format('M j, Y g:i A'),
+        ];
+
+        // Add restaurant profile if exists
+        if ($user->restaurantProfile) {
+            $userData['restaurant_profile'] = [
+                'restaurant_name' => $user->restaurantProfile->restaurant_name,
+                'address' => $user->restaurantProfile->address,
+                'phone' => $user->restaurantProfile->phone,
+            ];
+        }
+
+        // Add recipient profile if exists
+        if ($user->recipient) {
+            $userData['recipient_profile'] = [
+                'organization_name' => $user->recipient->organization_name,
+                'address' => $user->recipient->address,
+                'phone' => $user->recipient->phone,
+            ];
+        }
+
+        // Add user's phone if available
+        if ($user->phone) {
+            $userData['phone'] = $user->phone;
+        }
+
+        // Add user's address if available
+        if ($user->address) {
+            $userData['address'] = $user->address;
+        }
+
+        return response()->json([
+            'success' => true,
+            'user' => $userData
+        ]);
+    }
+
+    /**
      * Show active listings management page.
      */
     public function activeListings()
     {
         $activeListings = FoodListing::with(['restaurantProfile', 'creator'])
-            ->whereIn('status', ['active', 'reserved'])
+            ->whereIn('status', ['active', 'matched'])
             ->orderBy('created_at', 'desc')
             ->paginate(20);
 
         $stats = [
             'total_listings' => FoodListing::count(),
             'active_listings' => FoodListing::where('status', 'active')->count(),
-            'reserved_listings' => FoodListing::where('status', 'reserved')->count(),
+            'matched_listings' => FoodListing::where('status', 'matched')->count(),
             'expired_listings' => FoodListing::where('expiry_date', '<', now()->toDateString())->count(),
             'pending_approvals' => FoodListing::where('approval_status', 'pending')->count(),
         ];
@@ -196,16 +337,16 @@ class DashboardController extends Controller
         $activePickups = \App\Models\FoodMatch::with(['foodListing.restaurantProfile', 'recipient', 'pickupVerification'])
             ->whereIn('status', ['approved', 'scheduled'])
             ->whereDoesntHave('pickupVerification') // Only matches without verification records
-            ->where(function($query) {
+            ->where(function ($query) {
                 $query->whereNull('pickup_scheduled_at')
-                      ->orWhere('pickup_scheduled_at', '<=', now());
+                    ->orWhere('pickup_scheduled_at', '<=', now());
             })
             ->orderBy('created_at', 'asc')
             ->take(15)
             ->get();
 
         // Get recent pickups with verification records (use scanned_at as verification timestamp)
-        $recentPickups = \App\Models\PickupVerification::with(['match.foodListing.restaurantProfile', 'match.recipient'])
+        $recentPickups = \App\Models\PickupVerification::with(['foodMatch.foodListing.restaurantProfile', 'foodMatch.recipient'])
             ->whereNotNull('scanned_at')
             ->where('scanned_at', '>=', now()->subHours(24))
             ->orderBy('scanned_at', 'desc')
@@ -243,29 +384,50 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
 
-        // Get restaurant profile
+        // Get restaurant profile - create if missing for existing users
         $restaurantProfile = $user->restaurantProfile;
 
+        // If no profile exists but user has restaurant data, create one
+        if (!$restaurantProfile && $user->restaurant_name) {
+            $restaurantProfile = \App\Models\RestaurantProfile::create([
+                'user_id' => $user->id,
+                'restaurant_name' => $user->restaurant_name,
+                'address' => $user->address ?? '',
+                'business_license' => $user->business_license ?? '',
+                'cuisine_type' => $user->cuisine_type ?? 'other',
+                'status' => $user->status ?? 'pending',
+            ]);
+        }
+
+        // Determine query method: by restaurant_profile_id or by created_by (fallback)
+        $listingsQuery = $restaurantProfile
+            ? FoodListing::where('restaurant_profile_id', $restaurantProfile->id)
+            : FoodListing::where('created_by', $user->id);
+
         $stats = [
-            'active_listings' => $restaurantProfile ? FoodListing::where('restaurant_profile_id', $restaurantProfile->id)->where('status', 'active')->where('approval_status', 'approved')->count() : 0,
-            'total_donations' => $restaurantProfile ? FoodListing::where('restaurant_profile_id', $restaurantProfile->id)->count() : 0,
-            'pending_pickups' => $restaurantProfile ? FoodListing::where('restaurant_profile_id', $restaurantProfile->id)->whereIn('status', ['active', 'reserved'])->count() : 0,
-            'total_people_helped' => $restaurantProfile ? FoodListing::where('restaurant_profile_id', $restaurantProfile->id)->whereHas('matches')->count() : 0,
+            'active_listings' => (clone $listingsQuery)->where('status', 'active')->where('approval_status', 'approved')->count(),
+            'total_donations' => $listingsQuery->count(),
+            'pending_pickups' => (clone $listingsQuery)->whereIn('status', ['active', 'reserved'])->count(),
+            'total_people_helped' => (clone $listingsQuery)->whereHas('matches')->count(),
+            'pending_approval' => (clone $listingsQuery)->where('approval_status', 'pending')->count(),
         ];
 
-        $recentListings = $restaurantProfile ? FoodListing::where('restaurant_profile_id', $restaurantProfile->id)
+        $recentListings = (clone $listingsQuery)
             ->where('status', 'active')
             ->where('approval_status', 'approved')
+            ->whereDoesntHave('matches', function($q) {
+                $q->where('status', 'completed');
+            })
             ->where(function ($q) {
                 $q->where('expiry_date', '>', now()->toDateString())
-                  ->orWhere(function ($q2) {
-                      $q2->where('expiry_date', '=', now()->toDateString())
-                         ->where('expiry_time', '>=', now()->format('H:i'));
-                  });
+                    ->orWhere(function ($q2) {
+                        $q2->where('expiry_date', '=', now()->toDateString())
+                            ->where('expiry_time', '>=', now()->format('H:i'));
+                    });
             })
             ->orderBy('created_at', 'desc')
             ->take(5)
-            ->get() : collect();
+            ->get();
 
         // Get latest 3 notifications for the restaurant user
         $notifications = $user->notifications()
@@ -273,7 +435,7 @@ class DashboardController extends Controller
             ->take(3)
             ->get()
             ->map(function ($notification) {
-                $data = json_decode($notification->data, true);
+                $data = is_array($notification->data) ? $notification->data : json_decode($notification->data, true);
                 return [
                     'id' => $notification->id,
                     'type' => $notification->type,
@@ -287,10 +449,11 @@ class DashboardController extends Controller
 
         // Count active recipients within 5km
         $activeRecipientsNearby = 0;
-        $restaurantLat = $restaurantProfile->latitude;
-        $restaurantLng = $restaurantProfile->longitude;
 
-        if ($restaurantLat && $restaurantLng) {
+        if ($restaurantProfile && $restaurantProfile->latitude && $restaurantProfile->longitude) {
+            $restaurantLat = $restaurantProfile->latitude;
+            $restaurantLng = $restaurantProfile->longitude;
+
             // Get all users with recipient profiles that have location data
             $recipientsWithLocation = User::whereHas('recipient')
                 ->whereNotNull('latitude')
@@ -338,7 +501,7 @@ class DashboardController extends Controller
 
         // Get today's pickups (scheduled for today)
         $todayPickups = \App\Models\FoodMatch::with(['foodListing', 'recipient'])
-            ->whereHas('foodListing', function($query) use ($user) {
+            ->whereHas('foodListing', function ($query) use ($user) {
                 $query->where('created_by', $user->id);
             })
             ->whereDate('pickup_scheduled_at', today())
@@ -348,7 +511,7 @@ class DashboardController extends Controller
 
         // Get pending pickups (approved but not scheduled)
         $pendingPickups = \App\Models\FoodMatch::with(['foodListing', 'recipient'])
-            ->whereHas('foodListing', function($query) use ($user) {
+            ->whereHas('foodListing', function ($query) use ($user) {
                 $query->where('created_by', $user->id);
             })
             ->where('status', 'approved')
@@ -359,7 +522,7 @@ class DashboardController extends Controller
 
         // Get completed pickups this week
         $completedPickups = \App\Models\FoodMatch::with(['foodListing', 'recipient'])
-            ->whereHas('foodListing', function($query) use ($user) {
+            ->whereHas('foodListing', function ($query) use ($user) {
                 $query->where('created_by', $user->id);
             })
             ->where('status', 'completed')
@@ -371,10 +534,10 @@ class DashboardController extends Controller
             ->where('created_at', '>=', now()->startOfMonth())
             ->sum('quantity');
 
-        
+
         // Get recent activity
         $recentActivity = \App\Models\FoodMatch::with(['foodListing', 'recipient'])
-            ->whereHas('foodListing', function($query) use ($user) {
+            ->whereHas('foodListing', function ($query) use ($user) {
                 $query->where('created_by', $user->id);
             })
             ->whereIn('status', ['approved', 'scheduled', 'completed'])
@@ -382,12 +545,25 @@ class DashboardController extends Controller
             ->take(10)
             ->get();
 
+        // Get upcoming pickups (next 5, sorted by pickup date)
+        $upcomingPickups = \App\Models\FoodMatch::with(['foodListing', 'recipient'])
+            ->whereHas('foodListing', function ($query) use ($user) {
+                $query->where('created_by', $user->id);
+            })
+            ->whereIn('status', ['approved', 'scheduled'])
+            ->whereNotNull('pickup_scheduled_at')
+            ->where('pickup_scheduled_at', '>=', now())
+            ->orderBy('pickup_scheduled_at', 'asc')
+            ->take(5)
+            ->get();
+
         return view('restaurant.schedule.index', compact(
             'todayPickups',
             'pendingPickups',
             'completedPickups',
             'totalDonated',
-            'recentActivity'
+            'recentActivity',
+            'upcomingPickups'
         ));
     }
 
@@ -435,8 +611,8 @@ class DashboardController extends Controller
         $dLat = deg2rad($lat2 - $lat1);
         $dLon = deg2rad($lon2 - $lon1);
 
-        $a = sin($dLat/2) * sin($dLat/2) + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($dLon/2) * sin($dLon/2);
-        $c = 2 * atan2(sqrt($a), sqrt(1-$a));
+        $a = sin($dLat / 2) * sin($dLat / 2) + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($dLon / 2) * sin($dLon / 2);
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
 
         return $earthRadius * $c;
     }
@@ -445,7 +621,7 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
 
-        // Get user's profile for pinned location (since they are the recipient/NGO)
+        // Get user's profile for pinned location (since they are the recipient)
         $pinnedLocation = null;
 
         if ($user->latitude && $user->longitude) {
@@ -455,7 +631,7 @@ class DashboardController extends Controller
             $pinnedLocation = [
                 'latitude' => $user->latitude,
                 'longitude' => $user->longitude,
-                'name' => json_decode($user->profile_data ?: '{}')->location_name ?? 'Organization Location'
+                'name' => json_decode($user->profile_data ?: '{}', true)['location_name'] ?? 'Organization Location'
             ];
         } else {
             // Fallback to default location
@@ -469,10 +645,15 @@ class DashboardController extends Controller
             $allListings = FoodListing::with(['restaurantProfile', 'creator'])
                 ->where('status', 'active')
                 ->where('approval_status', 'approved')
-                ->where('expiry_date', '>=', now()->toDateString())
-                ->orWhere(function ($q) {
-                    $q->where('expiry_date', '=', now()->toDateString())
-                      ->where('expiry_time', '>=', now()->format('H:i'));
+                ->whereDoesntHave('matches', function($q) {
+                    $q->where('status', 'completed');
+                })
+                ->where(function ($q) {
+                    $q->where('expiry_date', '>', now()->toDateString())
+                      ->orWhere(function ($q2) {
+                          $q2->where('expiry_date', '=', now()->toDateString())
+                              ->where('expiry_time', '>=', now()->format('H:i'));
+                      });
                 })
                 ->get();
 
@@ -509,14 +690,42 @@ class DashboardController extends Controller
         $upcomingPickups = collect();
         if ($user->recipient) {
             $upcomingPickups = $user->recipient->matches()
-                ->with(['foodListing.restaurantProfile', 'foodListing.creator'])
+                ->with(['foodListing.restaurantProfile', 'foodListing.creator', 'pickupVerification'])
+                ->whereIn('status', ['approved', 'scheduled'])
+                ->orderBy('pickup_scheduled_at', 'asc')
+                ->get();
+
+            // Generate verification codes for approved pickups that don't have them
+            foreach ($upcomingPickups as $pickup) {
+                if ($pickup->status == 'approved' && !$pickup->pickupVerification) {
+                    \App\Models\PickupVerification::generateForMatch($pickup);
+                }
+            }
+
+            // Reload with verification data
+            $upcomingPickups = $user->recipient->matches()
+                ->with(['foodListing.restaurantProfile', 'foodListing.creator', 'pickupVerification'])
                 ->whereIn('status', ['approved', 'scheduled'])
                 ->orderBy('pickup_scheduled_at', 'asc')
                 ->get();
         } else {
             // Fallback: Try to get matches directly from user ID if recipient profile doesn't exist
             $upcomingPickups = \App\Models\FoodMatch::where('recipient_id', $user->id)
-                ->with(['foodListing.restaurantProfile', 'foodListing.creator'])
+                ->with(['foodListing.restaurantProfile', 'foodListing.creator', 'pickupVerification'])
+                ->whereIn('status', ['approved', 'scheduled'])
+                ->orderBy('pickup_scheduled_at', 'asc')
+                ->get();
+
+            // Generate verification codes for approved pickups that don't have them
+            foreach ($upcomingPickups as $pickup) {
+                if ($pickup->status == 'approved' && !$pickup->pickupVerification) {
+                    \App\Models\PickupVerification::generateForMatch($pickup);
+                }
+            }
+
+            // Reload with verification data
+            $upcomingPickups = \App\Models\FoodMatch::where('recipient_id', $user->id)
+                ->with(['foodListing.restaurantProfile', 'foodListing.creator', 'pickupVerification'])
                 ->whereIn('status', ['approved', 'scheduled'])
                 ->orderBy('pickup_scheduled_at', 'asc')
                 ->get();
@@ -599,6 +808,29 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
         $profile = $user->restaurantProfile;
+
+        // If no restaurant profile exists but user has restaurant data, create one
+        if (!$profile && $user->restaurant_name) {
+            $profile = \App\Models\RestaurantProfile::create([
+                'user_id' => $user->id,
+                'restaurant_name' => $user->restaurant_name,
+                'address' => $user->address ?? '',
+                'business_license' => $user->business_license ?? '',
+                'cuisine_type' => $user->cuisine_type ?? 'other',
+                'status' => $user->status ?? 'pending',
+            ]);
+        }
+
+        // If still no profile, create a default one
+        if (!$profile) {
+            $profile = new \App\Models\RestaurantProfile([
+                'user_id' => $user->id,
+                'restaurant_name' => $user->name . ' Restaurant',
+                'cuisine_type' => 'other',
+                'status' => 'pending',
+            ]);
+        }
+
         return view('restaurant.profile.index', compact('user', 'profile'));
     }
 
@@ -686,7 +918,7 @@ class DashboardController extends Controller
         $recipientProfile = $user->recipient;
 
         if ($recipientProfile && $recipientProfile->latitude && $recipientProfile->longitude) {
-            // Use NGO's pinned location
+            // Use recipient's pinned location
             $userLat = $recipientProfile->latitude;
             $userLon = $recipientProfile->longitude;
         } else {
@@ -700,11 +932,14 @@ class DashboardController extends Controller
             $allActiveListings = FoodListing::with(['restaurantProfile', 'creator'])
                 ->where('status', 'active')
                 ->where('approval_status', 'approved')
+                ->whereDoesntHave('matches', function($q) {
+                    $q->where('status', 'completed');
+                })
                 ->where(function ($q) {
-                    $q->where('expiry_date', '>=', now()->toDateString())
+                    $q->where('expiry_date', '>', now()->toDateString())
                       ->orWhere(function ($q2) {
                           $q2->where('expiry_date', '=', now()->toDateString())
-                             ->where('expiry_time', '>=', now()->format('H:i'));
+                              ->where('expiry_time', '>=', now()->format('H:i'));
                       });
                 })
                 ->get();
@@ -735,12 +970,15 @@ class DashboardController extends Controller
             $nearbyFoodListings = FoodListing::with(['restaurantProfile', 'creator'])
                 ->where('status', 'active')
                 ->where('approval_status', 'approved')
+                ->whereDoesntHave('matches', function($q) {
+                    $q->where('status', 'completed');
+                })
                 ->where(function ($q) {
                     $q->where('expiry_date', '>=', now()->toDateString())
-                      ->orWhere(function ($q2) {
-                          $q2->where('expiry_date', '=', now()->toDateString())
-                             ->where('expiry_time', '>=', now()->format('H:i'));
-                      });
+                        ->orWhere(function ($q2) {
+                            $q2->where('expiry_date', '=', now()->toDateString())
+                                ->where('expiry_time', '>=', now()->format('H:i'));
+                        });
                 })
                 ->get();
         }
@@ -788,12 +1026,15 @@ class DashboardController extends Controller
         if (!$user->latitude || !$user->longitude) {
             return FoodListing::where('status', 'active')
                 ->where('approval_status', 'approved')
+                ->whereDoesntHave('matches', function($q) {
+                    $q->where('status', 'completed');
+                })
                 ->where(function ($q) {
                     $q->where('expiry_date', '>=', now()->toDateString())
-                      ->orWhere(function ($q2) {
-                          $q2->where('expiry_date', '=', now()->toDateString())
-                             ->where('expiry_time', '>=', now()->format('H:i'));
-                      });
+                        ->orWhere(function ($q2) {
+                            $q2->where('expiry_date', '=', now()->toDateString())
+                                ->where('expiry_time', '>=', now()->format('H:i'));
+                        });
                 })
                 ->count();
         }
@@ -801,10 +1042,15 @@ class DashboardController extends Controller
         $allListings = FoodListing::with(['restaurantProfile', 'creator'])
             ->where('status', 'active')
             ->where('approval_status', 'approved')
-            ->where('expiry_date', '>=', now()->toDateString())
-            ->orWhere(function ($q) {
-                $q->where('expiry_date', '=', now()->toDateString())
-                  ->where('expiry_time', '>=', now()->format('H:i'));
+            ->whereDoesntHave('matches', function($q) {
+                $q->where('status', 'completed');
+            })
+            ->where(function ($q) {
+                $q->where('expiry_date', '>', now()->toDateString())
+                  ->orWhere(function ($q2) {
+                      $q2->where('expiry_date', '=', now()->toDateString())
+                          ->where('expiry_time', '>=', now()->format('H:i'));
+                  });
             })
             ->get();
 
@@ -835,7 +1081,7 @@ class DashboardController extends Controller
             $pinnedLocation = [
                 'latitude' => $user->latitude,
                 'longitude' => $user->longitude,
-                'name' => json_decode($user->profile_data ?: '{}')->location_name ?? 'Organization Location'
+                'name' => json_decode($user->profile_data ?: '{}', true)['location_name'] ?? 'Organization Location'
             ];
         }
 
@@ -856,11 +1102,11 @@ class DashboardController extends Controller
         // Share available food count with sidebar
         view()->share('availableFoodCount', $availableFoodCount);
 
-        // Get user's matches with related data
-        $matches = $user->recipient ? $user->recipient->matches()
+        // Get user's matches with related data - use User's matches() relationship directly
+        $matches = $user->matches()
             ->with(['foodListing.restaurantProfile', 'foodListing.creator'])
             ->orderBy('created_at', 'desc')
-            ->get() : collect();
+            ->get();
 
         return view('recipient.my-matches', compact('matches'));
     }
@@ -879,12 +1125,12 @@ class DashboardController extends Controller
             ->get() : collect();
 
         // Calculate impact metrics
-        $totalCO2Saved = $completedMatches->sum(function($match) {
+        $totalCO2Saved = $completedMatches->sum(function ($match) {
             return $match->foodListing->estimated_co2_saved ?? 0;
         });
 
         $totalMealsRecovered = $completedMatches->count();
-        $totalMoneySaved = $completedMatches->sum(function($match) {
+        $totalMoneySaved = $completedMatches->sum(function ($match) {
             return $match->foodListing->estimated_value ?? 0;
         });
 
@@ -904,8 +1150,14 @@ class DashboardController extends Controller
         view()->share('availableFoodCount', $availableFoodCount);
 
         return view('recipient.impact-report', compact(
-            'totalCO2Saved', 'totalMealsRecovered', 'totalMoneySaved', 'peopleHelped',
-            'completedMatches', 'monthlyRecoveryData', 'foodCategoryData', 'keyStats'
+            'totalCO2Saved',
+            'totalMealsRecovered',
+            'totalMoneySaved',
+            'peopleHelped',
+            'completedMatches',
+            'monthlyRecoveryData',
+            'foodCategoryData',
+            'keyStats'
         ));
     }
 
@@ -916,31 +1168,41 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
 
-        if (!$user->recipient) {
+        // Always try to get the recipient profile for the user
+        $recipient = $user->recipient;
+
+        if (!$recipient) {
+            // No recipient profile found, return empty
             return collect();
         }
 
-        // Get completed matches grouped by month
-        return $user->recipient->matches()
+        // Get matches from recipient relationship
+        $matches = $recipient->matches()
+            ->with('foodListing')
             ->where('status', 'completed')
             ->where('completed_at', '>=', now()->subMonths(6))
             ->orderBy('completed_at')
-            ->get()
-            ->groupBy(function($match) {
-                return $match->completed_at->format('Y-m');
-            })
-            ->map(function($matches, $month) {
-                return [
-                    'month' => $month,
-                    'meals' => $matches->count(),
-                    'co2_saved' => $matches->sum(function($match) {
-                        return $match->foodListing->estimated_co2_saved ?? 0;
-                    }),
-                    'money_saved' => $matches->sum(function($match) {
-                        return $match->foodListing->estimated_value ?? 0;
-                    })
-                ];
-            });
+            ->get();
+
+        if ($matches->isEmpty()) {
+            return collect();
+        }
+
+        // Group by month and calculate stats
+        return $matches->groupBy(function ($match) {
+            return $match->completed_at->format('Y-m');
+        })->map(function ($monthMatches, $month) {
+            return [
+                'month' => $month,
+                'meals' => $monthMatches->count(),
+                'co2_saved' => $monthMatches->sum(function ($match) {
+                    return $match->foodListing->estimated_co2_saved ?? 0;
+                }),
+                'money_saved' => $monthMatches->sum(function ($match) {
+                    return $match->foodListing->estimated_value ?? 0;
+                })
+            ];
+        });
     }
 
     /**
@@ -950,7 +1212,10 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
 
-        if (!$user->recipient) {
+        // Always try to get the recipient profile for the user
+        $recipient = $user->recipient;
+
+        if (!$recipient) {
             return collect();
         }
 
@@ -958,17 +1223,21 @@ class DashboardController extends Controller
         $preferredCategories = ['Prepared Meals', 'Bakery', 'Produce', 'Dairy', 'Canned Goods'];
 
         // Get completed matches with food listing categories
-        $completedMatches = $user->recipient->matches()
+        $completedMatches = $recipient->matches()
             ->where('status', 'completed')
-            ->whereHas('foodListing', function($query) {
+            ->whereHas('foodListing', function ($query) {
                 $query->whereNotNull('category');
             })
             ->with('foodListing')
             ->get();
 
+        if ($completedMatches->isEmpty()) {
+            return collect();
+        }
+
         // Group matches by category and count
-        $categoryData = $completedMatches->groupBy(function($match) {
-            $category = $match->foodListing->category;
+        $categoryData = $completedMatches->groupBy(function ($match) {
+            $category = $match->foodListing->category ?? 'Other';
             // Normalize category names to match preferred categories
             if (stripos($category, 'meal') !== false || stripos($category, 'food') !== false || stripos($category, 'ready') !== false) {
                 return 'Prepared Meals';
@@ -986,7 +1255,7 @@ class DashboardController extends Controller
 
         // Map to the preferred categories structure
         return collect($preferredCategories)
-            ->map(function($preferredCategory) use ($categoryData) {
+            ->map(function ($preferredCategory) use ($categoryData) {
                 $matches = $categoryData->get($preferredCategory, collect());
                 return [
                     'category' => $preferredCategory,
@@ -994,7 +1263,7 @@ class DashboardController extends Controller
                     'percentage' => 0 // Will be calculated in view
                 ];
             })
-            ->filter(function($item) {
+            ->filter(function ($item) {
                 return $item['count'] > 0; // Only include categories with data
             })
             ->sortByDesc('count');
@@ -1007,7 +1276,10 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
 
-        if (!$user->recipient) {
+        // Always try to get the recipient profile for the user
+        $recipient = $user->recipient;
+
+        if (!$recipient) {
             return [
                 'averageRating' => 0,
                 'successRate' => 0,
@@ -1016,21 +1288,21 @@ class DashboardController extends Controller
             ];
         }
 
-        $completedMatches = $user->recipient->matches()
+        $completedMatches = $recipient->matches()
             ->where('status', 'completed')
             ->count();
 
-        $totalMatches = $user->recipient->matches()->count();
+        $totalMatches = $recipient->matches()->count();
 
         $successRate = $totalMatches > 0 ? ($completedMatches / $totalMatches) * 100 : 0;
 
         // Get unique restaurants helped
-        $partnerRestaurants = $user->recipient->matches()
+        $partnerRestaurants = $recipient->matches()
             ->where('status', 'completed')
             ->whereHas('foodListing.restaurantProfile')
             ->with('foodListing.restaurantProfile')
             ->get()
-            ->unique(function($match) {
+            ->unique(function ($match) {
                 return $match->foodListing->restaurantProfile->id ?? $match->foodListing->creator_id;
             })
             ->count();
@@ -1044,7 +1316,7 @@ class DashboardController extends Controller
     }
 
     /**
-     * NGO profile for recipients.
+     * Profile for recipients.
      */
     public function ngoProfile()
     {
@@ -1069,7 +1341,7 @@ class DashboardController extends Controller
         $endDate = $request->input('end_date', now()->format('Y-m-d'));
 
         // Get pickup verifications for the date range
-        $pickupVerifications = PickupVerification::with(['match.foodListing', 'match.recipient', 'match.restaurant'])
+        $pickupVerifications = PickupVerification::with(['foodMatch.foodListing', 'foodMatch.recipient', 'foodListing'])
             ->whereDate('scanned_at', '>=', $startDate)
             ->whereDate('scanned_at', '<=', $endDate)
             ->orderBy('scanned_at', 'desc')
@@ -1084,13 +1356,13 @@ class DashboardController extends Controller
         $successRate = $totalPickups > 0 ? ($verifiedPickups / $totalPickups) * 100 : 0;
 
         // Group by date
-        $dailyStats = $pickupVerifications->groupBy(function($item) {
+        $dailyStats = $pickupVerifications->groupBy(function ($item) {
             return $item->scanned_at->format('Y-m-d');
         });
 
         // Group by recipient
-        $recipientStats = $pickupVerifications->groupBy(function($item) {
-            return $item->match->recipient ? ($item->match->recipient->organization_name ?? $item->match->recipient->name) : 'Unknown Recipient';
+        $recipientStats = $pickupVerifications->groupBy(function ($item) {
+            return $item->foodMatch?->recipient ? ($item->foodMatch->recipient->organization_name ?? $item->foodMatch->recipient->name) : 'Unknown Recipient';
         });
 
         // Generate CSV for download
@@ -1122,7 +1394,7 @@ class DashboardController extends Controller
             'Content-Disposition' => 'attachment; filename="pickup-monitoring-report-' . $startDate . '-to-' . $endDate . '.csv"',
         ];
 
-        $callback = function() use ($pickupVerifications) {
+        $callback = function () use ($pickupVerifications) {
             $file = fopen('php://output', 'w');
 
             // Add CSV headers
@@ -1141,15 +1413,15 @@ class DashboardController extends Controller
             // Add data rows
             foreach ($pickupVerifications as $verification) {
                 fputcsv($file, [
-                    $verification->match->id,
-                    $verification->match->foodListing->food_name,
-                    $verification->match->restaurant->restaurant_name ?? $verification->match->foodListing->creator->name,
-                    $verification->match->recipient ? ($verification->match->recipient->organization_name ?? $verification->match->recipient->name) : 'Unknown Recipient',
-                    $verification->match->pickup_scheduled_at->format('Y-m-d H:i:s'),
-                    $verification->scanned_at->format('Y-m-d H:i:s'),
+                    $verification->foodMatch?->id ?? $verification->id,
+                    $verification->foodListing?->food_name ?? $verification->foodMatch?->foodListing?->food_name ?? 'N/A',
+                    $verification->foodMatch?->foodListing?->restaurantProfile?->restaurant_name ?? $verification->foodListing?->restaurantProfile?->restaurant_name ?? $verification->foodListing?->creator?->name ?? 'N/A',
+                    $verification->foodMatch?->recipient?->organization_name ?? $verification->foodMatch?->recipient?->name ?? $verification->recipient?->organization_name ?? $verification->recipient?->name ?? 'Unknown Recipient',
+                    $verification->foodMatch?->pickup_scheduled_at?->format('Y-m-d H:i:s') ?? 'N/A',
+                    $verification->scanned_at?->format('Y-m-d H:i:s') ?? 'N/A',
                     $verification->verification_status,
-                    $verification->qr_code,
-                    $verification->notes ?? ''
+                    $verification->verification_code,
+                    $verification->recipient_notes ?? $verification->admin_notes ?? ''
                 ]);
             }
 
@@ -1160,7 +1432,7 @@ class DashboardController extends Controller
     }
 
     /**
-     * Update NGO Profile
+     * Update Recipient Profile
      */
     public function updateNgoProfile(Request $request)
     {
@@ -1202,7 +1474,7 @@ class DashboardController extends Controller
         }
 
         return redirect()->route('recipient.ngo-profile')
-            ->with('success', 'NGO profile updated successfully!');
+            ->with('success', 'Recipient updated successfully!');
     }
 
     /**
@@ -1258,5 +1530,344 @@ class DashboardController extends Controller
 
         return redirect()->route('admin.settings.logo')
             ->with('error', 'No file uploaded.');
+    }
+
+    /**
+     * Show pickup verification page.
+     */
+    public function showVerificationPage($code)
+    {
+        $verification = \App\Models\PickupVerification::with(['foodMatch.foodListing', 'foodMatch.restaurantProfile'])
+            ->where('verification_code', $code)
+            ->where('verification_status', 'pending')
+            ->firstOrFail();
+
+        // Check if user is authenticated
+        if (auth()->check()) {
+            // Check if this verification belongs to the authenticated user
+            if ($verification->recipient_id !== auth()->id()) {
+                abort(403, 'Unauthorized access');
+            }
+        } else {
+            // Store the verification code in session for after login
+            session(['pending_verification' => $code]);
+            // Redirect to login page
+            return redirect()->route('login')
+                ->with('message', 'Please login to verify your pickup')
+                ->with('verification_code', $code);
+        }
+
+        return view('recipient.verify-pickup', compact('verification'));
+    }
+
+    /**
+     * Process pickup verification.
+     */
+    public function verifyPickup(Request $request)
+    {
+        $request->validate([
+            'verification_code' => 'required|string',
+            'pickup_code' => 'required|string',
+            'quality_rating' => 'nullable|integer|min:1|max:5',
+            'notes' => 'nullable|string|max:500',
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        // Find the verification record - allow pending or verified (scanned) status
+        $verification = \App\Models\PickupVerification::where('verification_code', $request->verification_code)
+            ->whereIn('verification_status', ['pending', 'verified'])
+            ->first();
+
+        // Debug information - remove this in production
+        if (app()->environment('local')) {
+            \Log::info('Verification Debug', [
+                'submitted_verification_code' => $request->verification_code,
+                'submitted_pickup_code' => $request->pickup_code,
+                'verification_found' => $verification ? true : false,
+                'verification_status' => $verification ? $verification->verification_status : 'N/A',
+                'verification_id' => $verification ? $verification->id : 'N/A'
+            ]);
+
+            // Also check if any verification exists with this code (regardless of status)
+            $anyVerification = \App\Models\PickupVerification::where('verification_code', $request->verification_code)->first();
+            if ($anyVerification) {
+                \Log::info('Verification Found (any status)', [
+                    'status' => $anyVerification->verification_status,
+                    'id' => $anyVerification->id,
+                    'recipient_id' => $anyVerification->recipient_id,
+                    'food_match_id' => $anyVerification->food_match_id
+                ]);
+            }
+        }
+
+        if (!$verification) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Verification not found or already processed.'
+            ], 404);
+        }
+
+        // Check if the pickup code matches
+        if ($verification->verification_code !== $request->pickup_code) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid pickup code. Please try again.'
+            ], 422);
+        }
+
+        // Check if this verification belongs to the authenticated user
+        if ($verification->recipient_id !== auth()->id()) {
+            // Check if user is authenticated and has recipient role
+            if (!auth()->check()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Please login to verify your pickup. You must be logged in as a recipient user.'
+                ], 401);
+            }
+
+            if (!auth()->user()->isRecipient()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only recipient users can verify pickups. Please login with a recipient account.'
+                ], 403);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'This verification does not belong to your account.'
+            ], 403);
+        }
+
+        // Handle photo upload if provided
+        $photoPath = null;
+        if ($request->hasFile('photo')) {
+            $photo = $request->file('photo');
+            $photoPath = 'pickup-evidence/' . time() . '.' . $photo->getClientOriginalExtension();
+            $photo->move(public_path('storage/' . dirname($photoPath)), basename($photoPath));
+        }
+
+        // Update verification
+        $verification->update([
+            'qr_code_scanned' => $request->pickup_code,
+            'scanned_at' => now(),
+            'verification_status' => 'verified',
+            'quality_rating' => $request->quality_rating,
+            'recipient_notes' => $request->notes,
+            'photo_evidence' => $photoPath ? [$photoPath] : [],
+            'quality_confirmed' => $request->quality_rating >= 4,
+            'pickup_completed_at' => now(),
+        ]);
+
+        // Update the food match status
+        $verification->foodMatch->update([
+            'status' => 'completed',
+            'completed_at' => now(),
+        ]);
+
+        // Update the food listing status to picked_up
+        $foodListing = $verification->foodMatch->foodListing;
+        if ($foodListing) {
+            $foodListing->update([
+                'status' => 'picked_up'
+            ]);
+        }
+
+        // Send notification to restaurant
+        $restaurant = $verification->foodMatch->foodListing->creator;
+        if ($restaurant) {
+            $restaurant->notify(new \App\Notifications\PickupVerified($verification));
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Pickup verified successfully!',
+            'redirect_url' => route('recipient.dashboard')
+        ]);
+    }
+
+    /**
+     * Show dedicated verification page for scanning QR codes.
+     */
+    public function verificationPage()
+    {
+        $user = auth()->user();
+
+        // Get all pending verifications for this recipient
+        $pendingVerifications = \App\Models\PickupVerification::with(['foodMatch.foodListing', 'foodMatch.restaurantProfile'])
+            ->where('recipient_id', $user->recipient->id ?? $user->id)
+            ->where('verification_status', 'pending')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Also get approved pickups that don't have verifications yet
+        $approvedPickups = \App\Models\FoodMatch::with(['foodListing'])
+            ->where('recipient_id', $user->recipient->id ?? $user->id)
+            ->where('status', 'approved')
+            ->whereDoesntHave('pickupVerification')
+            ->get();
+
+        return view('recipient.verification-page', compact('pendingVerifications', 'approvedPickups'));
+    }
+
+    /**
+     * Show QR scanner page for recipient
+     */
+    public function showScannerPage()
+    {
+        if (!auth()->check() || !auth()->user()->isRecipient()) {
+            if (!auth()->check()) {
+                return redirect()->route('login')->with('message', 'Please login to access the scanner page.');
+            }
+            abort(403, 'Unauthorized action');
+        }
+
+        $user = auth()->user();
+
+        // Get current pickup (approved match without verification)
+        $currentPickup = FoodMatch::with(['foodListing.restaurantProfile'])
+            ->where('recipient_id', $user->id)
+            ->where('status', 'approved')
+            ->whereDoesntHave('pickupVerification')
+            ->orderBy('pickup_scheduled_at', 'asc')
+            ->first();
+
+        // Get recent verifications
+        $recentVerifications = PickupVerification::with(['foodMatch.foodListing'])
+            ->where('recipient_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
+
+        return view('recipient.scanner', compact('currentPickup', 'recentVerifications'));
+    }
+
+    /**
+     * Cancel a verification (restaurant only)
+     */
+    public function cancelVerification($verificationId)
+    {
+        if (!auth()->user()->isRestaurantOwner()) {
+            abort(403, 'Unauthorized action');
+        }
+
+        $verification = PickupVerification::where('id', $verificationId)
+            ->where('donor_id', auth()->id())
+            ->where('verification_status', 'pending')
+            ->first();
+
+        if (!$verification) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Verification not found or already processed.'
+            ], 404);
+        }
+
+        // Cancel the verification and delete the record
+        $verification->delete();
+
+        // Also delete the related food match if it exists
+        if ($verification->foodMatch) {
+            $verification->foodMatch->delete();
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Verification cancelled successfully.'
+        ]);
+    }
+
+    /**
+     * Generate QR code for restaurant pickup verification
+     */
+    public function generateQr($matchId)
+    {
+        if (!auth()->user()->isRestaurantOwner()) {
+            abort(403, 'Unauthorized action');
+        }
+
+        // Find the match owned by this restaurant with relationships
+        $match = \App\Models\FoodMatch::with(['foodListing', 'recipient'])
+            ->whereHas('foodListing', function ($query) {
+                $query->where('created_by', auth()->id());
+            })
+            ->where('id', $matchId)
+            ->first();
+
+        if (!$match) {
+            abort(404, 'Match not found');
+        }
+
+        // Get or create verification record with relationships loaded
+        $verification = \App\Models\PickupVerification::with(['foodMatch.foodListing', 'foodMatch.recipient', 'foodListing', 'recipient'])
+            ->firstOrCreate(
+                ['food_match_id' => $match->id],
+                [
+                    'food_listing_id' => $match->food_listing_id,
+                    'recipient_id' => $match->recipient_id,
+                    'donor_id' => auth()->id(),
+                    'verification_code' => \App\Models\PickupVerification::generateUniqueCode(),
+                    'verification_status' => 'pending',
+                ]
+            );
+
+        // Reload the verification with relationships to ensure they're loaded
+        $verification->load(['foodMatch.foodListing', 'foodMatch.recipient', 'foodListing', 'recipient']);
+
+        // Generate QR code using simple-qrcode (SVG format to avoid imagick dependency)
+        $qrCode = \QrCode::format('svg')
+            ->size(200)
+            ->errorCorrection('H')
+            ->generate($verification->generateQrCode());
+
+        $qrCodeImage = 'data:image/svg+xml;base64,' . base64_encode($qrCode);
+
+        return view('restaurant.qr-code', compact('verification', 'qrCodeImage'));
+    }
+
+    /**
+     * Get admin notifications (database stored + unread count)
+     */
+    public function getNotifications(Request $request)
+    {
+        $user = auth()->user();
+        if (!$user || !$user->isAdmin()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $notifications = $user->unreadNotifications()
+            ->latest()
+            ->limit(50)
+            ->get()
+            ->map(function ($notification) {
+                return [
+                    'id' => $notification->id,
+                    'type' => $notification->type,
+                    'data' => $notification->data,
+                    'created_at' => $notification->created_at->toISOString(),
+                ];
+            });
+
+        $unreadCount = $user->unreadNotifications()->count();
+
+        return response()->json([
+            'notifications' => $notifications,
+            'unread_count' => $unreadCount,
+        ]);
+    }
+
+    /**
+     * Mark notification as read
+     */
+    public function markNotificationRead(Request $request, $notificationId)
+    {
+        $user = auth()->user();
+        if (!$user || !$user->isAdmin()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $notification = $user->notifications()->findOrFail($notificationId);
+        $notification->markAsRead();
+
+        return response()->json(['success' => true]);
     }
 }

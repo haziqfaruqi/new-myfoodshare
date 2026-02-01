@@ -52,13 +52,13 @@
         <div>
             <h3 class="px-3 text-xs font-medium text-zinc-400 uppercase tracking-wider mb-2">Monitoring</h3>
             <nav class="space-y-0.5">
-                <a href="{{ route('admin.pickup-monitoring') }}" class="flex items-center gap-3 px-3 py-2 text-sm font-medium {{ request()->is('admin/pickup-monitoring') && !request()->is('admin/pickup-monitoring/report*') ? 'text-emerald-600 bg-emerald-50' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50' }} rounded-md transition-colors">
+                {{-- <a href="{{ route('admin.pickup-monitoring') }}" class="flex items-center gap-3 px-3 py-2 text-sm font-medium {{ request()->is('admin/pickup-monitoring') && !request()->is('admin/pickup-monitoring/report*') ? 'text-emerald-600 bg-emerald-50' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50' }} rounded-md transition-colors">
                     <i data-lucide="qr-code" class="w-4 h-4 text-zinc-400"></i>
                     Pickup Verification
                     <span class="ml-auto bg-emerald-100 text-emerald-700 py-0.5 px-2 rounded-full text-[10px] font-medium">
                         {{ App\Models\PickupVerification::where('verification_status', 'pending')->whereNull('qr_code_scanned')->count() }}
                     </span>
-                </a>
+                </a> --}}
                 <a href="{{ route('admin.pickup-monitoring.report') }}" class="flex items-center gap-3 px-3 py-2 text-sm font-medium {{ request()->is('admin/pickup-monitoring/report') ? 'text-emerald-600 bg-emerald-50' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50' }} rounded-md transition-colors">
                     <i data-lucide="file-text" class="w-4 h-4 text-zinc-400"></i>
                     Pickup Report
@@ -66,7 +66,7 @@
             </nav>
         </div>
 
-        <!-- Settings -->
+        {{-- <!-- Settings -->
         <div>
             <h3 class="px-3 text-xs font-medium text-zinc-400 uppercase tracking-wider mb-2">Settings</h3>
             <nav class="space-y-0.5">
@@ -75,7 +75,7 @@
                     Logo Settings
                 </a>
             </nav>
-        </div>
+        </div> --}}
     </div>
 
     <!-- User Profile Stub -->

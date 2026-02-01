@@ -46,11 +46,11 @@
 
                     <div class="p-4 bg-white rounded-xl border border-zinc-200 shadow-sm">
                         <div class="flex items-center justify-between mb-3">
-                            <span class="text-xs font-medium text-zinc-500 uppercase">Reserved</span>
+                            <span class="text-xs font-medium text-zinc-500 uppercase">Matched</span>
                             <i data-lucide="clock" class="w-4 h-4 text-amber-600"></i>
                         </div>
                         <div class="flex items-baseline gap-2">
-                            <span class="text-2xl font-semibold tracking-tight text-zinc-900">{{ $stats['reserved_listings'] }}</span>
+                            <span class="text-2xl font-semibold tracking-tight text-zinc-900">{{ $stats['matched_listings'] }}</span>
                             <span class="text-xs font-medium text-amber-600">Pending</span>
                         </div>
                     </div>
@@ -163,7 +163,15 @@
                                         <p class="text-xs text-zinc-500">{{ $listing->unit }}</p>
                                     </td>
                                     <td class="px-6 py-4">
-                                        @if($listing->status === 'active')
+                                        @php
+                                            $hasCompletedPickup = $listing->matches()->where('status', 'completed')->count() > 0;
+                                        @endphp
+                                        @if($hasCompletedPickup)
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+                                                <i data-lucide="check-circle" class="w-3 h-3"></i>
+                                                Picked Up
+                                            </span>
+                                        @elseif($listing->status === 'active')
                                             <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
                                                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                                                 Active
@@ -191,11 +199,11 @@
                                             <a href="{{ route('admin.food-listings.show', $listing->id) }}" class="text-zinc-400 hover:text-emerald-600 transition-colors" title="View Details">
                                                 <i data-lucide="eye" class="w-4 h-4"></i>
                                             </a>
-                                            @if($listing->status === 'active')
+                                            {{-- @if($listing->status === 'active')
                                                 <a href="{{ route('admin.matches.index') }}?food_listing_id={{ $listing->id }}" class="text-zinc-400 hover:text-blue-600 transition-colors" title="Manage Matches">
                                                     <i data-lucide="users" class="w-4 h-4"></i>
                                                 </a>
-                                            @endif
+                                            @endif --}}
                                             <form action="{{ route('admin.food-listings.reject', $listing) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to deactivate this listing?')">
                                                 @csrf
                                                 <button type="submit" class="text-zinc-400 hover:text-red-600 transition-colors" title="Deactivate">

@@ -193,11 +193,11 @@
                 <div>
                     <p class="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-2">Address</p>
                     <p class="text-sm text-zinc-900">{{ $profile->address }}</p>
-                    <p class="text-sm text-zinc-700">{{ $profile->city }}, {{ $profile->state }} {{ $profile->zip_code }}</p>
+                    <p class="text-sm text-zinc-700">{{ $profile->city }} {{ $profile->state }} {{ $profile->zip_code }}</p>
                 </div>
 
                 <!-- Contact Info Grid -->
-                <div class="grid grid-cols-2 gap-4">
+                {{-- <div class="grid grid-cols-2 gap-4">
                     <div>
                         <p class="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1">Phone</p>
                         <p class="text-sm font-medium text-zinc-900">{{ $profile->phone ?? 'Not provided' }}</p>
@@ -206,7 +206,7 @@
                         <p class="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1">Email</p>
                         <p class="text-sm font-medium text-zinc-900">{{ $profile->email }}</p>
                     </div>
-                </div>
+                </div> --}}
 
                 <!-- Website -->
                 @if($profile->website)
@@ -301,7 +301,7 @@
                             <div class="flex-1">
                                 <p class="text-xs font-medium text-zinc-500 uppercase tracking-wider">Business Address</p>
                                 <p class="text-sm font-medium text-zinc-900">{{ $profile->address }}</p>
-                                <p class="text-sm font-medium text-zinc-900">{{ $profile->city }}, {{ $profile->state }} {{ $profile->zip_code }}</p>
+                                <p class="text-sm font-medium text-zinc-900">{{ $profile->city }} {{ $profile->state }} {{ $profile->zip_code }}</p>
                             </div>
                         </div>
 

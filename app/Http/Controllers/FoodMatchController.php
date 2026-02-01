@@ -90,18 +90,26 @@ class FoodMatchController extends Controller
     /**
      * Recipient view their matches
      */
-    public function index()
+    public function index(Request $request)
     {
         if (!Auth::user()->isRecipient()) {
             abort(403, 'Unauthorized action');
         }
 
-        $matches = FoodMatch::with(['foodListing.restaurantProfile'])
-            ->where('recipient_id', Auth::id())
-            ->latest()
-            ->paginate(10);
+        // Get status filter from query parameter
+        $statusFilter = $request->get('status');
 
-        return view('recipient.matches.index', compact('matches'));
+        $query = FoodMatch::with(['foodListing.restaurantProfile', 'foodListing.creator', 'recipient'])
+            ->where('recipient_id', Auth::id());
+
+        // Apply status filter if provided
+        if ($statusFilter && $statusFilter !== 'all') {
+            $query->where('status', $statusFilter);
+        }
+
+        $matches = $query->latest()->paginate(10);
+
+        return view('recipient.my-matches', compact('matches'));
     }
 
     /**
@@ -109,11 +117,12 @@ class FoodMatchController extends Controller
      */
     public function show(FoodMatch $match)
     {
-        if (!Auth::user()->isRecipient() || Auth::user()->id !== $match->recipient_id) {
+        // Check if user is the recipient for this match
+        if (!Auth::user()->isRecipient() || $match->recipient_id !== Auth::id()) {
             abort(403, 'Unauthorized action');
         }
 
-        $match->load(['foodListing.restaurantProfile', 'foodListing.images']);
+        $match->load(['foodListing.restaurantProfile', 'foodListing.creator']);
 
         return view('recipient.matches.show', compact('match'));
     }
@@ -213,6 +222,11 @@ class FoodMatchController extends Controller
 
             // Generate QR code
             $match->generateQrCode();
+
+            // Update food listing status to matched
+            if ($match->foodListing) {
+                $match->foodListing->update(['status' => 'matched']);
+            }
 
             // Notify recipient if they exist
             if ($match->recipient) {

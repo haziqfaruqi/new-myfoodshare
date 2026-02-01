@@ -33,6 +33,7 @@
                         <option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>Rejected</option>
                         <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
                         <option value="reserved" {{ request('status') == 'reserved' ? 'selected' : '' }}>Reserved</option>
+                        <option value="picked_up" {{ request('status') == 'picked_up' ? 'selected' : '' }}>Picked Up</option>
                         <option value="expired" {{ request('status') == 'expired' ? 'selected' : '' }}>Expired</option>
                         <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Completed</option>
                     </select>
@@ -115,6 +116,9 @@
                             <div class="text-xs text-zinc-500">{{ $listing->expiry_time?->format('g:i A') }}</div>
                         </td>
                         <td class="px-6 py-4">
+                            @php
+                                $hasCompletedPickup = $listing->matches()->where('status', 'completed')->count() > 0;
+                            @endphp
                             @if($listing->approval_status === 'pending')
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
                                     <i data-lucide="clock" class="w-3 h-3 mr-1"></i>
@@ -124,6 +128,11 @@
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                                     <i data-lucide="x" class="w-3 h-3 mr-1"></i>
                                     Rejected
+                                </span>
+                            @elseif($hasCompletedPickup)
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                    <i data-lucide="check-circle" class="w-3 h-3 mr-1"></i>
+                                    Picked Up
                                 </span>
                             @elseif($listing->status === 'expired')
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">

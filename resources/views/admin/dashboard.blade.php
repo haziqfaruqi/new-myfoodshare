@@ -32,8 +32,8 @@
                             <i data-lucide="package" class="w-4 h-4 text-emerald-600"></i>
                         </div>
                         <div class="flex items-baseline gap-2">
-                            <span class="text-2xl font-semibold tracking-tight text-zinc-900">24</span>
-                            <span class="text-xs font-medium text-emerald-600">+4 today</span>
+                            <span class="text-2xl font-semibold tracking-tight text-zinc-900">{{ $stats['active_listings'] ?? 0 }}</span>
+                            <span class="text-xs font-medium text-emerald-600">+{{ $stats['listings_today'] ?? 0 }} today</span>
                         </div>
                     </div>
 
@@ -44,7 +44,7 @@
                             <i data-lucide="users" class="w-4 h-4 text-blue-600"></i>
                         </div>
                         <div class="flex items-baseline gap-2">
-                            <span class="text-2xl font-semibold tracking-tight text-zinc-900">1,204</span>
+                            <span class="text-2xl font-semibold tracking-tight text-zinc-900">{{ $stats['matches_total'] ?? 0 }}</span>
                             <span class="text-xs font-medium text-zinc-500">Lifetime</span>
                         </div>
                     </div>
@@ -52,24 +52,24 @@
                     <!-- Stat Card 3 -->
                     <div class="p-4 bg-white rounded-xl border border-zinc-200 shadow-sm">
                         <div class="flex items-center justify-between mb-3">
-                            <span class="text-xs font-medium text-zinc-500 uppercase">Meals Saved</span>
-                            <i data-lucide="utensils" class="w-4 h-4 text-orange-600"></i>
+                            <span class="text-xs font-medium text-zinc-500 uppercase">Pending Users</span>
+                            <i data-lucide="users" class="w-4 h-4 text-orange-600"></i>
                         </div>
                         <div class="flex items-baseline gap-2">
-                            <span class="text-2xl font-semibold tracking-tight text-zinc-900">856</span>
-                            <span class="text-xs font-medium text-emerald-600">↑ 12%</span>
+                            <span class="text-2xl font-semibold tracking-tight text-zinc-900">{{ $stats['pending_users'] ?? 0 }}</span>
+                            <span class="text-xs font-medium text-zinc-500">Awaiting approval</span>
                         </div>
                     </div>
 
                     <!-- Stat Card 4 -->
                     <div class="p-4 bg-white rounded-xl border border-zinc-200 shadow-sm">
                         <div class="flex items-center justify-between mb-3">
-                            <span class="text-xs font-medium text-zinc-500 uppercase">Verification Rate</span>
-                            <i data-lucide="shield-check" class="w-4 h-4 text-purple-600"></i>
+                            <span class="text-xs font-medium text-zinc-500 uppercase">Total Listings</span>
+                            <i data-lucide="archive" class="w-4 h-4 text-purple-600"></i>
                         </div>
                         <div class="flex items-baseline gap-2">
-                            <span class="text-2xl font-semibold tracking-tight text-zinc-900">98.2%</span>
-                            <span class="text-xs font-medium text-zinc-500">Last 30 days</span>
+                            <span class="text-2xl font-semibold tracking-tight text-zinc-900">{{ $stats['total_food_listings'] ?? 0 }}</span>
+                            <span class="text-xs font-medium text-zinc-500">All time</span>
                         </div>
                     </div>
                 </div>
@@ -154,144 +154,129 @@
                 <!-- Right: Activity & Verification -->
                 <div class="space-y-6">
 
-                    <!-- Active Pickup Panel -->
-                    <div class="bg-gradient-to-br from-zinc-900 to-zinc-800 rounded-xl p-5 text-white shadow-lg relative overflow-hidden">
-                        <div class="absolute top-0 right-0 p-32 bg-emerald-500/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
-
-                        <div class="relative z-10">
-                            <div class="flex justify-between items-start mb-4">
-                                <div>
-                                    <h3 class="text-sm font-medium text-zinc-100">Active Pickup</h3>
-                                    <p class="text-xs text-zinc-400 mt-1">Order #4922-A • 15 mins ago</p>
-                                </div>
-                                <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold px-2 py-0.5 rounded-full">READY</span>
-                            </div>
-
-                            <div class="flex items-center gap-3 bg-white/5 p-3 rounded-lg border border-white/10 mb-4">
-                                <div class="w-10 h-10 rounded bg-white/10 flex items-center justify-center">
-                                    <i data-lucide="coffee" class="w-5 h-5 text-zinc-300"></i>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-medium">Starbucks Leftovers</p>
-                                    <p class="text-xs text-zinc-400">12 items • Bagged</p>
-                                </div>
-                            </div>
-
-                            <button class="w-full py-2 bg-emerald-500 hover:bg-emerald-400 text-zinc-900 text-sm font-semibold rounded-lg shadow-md transition-colors flex items-center justify-center gap-2">
-                                <i data-lucide="qr-code" class="w-4 h-4"></i>
-                                Show Pickup QR
-                            </button>
-                        </div>
-                    </div>
-
                     <!-- Recent Activity List -->
                     <div class="bg-white border border-zinc-200 rounded-xl shadow-sm p-5">
                         <h3 class="text-sm font-medium text-zinc-900 mb-4">Recent Activity</h3>
-                        <div class="space-y-4">
-                            <!-- Item 1 -->
-                            <div class="flex gap-3 relative">
-                                <div class="absolute left-[11px] top-8 bottom-[-16px] w-[1px] bg-zinc-100"></div>
-                                <div class="w-6 h-6 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center shrink-0 z-10">
-                                    <i data-lucide="check" class="w-3 h-3 text-emerald-600"></i>
-                                </div>
-                                <div>
-                                    <p class="text-xs text-zinc-900 font-medium">Donation Approved</p>
-                                    <p class="text-[10px] text-zinc-500">Admin verified "Sushi Platter"</p>
-                                    <p class="text-[10px] text-zinc-400 mt-0.5">2m ago</p>
-                                </div>
+                        @if($recentActivity->count() > 0)
+                            <div class="space-y-4">
+                                @foreach($recentActivity as $index => $activity)
+                                    <div class="flex gap-3 relative">
+                                        @if($index < $recentActivity->count() - 1)
+                                            <div class="absolute left-[11px] top-8 bottom-[-16px] w-[1px] bg-zinc-100"></div>
+                                        @endif
+                                        <div class="w-6 h-6 rounded-full bg-{{ $activity['color'] ?? 'zinc' }}-50 border border-{{ $activity['color'] ?? 'zinc' }}-100 flex items-center justify-center shrink-0 z-10">
+                                            <i data-lucide="{{ $activity['icon'] ?? 'activity' }}" class="w-3 h-3 text-{{ $activity['color'] ?? 'zinc' }}-600"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs text-zinc-900 font-medium">{{ $activity['title'] ?? 'Activity' }}</p>
+                                            <p class="text-[10px] text-zinc-500">{{ $activity['description'] ?? '' }}</p>
+                                            <p class="text-[10px] text-zinc-400 mt-0.5">{{ $activity['time'] ?? '' }}</p>
+                                        </div>
+                                    </div>
+                                @endforeach
                             </div>
-                            <!-- Item 2 -->
-                            <div class="flex gap-3 relative">
-                                <div class="absolute left-[11px] top-8 bottom-[-16px] w-[1px] bg-zinc-100"></div>
-                                <div class="w-6 h-6 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0 z-10">
-                                    <i data-lucide="user-check" class="w-3 h-3 text-blue-600"></i>
-                                </div>
-                                <div>
-                                    <p class="text-xs text-zinc-900 font-medium">Match Found</p>
-                                    <p class="text-[10px] text-zinc-500">Linked with local shelter</p>
-                                    <p class="text-[10px] text-zinc-400 mt-0.5">1h ago</p>
-                                </div>
+                        @else
+                            <div class="text-center py-6">
+                                <i data-lucide="activity" class="w-8 h-8 text-zinc-300 mx-auto mb-2"></i>
+                                <p class="text-xs text-zinc-500">No recent activity</p>
                             </div>
-                            <!-- Item 3 -->
-                            <div class="flex gap-3 relative">
-                                <div class="w-6 h-6 rounded-full bg-zinc-50 border border-zinc-100 flex items-center justify-center shrink-0 z-10">
-                                    <i data-lucide="upload-cloud" class="w-3 h-3 text-zinc-500"></i>
-                                </div>
-                                <div>
-                                    <p class="text-xs text-zinc-900 font-medium">Listing Created</p>
-                                    <p class="text-[10px] text-zinc-500">By Joe's Pizza</p>
-                                    <p class="text-[10px] text-zinc-400 mt-0.5">3h ago</p>
-                                </div>
-                            </div>
-                        </div>
-                        <button class="w-full mt-4 text-xs font-medium text-zinc-500 hover:text-zinc-900 border-t border-zinc-100 pt-3">
-                            View Full History
-                        </button>
+                        @endif
+                        <a href="{{ route('admin.dashboard') }}" class="w-full mt-4 text-xs font-medium text-zinc-500 hover:text-zinc-900 border-t border-zinc-100 pt-3 block text-center">
+                            Refresh Dashboard
+                        </a>
                     </div>
 
                 </div>
             </div>
 
-            <!-- Admin Table Section (Simulated Data) -->
+            <!-- Admin Table Section (Pending User Approvals) -->
             <div class="pt-2">
                 <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-base font-medium text-zinc-900">Pending Approvals (Admin)</h3>
-                    <button class="text-xs text-emerald-600 font-medium hover:underline">Manage All</button>
+                    <h3 class="text-base font-medium text-zinc-900">Pending User Approvals</h3>
+                    <a href="{{ route('admin.user-approvals') }}" class="text-xs text-emerald-600 font-medium hover:underline">Manage All</a>
                 </div>
-                <div class="bg-white border border-zinc-200 rounded-xl overflow-hidden shadow-sm">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-xs">
-                            <thead class="bg-zinc-50 text-zinc-500 border-b border-zinc-200">
-                                <tr>
-                                    <th class="px-6 py-3 font-medium">Donor</th>
-                                    <th class="px-6 py-3 font-medium">Food Type</th>
-                                    <th class="px-6 py-3 font-medium">Qty</th>
-                                    <th class="px-6 py-3 font-medium">Submitted</th>
-                                    <th class="px-6 py-3 font-medium">Status</th>
-                                    <th class="px-6 py-3 font-medium text-right">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-zinc-100">
-                                <tr class="hover:bg-zinc-50/50 transition-colors">
-                                    <td class="px-6 py-3 font-medium text-zinc-900">Downtown Bistro</td>
-                                    <td class="px-6 py-3 text-zinc-600">Soup & Salads</td>
-                                    <td class="px-6 py-3 text-zinc-600">5kg</td>
-                                    <td class="px-6 py-3 text-zinc-500">10 mins ago</td>
-                                    <td class="px-6 py-3">
-                                        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-100">
-                                            <span class="w-1 h-1 rounded-full bg-amber-500"></span>
-                                            Pending
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-3 text-right">
-                                        <div class="flex items-center justify-end gap-2">
-                                            <button class="text-zinc-400 hover:text-red-600"><i data-lucide="x" class="w-4 h-4"></i></button>
-                                            <button class="text-zinc-400 hover:text-emerald-600"><i data-lucide="check" class="w-4 h-4"></i></button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr class="hover:bg-zinc-50/50 transition-colors">
-                                    <td class="px-6 py-3 font-medium text-zinc-900">City Market</td>
-                                    <td class="px-6 py-3 text-zinc-600">Dairy Products</td>
-                                    <td class="px-6 py-3 text-zinc-600">12 units</td>
-                                    <td class="px-6 py-3 text-zinc-500">45 mins ago</td>
-                                    <td class="px-6 py-3">
-                                        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-100">
-                                            <span class="w-1 h-1 rounded-full bg-amber-500"></span>
-                                            Pending
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-3 text-right">
-                                        <div class="flex items-center justify-end gap-2">
-                                            <button class="text-zinc-400 hover:text-red-600"><i data-lucide="x" class="w-4 h-4"></i></button>
-                                            <button class="text-zinc-400 hover:text-emerald-600"><i data-lucide="check" class="w-4 h-4"></i></button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                @if(isset($pendingUsers) && $pendingUsers->count() > 0)
+                    <div class="bg-white border border-zinc-200 rounded-xl overflow-hidden shadow-sm">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-zinc-50 text-zinc-500 border-b border-zinc-200">
+                                    <tr>
+                                        <th class="px-6 py-3 font-medium">User</th>
+                                        <th class="px-6 py-3 font-medium">Role</th>
+                                        <th class="px-6 py-3 font-medium">Contact</th>
+                                        <th class="px-6 py-3 font-medium">Registered</th>
+                                        <th class="px-6 py-3 font-medium text-right">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-zinc-100">
+                                    @foreach($pendingUsers as $pendingUser)
+                                        <tr class="hover:bg-zinc-50/50 transition-colors">
+                                            <td class="px-6 py-3">
+                                                <div class="flex items-center gap-3">
+                                                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-zinc-100 to-zinc-200 flex items-center justify-center text-xs font-bold text-zinc-600">
+                                                        {{ strtoupper(substr($pendingUser->name, 0, 1)) }}
+                                                    </div>
+                                                    <div>
+                                                        <p class="font-medium text-zinc-900">{{ $pendingUser->name }}</p>
+                                                        @if($pendingUser->restaurant_name)
+                                                            <p class="text-xs text-zinc-500">{{ $pendingUser->restaurant_name }}</p>
+                                                        @elseif($pendingUser->organization_name)
+                                                            <p class="text-xs text-zinc-500">{{ $pendingUser->organization_name }}</p>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-3">
+                                                @if($pendingUser->role === 'restaurant_owner')
+                                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-orange-50 text-orange-700 border border-orange-200">
+                                                        Restaurant
+                                                    </span>
+                                                @elseif($pendingUser->role === 'recipient')
+                                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                                                        Recipient
+                                                    </span>
+                                                @else
+                                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-gray-50 text-gray-700 border border-gray-200">
+                                                        {{ $pendingUser->role }}
+                                                    </span>
+                                                @endif
+                                            </td>
+                                            <td class="px-6 py-3">
+                                                <div class="text-zinc-600">
+                                                    <p class="text-zinc-900">{{ $pendingUser->email }}</p>
+                                                    @if($pendingUser->phone)
+                                                        <p class="text-xs text-zinc-500">{{ $pendingUser->phone }}</p>
+                                                    @endif
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-3 text-zinc-500">{{ $pendingUser->created_at->format('M j, Y') }}</td>
+                                            <td class="px-6 py-3 text-right">
+                                                <div class="flex items-center justify-end gap-2">
+                                                    <button onclick="openApprovalModal({{ $pendingUser->id }}, '{{ $pendingUser->name }}', '{{ $pendingUser->role }}')"
+                                                            class="text-zinc-400 hover:text-emerald-600 bg-white hover:bg-emerald-50 p-2 rounded-lg transition-colors"
+                                                            title="Approve">
+                                                        <i data-lucide="check" class="w-4 h-4"></i>
+                                                    </button>
+                                                    <button onclick="openRejectModal({{ $pendingUser->id }}, '{{ $pendingUser->name }}')"
+                                                            class="text-zinc-400 hover:text-red-600 bg-white hover:bg-red-50 p-2 rounded-lg transition-colors"
+                                                            title="Reject">
+                                                        <i data-lucide="x" class="w-4 h-4"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                </div>
+                @else
+                    <div class="bg-white border border-zinc-200 rounded-xl p-8 text-center">
+                        <i data-lucide="check-circle" class="w-12 h-12 text-emerald-500 mx-auto mb-4"></i>
+                        <h3 class="text-lg font-medium text-zinc-900 mb-2">No Pending User Approvals</h3>
+                        <p class="text-sm text-zinc-500">All user registrations have been reviewed and processed.</p>
+                    </div>
+                @endif
             </div>
 
         </div>
@@ -307,6 +292,66 @@
         <i data-lucide="plus" class="w-6 h-6"></i>
     </button>
 
+    <!-- Approve User Modal -->
+    <div id="approve-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeApprovalModal()"></div>
+        <!-- Modal Content -->
+        <div class="relative bg-white rounded-xl shadow-xl max-w-md w-full p-6 animate-in fade-in zoom-in duration-200">
+            <div class="text-center">
+                <div class="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i data-lucide="check-circle" class="w-8 h-8 text-emerald-600"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-zinc-900 mb-2">Approve User Registration</h3>
+                <p class="text-sm text-zinc-500 mb-1">Are you sure you want to approve this user?</p>
+                <p id="approve-user-info" class="text-sm font-medium text-zinc-700"></p>
+            </div>
+            <form id="approve-form" action="" method="POST" class="mt-6">
+                @csrf
+                <div class="flex gap-3">
+                    <button type="button" onclick="closeApprovalModal()" class="flex-1 px-4 py-2.5 bg-white border border-zinc-200 text-zinc-700 text-sm font-medium rounded-lg hover:bg-zinc-50 transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit" class="flex-1 px-4 py-2.5 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors">
+                        Approve User
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Reject User Modal -->
+    <div id="reject-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeRejectModal()"></div>
+        <!-- Modal Content -->
+        <div class="relative bg-white rounded-xl shadow-xl max-w-md w-full p-6 animate-in fade-in zoom-in duration-200">
+            <div class="text-center">
+                <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i data-lucide="x-circle" class="w-8 h-8 text-red-600"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-zinc-900 mb-2">Reject User Registration</h3>
+                <p class="text-sm text-zinc-500 mb-1">Are you sure you want to reject this user?</p>
+                <p id="reject-user-info" class="text-sm font-medium text-zinc-700"></p>
+            </div>
+            <form id="reject-form" action="" method="POST" class="mt-6">
+                @csrf
+                <div class="mb-4">
+                    <label for="rejection_reason" class="block text-sm font-medium text-zinc-700 mb-1">Reason for Rejection <span class="text-red-500">*</span></label>
+                    <textarea name="rejection_reason" id="rejection_reason" rows="3" class="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm" placeholder="Provide a reason for rejection..." required></textarea>
+                </div>
+                <div class="flex gap-3">
+                    <button type="button" onclick="closeRejectModal()" class="flex-1 px-4 py-2.5 bg-white border border-zinc-200 text-zinc-700 text-sm font-medium rounded-lg hover:bg-zinc-50 transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit" class="flex-1 px-4 py-2.5 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors">
+                        Reject User
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 </div>
 
 @endsection
@@ -315,5 +360,48 @@
 <script>
     // Initialize Lucide Icons
     lucide.createIcons();
+
+    // Store base URLs for the routes
+    const approveUrlBase = "{{ url('/admin/users') }}";
+    const rejectUrlBase = "{{ url('/admin/users') }}";
+
+    // Approve Modal Functions
+    function openApprovalModal(userId, userName, userRole) {
+        const form = document.getElementById('approve-form');
+        form.action = `${approveUrlBase}/${userId}/approve`;
+        document.getElementById('approve-user-info').textContent = `${userName} (${userRole})`;
+        document.getElementById('approve-modal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        lucide.createIcons();
+    }
+
+    function closeApprovalModal() {
+        document.getElementById('approve-modal').classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+
+    // Reject Modal Functions
+    function openRejectModal(userId, userName) {
+        const form = document.getElementById('reject-form');
+        form.action = `${rejectUrlBase}/${userId}/reject`;
+        document.getElementById('reject-user-info').textContent = userName;
+        document.getElementById('reject-modal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        lucide.createIcons();
+    }
+
+    function closeRejectModal() {
+        document.getElementById('reject-modal').classList.add('hidden');
+        document.body.style.overflow = '';
+        document.getElementById('rejection_reason').value = '';
+    }
+
+    // Close modals on Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeApprovalModal();
+            closeRejectModal();
+        }
+    });
 </script>
 @endpush
