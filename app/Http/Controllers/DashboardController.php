@@ -1119,19 +1119,31 @@ class DashboardController extends Controller
         $user = auth()->user();
 
         // Get user's completed matches for impact calculations
-        $completedMatches = $user->recipient ? $user->recipient->matches()
-            ->with(['foodListing.restaurantProfile'])
-            ->where('status', 'completed')
-            ->get() : collect();
+        // Use same logic as dashboard - fallback to direct query if recipient profile doesn't exist
+        if ($user->recipient) {
+            $completedMatches = $user->recipient->matches()
+                ->with(['foodListing.restaurantProfile'])
+                ->where('status', 'completed')
+                ->get();
+        } else {
+            // Fallback: Calculate directly from FoodMatch table
+            $completedMatches = FoodMatch::with(['foodListing.restaurantProfile'])
+                ->where('recipient_id', $user->id)
+                ->where('status', 'completed')
+                ->get();
+        }
 
         // Calculate impact metrics
         $totalCO2Saved = $completedMatches->sum(function ($match) {
-            return $match->foodListing->estimated_co2_saved ?? 0;
+            // Fallback: calculate CO2 savings (~2.5kg CO2 per meal pickup)
+            return $match->foodListing->estimated_co2_saved ?? 2.5;
         });
 
-        $totalMealsRecovered = $completedMatches->count();
+        $totalMealsRecovered = $completedMatches->count(); // Count each completed pickup as 1 meal
+
         $totalMoneySaved = $completedMatches->sum(function ($match) {
-            return $match->foodListing->estimated_value ?? 0;
+            // Fallback: RM50 per completed pickup
+            return $match->foodListing->estimated_value ?? 50;
         });
 
         $peopleHelped = $completedMatches->count(); // Simple approximation
@@ -1168,21 +1180,23 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
 
-        // Always try to get the recipient profile for the user
-        $recipient = $user->recipient;
-
-        if (!$recipient) {
-            // No recipient profile found, return empty
-            return collect();
+        // Get matches - use fallback if recipient profile doesn't exist
+        if ($user->recipient) {
+            $matches = $user->recipient->matches()
+                ->with('foodListing')
+                ->where('status', 'completed')
+                ->where('completed_at', '>=', now()->subMonths(6))
+                ->orderBy('completed_at')
+                ->get();
+        } else {
+            // Fallback: Query directly from FoodMatch table
+            $matches = FoodMatch::with('foodListing')
+                ->where('recipient_id', $user->id)
+                ->where('status', 'completed')
+                ->where('completed_at', '>=', now()->subMonths(6))
+                ->orderBy('completed_at')
+                ->get();
         }
-
-        // Get matches from recipient relationship
-        $matches = $recipient->matches()
-            ->with('foodListing')
-            ->where('status', 'completed')
-            ->where('completed_at', '>=', now()->subMonths(6))
-            ->orderBy('completed_at')
-            ->get();
 
         if ($matches->isEmpty()) {
             return collect();
@@ -1212,24 +1226,28 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
 
-        // Always try to get the recipient profile for the user
-        $recipient = $user->recipient;
-
-        if (!$recipient) {
-            return collect();
-        }
-
         // Define the specific categories requested by user
         $preferredCategories = ['Prepared Meals', 'Bakery', 'Produce', 'Dairy', 'Canned Goods'];
 
-        // Get completed matches with food listing categories
-        $completedMatches = $recipient->matches()
-            ->where('status', 'completed')
-            ->whereHas('foodListing', function ($query) {
-                $query->whereNotNull('category');
-            })
-            ->with('foodListing')
-            ->get();
+        // Get completed matches - use fallback if recipient profile doesn't exist
+        if ($user->recipient) {
+            $completedMatches = $user->recipient->matches()
+                ->where('status', 'completed')
+                ->whereHas('foodListing', function ($query) {
+                    $query->whereNotNull('category');
+                })
+                ->with('foodListing')
+                ->get();
+        } else {
+            // Fallback: Query directly from FoodMatch table
+            $completedMatches = FoodMatch::where('recipient_id', $user->id)
+                ->where('status', 'completed')
+                ->whereHas('foodListing', function ($query) {
+                    $query->whereNotNull('category');
+                })
+                ->with('foodListing')
+                ->get();
+        }
 
         if ($completedMatches->isEmpty()) {
             return collect();
@@ -1276,41 +1294,83 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
 
-        // Always try to get the recipient profile for the user
-        $recipient = $user->recipient;
+        // Calculate actual average rating from pickup verifications (works regardless of recipient profile)
+        $averageRating = \App\Models\PickupVerification::where('recipient_id', $user->id)
+            ->whereNotNull('quality_rating')
+            ->avg('quality_rating') ?? 0;
 
-        if (!$recipient) {
-            return [
-                'averageRating' => 0,
-                'successRate' => 0,
-                'avgResponseTime' => 0,
-                'partnerRestaurants' => 0
-            ];
+        // Get matches - use fallback if recipient profile doesn't exist
+        if ($user->recipient) {
+            $completedMatches = $user->recipient->matches()
+                ->where('status', 'completed')
+                ->count();
+
+            $totalMatches = $user->recipient->matches()->count();
+
+            // Get unique restaurants helped
+            $partnerRestaurants = $user->recipient->matches()
+                ->where('status', 'completed')
+                ->whereHas('foodListing.restaurantProfile')
+                ->with('foodListing.restaurantProfile')
+                ->get()
+                ->unique(function ($match) {
+                    return $match->foodListing->restaurantProfile->id ?? $match->foodListing->creator_id;
+                })
+                ->count();
+
+            // Calculate average response time (time from match to approval)
+            $avgResponseTime = $user->recipient->matches()
+                ->whereNotNull('approved_at')
+                ->whereNotNull('created_at')
+                ->get()
+                ->avg(function ($match) {
+                    $created = $match->created_at;
+                    $approved = $match->approved_at;
+                    if ($created && $approved) {
+                        return max(0, $created->diffInHours($approved));
+                    }
+                    return 0;
+                }) ?? 0;
+        } else {
+            // Fallback: Query directly from FoodMatch table
+            $completedMatches = FoodMatch::where('recipient_id', $user->id)
+                ->where('status', 'completed')
+                ->count();
+
+            $totalMatches = FoodMatch::where('recipient_id', $user->id)->count();
+
+            // Get unique restaurants helped
+            $partnerRestaurants = FoodMatch::where('recipient_id', $user->id)
+                ->where('status', 'completed')
+                ->whereHas('foodListing.restaurantProfile')
+                ->with('foodListing.restaurantProfile')
+                ->get()
+                ->unique(function ($match) {
+                    return $match->foodListing->restaurantProfile->id ?? $match->foodListing->creator_id;
+                })
+                ->count();
+
+            // Calculate average response time
+            $avgResponseTime = FoodMatch::where('recipient_id', $user->id)
+                ->whereNotNull('approved_at')
+                ->whereNotNull('created_at')
+                ->get()
+                ->avg(function ($match) {
+                    $created = $match->created_at;
+                    $approved = $match->approved_at;
+                    if ($created && $approved) {
+                        return max(0, $created->diffInHours($approved));
+                    }
+                    return 0;
+                }) ?? 0;
         }
-
-        $completedMatches = $recipient->matches()
-            ->where('status', 'completed')
-            ->count();
-
-        $totalMatches = $recipient->matches()->count();
 
         $successRate = $totalMatches > 0 ? ($completedMatches / $totalMatches) * 100 : 0;
 
-        // Get unique restaurants helped
-        $partnerRestaurants = $recipient->matches()
-            ->where('status', 'completed')
-            ->whereHas('foodListing.restaurantProfile')
-            ->with('foodListing.restaurantProfile')
-            ->get()
-            ->unique(function ($match) {
-                return $match->foodListing->restaurantProfile->id ?? $match->foodListing->creator_id;
-            })
-            ->count();
-
         return [
-            'averageRating' => 4.8, // Placeholder - would need ratings system
+            'averageRating' => round($averageRating, 1),
             'successRate' => round($successRate, 1),
-            'avgResponseTime' => 2.3, // Placeholder - would need response time tracking
+            'avgResponseTime' => round($avgResponseTime, 1),
             'partnerRestaurants' => $partnerRestaurants
         ];
     }
@@ -1349,7 +1409,8 @@ class DashboardController extends Controller
 
         // Calculate report statistics
         $totalPickups = $pickupVerifications->count();
-        $verifiedPickups = $pickupVerifications->where('verification_status', 'verified')->count();
+        // Count both 'verified' and 'completed' as successful verifications
+        $verifiedPickups = $pickupVerifications->whereIn('verification_status', ['verified', 'completed'])->count();
         $failedPickups = $pickupVerifications->where('verification_status', 'failed')->count();
         $pendingPickups = $pickupVerifications->where('verification_status', 'pending')->count();
 
@@ -1646,42 +1707,19 @@ class DashboardController extends Controller
             $photo->move(public_path('storage/' . dirname($photoPath)), basename($photoPath));
         }
 
-        // Update verification
+        // Update verification - mark as verified but don't complete yet (waiting for feedback)
         $verification->update([
             'qr_code_scanned' => $request->pickup_code,
             'scanned_at' => now(),
             'verification_status' => 'verified',
-            'quality_rating' => $request->quality_rating,
-            'recipient_notes' => $request->notes,
             'photo_evidence' => $photoPath ? [$photoPath] : [],
-            'quality_confirmed' => $request->quality_rating >= 4,
-            'pickup_completed_at' => now(),
         ]);
-
-        // Update the food match status
-        $verification->foodMatch->update([
-            'status' => 'completed',
-            'completed_at' => now(),
-        ]);
-
-        // Update the food listing status to picked_up
-        $foodListing = $verification->foodMatch->foodListing;
-        if ($foodListing) {
-            $foodListing->update([
-                'status' => 'picked_up'
-            ]);
-        }
-
-        // Send notification to restaurant
-        $restaurant = $verification->foodMatch->foodListing->creator;
-        if ($restaurant) {
-            $restaurant->notify(new \App\Notifications\PickupVerified($verification));
-        }
 
         return response()->json([
             'success' => true,
             'message' => 'Pickup verified successfully!',
-            'redirect_url' => route('recipient.dashboard')
+            'verification_id' => $verification->id,
+            'redirect_url' => route('recipient.feedback', $verification->id)
         ]);
     }
 
@@ -1739,6 +1777,68 @@ class DashboardController extends Controller
             ->get();
 
         return view('recipient.scanner', compact('currentPickup', 'recentVerifications'));
+    }
+
+    /**
+     * Show feedback form after pickup verification
+     */
+    public function showFeedbackForm($verificationId)
+    {
+        $verification = PickupVerification::with(['foodMatch.foodListing.restaurantProfile'])
+            ->where('id', $verificationId)
+            ->where('recipient_id', auth()->id())
+            ->where('verification_status', 'verified')
+            ->firstOrFail();
+
+        return view('recipient.feedback-form', compact('verification'));
+    }
+
+    /**
+     * Submit feedback for a completed pickup
+     */
+    public function submitFeedback(Request $request, $verificationId)
+    {
+        $request->validate([
+            'quality_rating' => 'required|integer|min:1|max:5',
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        $verification = PickupVerification::with(['foodMatch', 'foodMatch.foodListing'])
+            ->where('id', $verificationId)
+            ->where('recipient_id', auth()->id())
+            ->where('verification_status', 'verified')
+            ->firstOrFail();
+
+        // Update verification with feedback
+        $verification->update([
+            'quality_rating' => $request->quality_rating,
+            'recipient_notes' => $request->notes,
+            'quality_confirmed' => $request->quality_rating >= 4,
+            'verification_status' => 'completed',
+            'pickup_completed_at' => now(),
+        ]);
+
+        // Update the food match status
+        $verification->foodMatch->update([
+            'status' => 'completed',
+            'completed_at' => now(),
+        ]);
+
+        // Update the food listing status to picked_up
+        $foodListing = $verification->foodMatch->foodListing;
+        if ($foodListing) {
+            $foodListing->update([
+                'status' => 'picked_up'
+            ]);
+        }
+
+        // Send notification to restaurant
+        $restaurant = $verification->foodMatch->foodListing->creator;
+        if ($restaurant) {
+            $restaurant->notify(new \App\Notifications\PickupVerified($verification));
+        }
+
+        return redirect()->route('recipient.dashboard')->with('success', 'Thank you for your feedback!');
     }
 
     /**

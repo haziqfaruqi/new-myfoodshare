@@ -34,8 +34,16 @@
                     <div class="flex items-center gap-4 mt-2">
                         <div class="flex items-center text-sm">
                             <i data-lucide="star" class="w-4 h-4 fill-yellow-400 text-yellow-400 mr-1"></i>
-                            <span class="font-medium text-zinc-900">4.9</span>
-                            <span class="text-zinc-500">(128 reviews)</span>
+                            <span class="font-medium text-zinc-900">{{ $profile->average_rating ?? number_format(\App\Models\PickupVerification::whereHas('foodMatch', function($q) use ($profile) {
+                                return $q->whereHas('foodListing', function($q2) use ($profile) {
+                                    return $q2->where('created_by', auth()->id());
+                                });
+                            })->whereNotNull('quality_rating')->avg('quality_rating') ?? 0, 1) }}</span>
+                            <span class="text-zinc-500">({{ \App\Models\PickupVerification::whereHas('foodMatch', function($q) use ($profile) {
+                                return $q->whereHas('foodListing', function($q2) use ($profile) {
+                                    return $q2->where('created_by', auth()->id());
+                                });
+                            })->whereNotNull('quality_rating')->count() }} reviews)</span>
                         </div>
                         <div class="text-sm text-zinc-500">
                             <span class="text-emerald-600 font-medium">Active Member</span> since {{ auth()->user()->created_at->format('M Y') }}
@@ -82,7 +90,7 @@
                 </div>
             </div>
             <div class="flex items-baseline gap-2">
-                <span class="text-2xl font-bold text-zinc-900">24</span>
+                <span class="text-2xl font-bold text-zinc-900">{{ \App\Models\FoodListing::where('created_by', auth()->id())->count() }}</span>
                 <span class="text-xs font-medium text-emerald-600">Total</span>
             </div>
         </div>

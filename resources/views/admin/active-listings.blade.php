@@ -97,7 +97,7 @@
                                 <option>Other</option>
                             </select>
                         </div>
-                        <div class="flex items-center gap-2">
+                        {{-- <div class="flex items-center gap-2">
                             <button class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-md transition-colors flex items-center gap-2">
                                 <i data-lucide="download" class="w-4 h-4"></i>
                                 Export Report
@@ -105,7 +105,7 @@
                             <button class="px-4 py-2 border border-zinc-200 text-zinc-700 text-sm font-medium rounded-md hover:bg-zinc-50 transition-colors">
                                 Bulk Actions
                             </button>
-                        </div>
+                        </div> --}}
                     </div>
                 </div>
 
@@ -176,10 +176,10 @@
                                                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                                                 Active
                                             </span>
-                                        @elseif($listing->status === 'reserved')
+                                        @elseif($listing->status === 'matched')
                                             <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
                                                 <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
-                                                Reserved
+                                                Matched
                                             </span>
                                         @else
                                             <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">

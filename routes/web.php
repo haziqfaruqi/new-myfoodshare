@@ -53,6 +53,10 @@ Route::post('/register/recipient', [RegisteredUserController::class, 'registerRe
 Route::get('/pickup/{code}', [DashboardController::class, 'showVerificationPage'])->name('pickup.verify');
 Route::post('/pickup/verify', [DashboardController::class, 'verifyPickup'])->name('recipient.pickup.verify')->middleware(['auth', 'role:recipient']);
 
+// Feedback routes
+Route::get('/pickup/feedback/{verification}', [DashboardController::class, 'showFeedbackForm'])->name('recipient.feedback')->middleware(['auth', 'role:recipient']);
+Route::post('/pickup/feedback/{verification}', [DashboardController::class, 'submitFeedback'])->name('recipient.feedback.submit')->middleware(['auth', 'role:recipient']);
+
 // QR Scanner routes
 Route::get('/recipient/scan', [DashboardController::class, 'showScannerPage'])->name('recipient.scan');
 

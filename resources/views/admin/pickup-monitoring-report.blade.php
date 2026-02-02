@@ -111,14 +111,14 @@
                         <tr>
                             <td class="px-4 py-3 text-sm text-zinc-900">{{ \Carbon\Carbon::parse($date)->format('M j, Y') }}</td>
                             <td class="px-4 py-3 text-sm text-zinc-900">{{ $pickups->count() }}</td>
-                            <td class="px-4 py-3 text-sm text-emerald-600">{{ $pickups->where('verification_status', 'verified')->count() }}</td>
+                            <td class="px-4 py-3 text-sm text-emerald-600">{{ $pickups->whereIn('verification_status', ['verified', 'completed'])->count() }}</td>
                             <td class="px-4 py-3 text-sm text-red-600">{{ $pickups->where('verification_status', 'failed')->count() }}</td>
                             <td class="px-4 py-3">
                                 <div class="flex items-center gap-2">
                                     <div class="flex-1 bg-zinc-200 rounded-full h-2">
-                                        <div class="bg-emerald-600 h-2 rounded-full" style="width: {{ ($pickups->where('verification_status', 'verified')->count() / max(1, $pickups->count())) * 100 }}%"></div>
+                                        <div class="bg-emerald-600 h-2 rounded-full" style="width: {{ ($pickups->whereIn('verification_status', ['verified', 'completed'])->count() / max(1, $pickups->count())) * 100 }}%"></div>
                                     </div>
-                                    <span class="text-xs text-zinc-600 min-w-[45px]">{{ number_format(($pickups->where('verification_status', 'verified')->count() / max(1, $pickups->count())) * 100, 0) }}%</span>
+                                    <span class="text-xs text-zinc-600 min-w-[45px]">{{ number_format(($pickups->whereIn('verification_status', ['verified', 'completed'])->count() / max(1, $pickups->count())) * 100, 0) }}%</span>
                                 </div>
                             </td>
                         </tr>
@@ -160,7 +160,12 @@
                         <td class="px-6 py-4 text-sm text-zinc-900">{{ $verification->foodMatch?->pickup_scheduled_at?->format('M j, Y g:i A') ?? 'N/A' }}</td>
                         <td class="px-6 py-4 text-sm text-zinc-900">{{ $verification->scanned_at?->format('M j, Y g:i A') ?? 'N/A' }}</td>
                         <td class="px-6 py-4">
-                            @if($verification->verification_status === 'verified')
+                            @if($verification->verification_status === 'completed')
+                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                                    <i data-lucide="check-circle-2" class="w-3 h-3"></i>
+                                    Completed
+                                </span>
+                            @elseif($verification->verification_status === 'verified')
                                 <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
                                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                                     Verified

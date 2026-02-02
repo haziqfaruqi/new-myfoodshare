@@ -227,7 +227,7 @@
                             </div>
                             <div>
                                 <h3 class="text-lg font-semibold text-gray-900">Organization Information</h3>
-                                <p class="text-sm text-gray-500">Details about your NGO/organization</p>
+                                <p class="text-sm text-gray-500">Details about recipient</p>
                             </div>
                         </div>
 
@@ -529,7 +529,7 @@
                     <button type="submit"
                             class="flex-1 flex justify-center items-center py-3 px-6 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white font-medium rounded-lg hover:from-emerald-700 hover:to-emerald-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all duration-200">
                         <i data-lucide="heart-handshake" class="w-4 h-4 mr-2"></i>
-                        Register NGO Account
+                        Register Recipient Account
                     </button>
                     <a href="{{ route('login') }}"
                        class="flex-1 flex justify-center items-center py-3 px-6 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all duration-200">

@@ -566,7 +566,12 @@ console.log('Scanner script started');
         .then(data => {
             hideLoading();
             if (data.success) {
-                showSuccess();
+                // Redirect to feedback page if verification_id is returned
+                if (data.verification_id) {
+                    window.location.href = '/pickup/feedback/' + data.verification_id;
+                } else {
+                    showSuccess();
+                }
             } else {
                 showError(data.message || 'Verification failed');
             }
