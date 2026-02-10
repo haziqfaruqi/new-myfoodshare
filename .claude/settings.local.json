@@ -26,7 +26,14 @@
       "Bash(start:*)",
       "Bash(composer require:*)",
       "Bash(composer show:*)",
-      "Bash(composer dump-autoload:*)"
+      "Bash(composer dump-autoload:*)",
+      "Bash(mysql:*)",
+      "Bash(powershell:*)",
+      "Bash(ipconfig:*)",
+      "Bash(netstat:*)",
+      "Bash(sudo:*)",
+      "Bash(sudo apt:*)",
+      "Bash(sudo apt install:*)"
     ],
     "deny": [],
     "ask": []
