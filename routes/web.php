@@ -36,6 +36,14 @@ Route::get('/auth/check', function () {
     ]);
 })->name('auth.check');
 
+// Health check endpoint for Railway deployment
+Route::get('/health', function () {
+    return response()->json([
+        'status' => 'ok',
+        'timestamp' => now()->toIso8601String(),
+    ]);
+})->name('health');
+
 
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login')->middleware('guest');
 Route::post('/login', [AuthController::class, 'login'])->middleware('guest');
