@@ -1088,7 +1088,59 @@ class DashboardController extends Controller
         $availableFoodCount = $this->getAvailableFoodCount();
         view()->share('availableFoodCount', $availableFoodCount);
 
-        return view('recipient.map-view', compact('pinnedLocation'));
+        // Get active food listings with restaurant information
+        $foodListings = FoodListing::with(['restaurantProfile', 'creator'])
+            ->where('status', 'active')
+            ->where('approval_status', 'approved')
+            ->where(function ($query) {
+                // Has its own coordinates OR restaurant has coordinates
+                $query->whereNotNull('latitude')
+                    ->whereNotNull('longitude')
+                    ->orWhereHas('restaurantProfile', function ($q) {
+                        $q->whereNotNull('latitude')
+                          ->whereNotNull('longitude');
+                    });
+            })
+            ->where(function ($query) {
+                // Not expired (check both expiry_date and expiry_time)
+                $query->where('expiry_date', '>=', now()->toDateString())
+                    ->orWhere(function ($q) {
+                        $q->where('expiry_date', '=', now()->toDateString())
+                          ->where('expiry_time', '>=', now()->format('H:i'));
+                    });
+            })
+            ->get()
+            ->filter(function ($listing) {
+                // Filter out listings that have no coordinates at all
+                $lat = $listing->latitude ?? $listing->restaurantProfile?->latitude;
+                $lng = $listing->longitude ?? $listing->restaurantProfile?->longitude;
+                return $lat && $lng;
+            })
+            ->map(function ($listing) {
+                // Use listing coordinates if available, otherwise use restaurant coordinates
+                $lat = $listing->latitude ?? $listing->restaurantProfile?->latitude;
+                $lng = $listing->longitude ?? $listing->restaurantProfile?->longitude;
+
+                // Use expiry_time if it exists, otherwise use expiry_date
+                // Both are Carbon objects with datetime
+                $expiryCarbon = $listing->expiry_time ?? $listing->expiry_date;
+                $isExpiringSoon = $expiryCarbon->lessThan(now()->addHours(6));
+
+                return [
+                    'id' => $listing->id,
+                    'name' => $listing->restaurantProfile?->restaurant_name ?? $listing->creator?->name ?? 'Unknown Restaurant',
+                    'lat' => (float) $lat,
+                    'lng' => (float) $lng,
+                    'food' => $listing->food_name,
+                    'description' => $listing->description,
+                    'quantity' => $listing->quantity . ' ' . $listing->unit,
+                    'expiry_time' => $expiryCarbon->format('M j, Y g:i A'),
+                    'is_expiring_soon' => $isExpiringSoon,
+                    'cuisine_type' => $listing->category ?? 'N/A',
+                ];
+            });
+
+        return view('recipient.map-view', compact('pinnedLocation', 'foodListings'));
     }
 
     /**

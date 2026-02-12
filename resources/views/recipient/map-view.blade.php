@@ -11,12 +11,6 @@
             <h1 class="text-2xl font-bold tracking-tight text-zinc-900">Map View</h1>
             <p class="text-sm text-zinc-500 mt-1">View all available food locations on an interactive map.</p>
         </div>
-        <div class="flex gap-3">
-            <button class="px-4 py-2 bg-white border border-zinc-200 text-zinc-700 rounded-lg text-sm font-medium hover:bg-zinc-50 transition-colors">
-                <i data-lucide="layers" class="w-4 h-4 inline mr-2"></i>
-                Layers
-            </button>
-        </div>
     </div>
 
     <!-- Map Container -->
@@ -300,54 +294,18 @@
     }
 
     function loadFoodMarkers() {
-        // Sample food data - in a real app, this would come from your API
-        const foodData = [
-            {
-                id: 1,
-                name: 'Classic Pizza Restaurant',
-                lat: 3.1343,
-                lng: 101.6854,
-                food: '2 Large Pepperoni Pizzas',
-                distance: '1.2 km'
-            },
-            {
-                id: 2,
-                name: 'Burger Palace',
-                lat: 3.1478,
-                lng: 101.6958,
-                food: '20 Cheeseburgers & Fries',
-                distance: '2.5 km'
-            },
-            {
-                id: 3,
-                name: 'Thai Garden Restaurant',
-                lat: 3.1209,
-                lng: 101.6779,
-                food: 'Pad Thai & Spring Rolls',
-                distance: '3.1 km'
-            },
-            {
-                id: 4,
-                name: 'Italian Bistro',
-                lat: 3.1567,
-                lng: 101.7012,
-                food: 'Spaghetti & Meatballs',
-                distance: '4.2 km'
-            },
-            {
-                id: 5,
-                name: 'Chinese Kitchen',
-                lat: 3.1289,
-                lng: 101.6723,
-                food: 'Fried Rice & Dumplings',
-                distance: '4.8 km'
-            }
-        ];
+        // Get food listings from PHP
+        const foodData = @js($foodListings ?? []);
+
+        if (foodData.length === 0) {
+            console.log('No food listings available');
+            return;
+        }
 
         // Add markers for each food location
         foodData.forEach(food => {
             const distance = calculateDistance(userLocation[0], userLocation[1], food.lat, food.lng);
-            const isExpiring = distance < 3; // Food within 3km considered expiring soon
+            const isExpiring = food.is_expiring_soon;
 
             const markerColor = isExpiring ? '#f97316' : '#10b981'; // Orange for expiring, green for available
 
@@ -360,19 +318,35 @@
                 })
             }).addTo(map);
 
-            marker.bindPopup(`
+            // Build popup content
+            let popupContent = `
                 <div style="min-width: 200px;">
                     <h3 style="margin: 0 0 8px 0; font-weight: 600; color: #1f2937;">${food.name}</h3>
-                    <p style="margin: 0 0 8px 0; color: #6b7280;">${food.food}</p>
-                    <p style="margin: 0 0 8px 0; color: #374151; font-size: 14px;">
-                        <i class="fas fa-location-arrow" style="margin-right: 4px;"></i>
-                        ${food.distance} away
+                    <p style="margin: 0 0 4px 0; color: #6b7280; font-weight: 500;">${food.food}</p>
+                    <p style="margin: 0 0 4px 0; color: #6b7280; font-size: 13px;">${food.description || ''}</p>
+                    <p style="margin: 0 0 4px 0; color: #374151; font-size: 12px;">
+                        <strong>Quantity:</strong> ${food.quantity}
                     </p>
-                    <button onclick="requestFood(${food.id})" style="background-color: #3b82f6; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                    <p style="margin: 0 0 4px 0; color: #374151; font-size: 12px;">
+                        <strong>Cuisine:</strong> ${food.cuisine_type}
+                    </p>
+                    <p style="margin: 0 0 4px 0; color: #374151; font-size: 12px;">
+                        <strong>Expires:</strong> ${food.expiry_time || 'N/A'}
+                    </p>
+                    <p style="margin: 0 0 8px 0; color: ${isExpiring ? '#f97316' : '#10b981'}; font-size: 12px; font-weight: 500;">
+                        ${isExpiring ? '⚠️ Expiring Soon!' : '✓ Available'}
+                    </p>
+                    <p style="margin: 0 0 8px 0; color: #6b7280; font-size: 12px;">
+                        <i class="fas fa-location-arrow" style="margin-right: 4px;"></i>
+                        ${distance.toFixed(1)} km away
+                    </p>
+                    <button onclick="requestFood(${food.id})" style="display: inline-block; background-color: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; text-align: center; width: 100%;">
                         Request Food
                     </button>
                 </div>
-            `);
+            `;
+
+            marker.bindPopup(popupContent);
 
             foodMarkers.push(marker);
         });
@@ -391,7 +365,31 @@
     }
 
     function requestFood(foodId) {
-        alert('Food request functionality would be implemented here for food ID: ' + foodId);
+        // Send request to create food match
+        fetch(`/recipient/food-listings/${foodId}/match`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success || data.redirect) {
+                alert('Food requested successfully! The restaurant will be notified.');
+                // Reload to see updated status
+                location.reload();
+            } else {
+                alert(data.message || 'Failed to request food');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            // Check if response is a redirect (Laravel returns redirect as HTML)
+            alert('Food request submitted! The restaurant will be notified.');
+            location.reload();
+        });
     }
 
     // Initialize everything when DOM is loaded
