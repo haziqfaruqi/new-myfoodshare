@@ -133,8 +133,11 @@
                                         <i data-lucide="lock" class="h-4 w-4 text-gray-400"></i>
                                     </div>
                                     <input id="password" name="password" type="password" autocomplete="current-password" required
-                                           class="block w-full pl-10 pr-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 placeholder-gray-400"
+                                           class="block w-full pl-10 pr-10 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 placeholder-gray-400"
                                            placeholder="Enter your password">
+                                    <button type="button" onclick="togglePassword('password', this)" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
+                                        <i data-lucide="eye" class="h-4 w-4"></i>
+                                    </button>
                                 </div>
                                 @error('password')
                                     <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
@@ -237,6 +240,21 @@
 </style>
 
 <script>
+    // Toggle password visibility
+    function togglePassword(inputId, button) {
+        const input = document.getElementById(inputId);
+        const icon = button.querySelector('i');
+
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.setAttribute('data-lucide', 'eye-off');
+        } else {
+            input.type = 'password';
+            icon.setAttribute('data-lucide', 'eye');
+        }
+        lucide.createIcons();
+    }
+
     // Initialize Lucide icons
     document.addEventListener('DOMContentLoaded', function() {
         lucide.createIcons();

@@ -188,8 +188,11 @@
                                 <div class="relative">
                                     <i data-lucide="lock" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"></i>
                                     <input id="password" name="password" type="password" autocomplete="new-password" required
-                                           class="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                                           class="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
                                            placeholder="Create a password">
+                                    <button type="button" onclick="togglePassword('password', this)" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
+                                        <i data-lucide="eye" class="h-4 w-4"></i>
+                                    </button>
                                 </div>
                                 @error('password')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -203,8 +206,11 @@
                                 <div class="relative">
                                     <i data-lucide="lock" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"></i>
                                     <input id="password_confirmation" name="password_confirmation" type="password" autocomplete="new-password" required
-                                           class="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                                           class="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
                                            placeholder="Confirm your password">
+                                    <button type="button" onclick="togglePassword('password_confirmation', this)" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
+                                        <i data-lucide="eye" class="h-4 w-4"></i>
+                                    </button>
                                 </div>
                                 @error('password_confirmation')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -410,6 +416,21 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
+    // Toggle password visibility
+    function togglePassword(inputId, button) {
+        const input = document.getElementById(inputId);
+        const icon = button.querySelector('i');
+
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.setAttribute('data-lucide', 'eye-off');
+        } else {
+            input.type = 'password';
+            icon.setAttribute('data-lucide', 'eye');
+        }
+        lucide.createIcons();
+    }
+
     // Initialize Lucide Icons
     lucide.createIcons();
 
