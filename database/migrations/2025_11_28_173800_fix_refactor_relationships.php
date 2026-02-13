@@ -95,6 +95,11 @@ return new class extends Migration
 
     private function migrateRestaurantData()
     {
+        // Skip if users table doesn't exist or is empty
+        if (!Schema::hasTable('users')) {
+            return;
+        }
+
         $users = \App\Models\User::where('role', 'donor')->get();
         foreach ($users as $user) {
             // Check if restaurant profile already exists
@@ -121,6 +126,11 @@ return new class extends Migration
 
     private function migrateRecipientData()
     {
+        // Skip if users table doesn't exist or is empty
+        if (!Schema::hasTable('users')) {
+            return;
+        }
+
         $users = \App\Models\User::where('role', 'recipient')->get();
         foreach ($users as $user) {
             // Check if recipient profile already exists
@@ -145,6 +155,11 @@ return new class extends Migration
 
     private function updateFoodListingRelationships()
     {
+        // Skip if food_listings table doesn't exist
+        if (!Schema::hasTable('food_listings')) {
+            return;
+        }
+
         $foodListings = \App\Models\FoodListing::all();
         foreach ($foodListings as $listing) {
             // Find restaurant profile for this user
