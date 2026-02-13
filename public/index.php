@@ -4,10 +4,13 @@ use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;
 
 // Simple health check that works even if Laravel isn't fully configured
-if (isset($_SERVER['REQUEST_URI']) && $_SERVER['REQUEST_URI'] === '/health') {
+$requestUri = $_SERVER['REQUEST_URI'] ?? '';
+$healthPath = parse_url($requestUri, PHP_URL_PATH) ?: $requestUri;
+
+if ($healthPath === '/health' || str_starts_with($healthPath, '/health')) {
     header('Content-Type: application/json');
     http_response_code(200);
-    echo json_encode(['status' => 'ok', 'timestamp' => date('c')]);
+    echo json_encode(['status' => 'ok', 'timestamp' => date('c'), 'path' => $healthPath]);
     exit;
 }
 
