@@ -103,7 +103,7 @@
                 </div>
                 <div class="z-10">
                     <h3 class="text-sm font-semibold text-blue-900">Smart Match Found!</h3>
-                    <p class="text-xs text-blue-700 mt-0.5">We found {{$nearbyFoodListings->first()->quantity}} of {{$nearbyFoodListings->first()->food_type}} at <span class="font-bold">{{$nearbyFoodListings->first()->restaurantProfile->restaurant_name ?? $nearbyFoodListings->first()->creator->name}}</span> ({{$nearbyFoodListings->first()->distance}}km away) that matches your preferences.</p>
+                    <p class="text-xs text-blue-700 mt-0.5">We found <span class="font-bold">{{$nearbyFoodListings->first()->food_name}}</span> at <span class="font-bold">{{$nearbyFoodListings->first()->restaurantProfile->restaurant_name ?? $nearbyFoodListings->first()->creator->name}}</span> ({{$nearbyFoodListings->first()->distance}}km away) that matches your preferences.</p>
                     <div class="mt-2 flex gap-2">
                         <form action="{{ route('recipient.matches.store', $nearbyFoodListings->first()->id) }}" method="POST" class="inline">
                             @csrf

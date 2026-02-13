@@ -119,13 +119,13 @@
         </div>
 
         <!-- Mobile Menu (Hidden by default) -->
-        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-zinc-200 absolute w-full">
+        {{-- <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-zinc-200 absolute w-full">
             <div class="px-4 pt-2 pb-6 space-y-1 shadow-lg">
                 <a href="#how-it-works" class="block px-3 py-3 rounded-md text-base font-medium text-zinc-600 hover:text-emerald-600 hover:bg-zinc-50">How it Works</a>
                 <a href="#impact" class="block px-3 py-3 rounded-md text-base font-medium text-zinc-600 hover:text-emerald-600 hover:bg-zinc-50">Impact</a>
                 <a href="#login-section" class="block mt-4 px-3 py-3 text-center rounded-md text-base font-medium bg-emerald-600 text-white">Login / Sign Up</a>
             </div>
-        </div>
+        </div> --}}
     </nav>
 
     <!-- Main Content -->

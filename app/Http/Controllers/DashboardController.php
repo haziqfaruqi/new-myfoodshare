@@ -312,8 +312,19 @@ class DashboardController extends Controller
      */
     public function activeListings()
     {
+        // Auto-update expired listings status
+        FoodListing::whereIn('status', ['active', 'matched'])
+            ->where(function ($q) {
+                $q->where('expiry_date', '<', now()->toDateString())
+                  ->orWhere(function ($q2) {
+                      $q2->where('expiry_date', '=', now()->toDateString())
+                           ->where('expiry_time', '<', now()->format('H:i'));
+                  });
+            })
+            ->update(['status' => 'expired']);
+
+        // Show ALL listings for admin, filters will be used on frontend
         $activeListings = FoodListing::with(['restaurantProfile', 'creator'])
-            ->whereIn('status', ['active', 'matched'])
             ->orderBy('created_at', 'desc')
             ->paginate(20);
 

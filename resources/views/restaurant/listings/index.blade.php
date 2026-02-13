@@ -185,10 +185,10 @@
             </div>
             <h3 class="font-medium text-zinc-900 mb-1">No listings found</h3>
             <p class="text-sm text-zinc-500 mb-4">No food listings match your current filters.</p>
-            <a href="{{ route('restaurant.listings.create') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-zinc-900 text-white rounded-lg text-sm font-medium hover:bg-zinc-800 transition-colors">
+            <button onclick="document.getElementById('post-modal').classList.remove('hidden')" class="inline-flex items-center gap-2 px-4 py-2 bg-zinc-900 text-white rounded-lg text-sm font-medium hover:bg-zinc-800 transition-colors">
                 <i data-lucide="plus" class="w-4 h-4"></i>
                 Add Your First Listing
-            </a>
+            </button>
         </div>
         @endif
     </div>
@@ -224,15 +224,12 @@
                     <label class="text-xs font-medium text-zinc-700">Food Image</label>
                     <div class="border-2 border-dashed border-zinc-200 rounded-lg p-6 text-center hover:border-zinc-300 transition-colors cursor-pointer" onclick="document.getElementById('food-image').click()">
                         <input type="file" id="food-image" name="image" class="hidden" accept="image/*" onchange="previewImage(event)">
-                        <div id="image-preview" class="hidden">
-                            <img id="preview-img" class="w-20 h-20 object-cover rounded-lg mx-auto mb-2">
-                            <p class="text-xs text-emerald-600 font-medium">Click to change image</p>
-                        </div>
                         <div id="image-upload-placeholder">
                             <i data-lucide="image-plus" class="w-8 h-8 text-zinc-400 mx-auto mb-2"></i>
                             <p class="text-xs text-zinc-500 font-medium">Click to upload food image</p>
                             <p class="text-[10px] text-zinc-400 mt-1">PNG, JPG up to 5MB</p>
                         </div>
+                        <img id="preview-img" class="hidden w-20 h-20 object-cover rounded-lg mx-auto mb-2">
                     </div>
                 </div>
 
@@ -250,11 +247,11 @@
                     <div class="space-y-1">
                         <label class="text-xs font-medium text-zinc-700">Food Category</label>
                         <select name="food_category" class="w-full px-3 py-2 bg-white border border-zinc-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
-                            <option>Fresh</option>
-                            <option>Cooked</option>
                             <option>Bakery</option>
-                            <option>Beverages</option>
-                            <option>Other</option>
+                            <option>Produce</option>
+                            <option>Canned Goods</option>
+                            <option>Dairy</option>
+                            <option>Prepared Meals</option>
                         </select>
                     </div>
                     <div class="space-y-1">
@@ -315,17 +312,19 @@
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    const preview = document.getElementById('image-preview');
                     const placeholder = document.getElementById('image-upload-placeholder');
                     const img = document.getElementById('preview-img');
 
                     img.src = e.target.result;
-                    preview.classList.remove('hidden');
+                    img.classList.remove('hidden');
                     placeholder.classList.add('hidden');
                 };
                 reader.readAsDataURL(file);
             }
         }
+
+        // Make previewImage available globally
+        window.previewImage = previewImage;
     });
 </script>
 @endsection

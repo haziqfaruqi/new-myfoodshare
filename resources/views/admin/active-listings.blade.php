@@ -82,19 +82,20 @@
                 <div class="bg-white border border-zinc-200 rounded-xl shadow-sm p-4">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div class="flex items-center gap-4">
-                            <select class="text-sm border border-zinc-200 rounded-md px-3 py-2 bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
-                                <option>All Status</option>
-                                <option>Active</option>
-                                <option>Reserved</option>
-                                <option>Expired</option>
+                            <select id="status-filter" class="text-sm border border-zinc-200 rounded-md px-3 py-2 bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500" onchange="filterTable()">
+                                <option value="">All Status</option>
+                                <option value="active">Active</option>
+                                <option value="picked_up">Picked Up</option>
+                                <option value="expired">Expired</option>
+                                <option value="cancelled">Cancelled</option>
                             </select>
-                            <select class="text-sm border border-zinc-200 rounded-md px-3 py-2 bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
-                                <option>All Categories</option>
-                                <option>Fresh</option>
-                                <option>Cooked</option>
-                                <option>Bakery</option>
-                                <option>Beverages</option>
-                                <option>Other</option>
+                            <select id="category-filter" class="text-sm border border-zinc-200 rounded-md px-3 py-2 bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500" onchange="filterTable()">
+                                <option value="">All Categories</option>
+                                <option value="bakery">Bakery</option>
+                                <option value="produce">Produce</option>
+                                <option value="canned goods">Canned Goods</option>
+                                <option value="dairy">Dairy</option>
+                                <option value="prepared meals">Prepared Meals</option>
                             </select>
                         </div>
                         {{-- <div class="flex items-center gap-2">
@@ -131,9 +132,16 @@
                                     <th class="px-6 py-3 font-medium text-right">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-zinc-100">
+                            <tbody class="divide-y divide-zinc-100" id="listings-table-body">
                                 @forelse($activeListings as $listing)
-                                <tr class="hover:bg-zinc-50/50 transition-colors">
+                                @php
+                                    $hasCompletedPickup = $listing->matches()->where('status', 'completed')->count() > 0;
+                                @endphp
+                                <tr class="hover:bg-zinc-50/50 transition-colors listing-row"
+                                    data-status="{{ $listing->status }}"
+                                    data-category="{{ strtolower($listing->category) }}"
+                                    data-expired="{{ $listing->expiry_date && $listing->expiry_date->lt(now()) ? 'true' : 'false' }}"
+                                    data-picked-up="{{ $hasCompletedPickup ? 'true' : 'false' }}">
                                     <td class="px-6 py-4">
                                         <div class="flex items-start gap-3">
                                             @if($listing->images && count($listing->images) > 0)
@@ -263,5 +271,42 @@
 <script>
     // Initialize Lucide Icons
     lucide.createIcons();
+
+    // Filter table function
+    function filterTable() {
+        const statusFilter = document.getElementById('status-filter').value.toLowerCase();
+        const categoryFilter = document.getElementById('category-filter').value.toLowerCase();
+        const rows = document.querySelectorAll('.listing-row');
+
+        rows.forEach(function(row) {
+            const rowStatus = row.getAttribute('data-status') || '';
+            const rowCategory = row.getAttribute('data-category') || '';
+            const isExpired = row.getAttribute('data-expired') === 'true';
+            const isPickedUp = row.getAttribute('data-picked-up') === 'true';
+
+            let showRow = true;
+
+            // Status filter
+            if (statusFilter) {
+                if (statusFilter === 'expired') {
+                    showRow = showRow && isExpired;
+                } else if (statusFilter === 'picked_up') {
+                    showRow = showRow && isPickedUp;
+                } else if (statusFilter === 'active') {
+                    // Active: must be active status AND not picked up
+                    showRow = showRow && rowStatus === 'active' && !isPickedUp;
+                } else {
+                    showRow = showRow && rowStatus === statusFilter;
+                }
+            }
+
+            // Category filter
+            if (categoryFilter) {
+                showRow = showRow && rowCategory === categoryFilter;
+            }
+
+            row.style.display = showRow ? '' : 'none';
+        });
+    }
 </script>
 @endpush

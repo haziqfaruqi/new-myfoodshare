@@ -248,7 +248,12 @@
             return;
         }
 
-        listEl.innerHTML = adminNotifications.slice(0, 10).map(function(n) {
+        // Sort by timestamp newest first, then take first 10
+        const sortedNotifications = adminNotifications.slice().sort(function(a, b) {
+            return new Date(b.timestamp) - new Date(a.timestamp);
+        });
+
+        listEl.innerHTML = sortedNotifications.slice(0, 10).map(function(n) {
             const isRead = n.read;
             const bgClass = isRead ? 'bg-zinc-50' : 'bg-white';
             const textClass = isRead ? 'text-zinc-500' : 'text-zinc-900';

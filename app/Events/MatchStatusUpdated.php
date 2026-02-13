@@ -47,10 +47,10 @@ class MatchStatusUpdated implements ShouldBroadcastNow
             'food_name' => $this->match->foodListing->food_name,
             'quantity' => $this->match->foodListing->quantity,
             'restaurant_name' => $this->match->foodListing->restaurantProfile->restaurant_name,
-            'recipient_name' => \App\Models\User::find($this->match->recipient_id)?->name ?? 'Unknown Recipient',
+            'recipient_name' => optional(\App\Models\User::find($this->match->recipient_id))->name ?? 'Unknown Recipient',
             'status' => $this->match->status,
             'qr_code' => $this->match->qr_code,
-            'pickup_scheduled_at' => $this->match->pickup_scheduled_at?->format('Y-m-d H:i:s'),
+            'pickup_scheduled_at' => $this->match->pickup_scheduled_at ? $this->match->pickup_scheduled_at->format('Y-m-d H:i:s') : null,
             'message' => $this->getStatusMessage(),
             'timestamp' => now()->toISOString(),
         ];

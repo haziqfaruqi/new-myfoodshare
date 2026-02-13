@@ -316,14 +316,15 @@ class FoodListingController extends Controller
         }
 
         $request->validate([
-            'admin_notes' => 'required|string|max:500',
+            'admin_notes' => 'nullable|string|max:500',
         ]);
 
         $foodListing->update([
+            'status' => 'cancelled',
             'approval_status' => 'rejected',
             'approved_at' => now(),
             'approved_by' => Auth::id(),
-            'admin_notes' => $request->admin_notes,
+            'admin_notes' => $request->admin_notes ?? 'Deactivated by admin',
         ]);
 
         return redirect()->route('admin.food-listings')
