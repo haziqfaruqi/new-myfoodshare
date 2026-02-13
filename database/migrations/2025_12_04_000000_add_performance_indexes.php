@@ -13,38 +13,66 @@ return new class extends Migration
     {
         // Add index to food_listings table for faster queries
         Schema::table('food_listings', function (Blueprint $table) {
-            $table->index('created_by');
-            $table->index('status');
-            $table->index('created_at');
-            $table->index('approval_status');
+            if (Schema::hasColumn('food_listings', 'created_by')) {
+                $table->index('created_by');
+            }
+            if (Schema::hasColumn('food_listings', 'status')) {
+                $table->index('status');
+            }
+            if (Schema::hasColumn('food_listings', 'created_at')) {
+                $table->index('created_at');
+            }
+            if (Schema::hasColumn('food_listings', 'approval_status')) {
+                $table->index('approval_status');
+            }
         });
 
         // Add composite indexes for common query patterns
         Schema::table('food_listings', function (Blueprint $table) {
-            $table->index(['created_by', 'status']); // For filtering by owner and status
-            $table->index(['created_by', 'created_at']); // For owner's recent listings
-            $table->index(['approval_status', 'created_at']); // For pending approvals
+            if (Schema::hasColumn('food_listings', 'created_by') && Schema::hasColumn('food_listings', 'status')) {
+                $table->index(['created_by', 'status']);
+            }
+            if (Schema::hasColumn('food_listings', 'created_by') && Schema::hasColumn('food_listings', 'created_at')) {
+                $table->index(['created_by', 'created_at']);
+            }
+            if (Schema::hasColumn('food_listings', 'approval_status') && Schema::hasColumn('food_listings', 'created_at')) {
+                $table->index(['approval_status', 'created_at']);
+            }
         });
 
-        // Add indexes to matches table for faster queries
-        Schema::table('food_matches', function (Blueprint $table) {
-            $table->index('status');
-            $table->index('pickup_scheduled_at');
-            $table->index('created_at');
-            $table->index('updated_at');
-        });
+        // Add indexes to matches table for faster queries (not food_matches)
+        if (Schema::hasTable('matches')) {
+            Schema::table('matches', function (Blueprint $table) {
+                if (Schema::hasColumn('matches', 'status')) {
+                    $table->index('status');
+                }
+                if (Schema::hasColumn('matches', 'pickup_scheduled_at')) {
+                    $table->index('pickup_scheduled_at');
+                }
+                if (Schema::hasColumn('matches', 'created_at')) {
+                    $table->index('created_at');
+                }
+                if (Schema::hasColumn('matches', 'updated_at')) {
+                    $table->index('updated_at');
+                }
+            });
 
-        // Add composite indexes for matches table
-        Schema::table('food_matches', function (Blueprint $table) {
-            $table->index(['food_listing_id', 'status']); // For specific listing status queries
-            $table->index(['status', 'pickup_scheduled_at']); // For scheduling queries
-            $table->index(['status', 'created_at']); // For recent activity queries
-        });
-
-        // Add index to food_listing_id for faster joins
-        Schema::table('food_matches', function (Blueprint $table) {
-            $table->index('food_listing_id');
-        });
+            // Add composite indexes for matches table
+            Schema::table('matches', function (Blueprint $table) {
+                if (Schema::hasColumn('matches', 'food_listing_id') && Schema::hasColumn('matches', 'status')) {
+                    $table->index(['food_listing_id', 'status']);
+                }
+                if (Schema::hasColumn('matches', 'status') && Schema::hasColumn('matches', 'pickup_scheduled_at')) {
+                    $table->index(['status', 'pickup_scheduled_at']);
+                }
+                if (Schema::hasColumn('matches', 'status') && Schema::hasColumn('matches', 'created_at')) {
+                    $table->index(['status', 'created_at']);
+                }
+                if (Schema::hasColumn('matches', 'food_listing_id')) {
+                    $table->index('food_listing_id');
+                }
+            });
+        }
     }
 
     /**
@@ -62,15 +90,17 @@ return new class extends Migration
             $table->dropIndex(['approval_status', 'created_at']);
         });
 
-        Schema::table('food_matches', function (Blueprint $table) {
-            $table->dropIndex(['status']);
-            $table->dropIndex(['pickup_scheduled_at']);
-            $table->dropIndex(['created_at']);
-            $table->dropIndex(['updated_at']);
-            $table->dropIndex(['food_listing_id', 'status']);
-            $table->dropIndex(['status', 'pickup_scheduled_at']);
-            $table->dropIndex(['status', 'created_at']);
-            $table->dropIndex(['food_listing_id']);
-        });
+        if (Schema::hasTable('matches')) {
+            Schema::table('matches', function (Blueprint $table) {
+                $table->dropIndex(['status']);
+                $table->dropIndex(['pickup_scheduled_at']);
+                $table->dropIndex(['created_at']);
+                $table->dropIndex(['updated_at']);
+                $table->dropIndex(['food_listing_id', 'status']);
+                $table->dropIndex(['status', 'pickup_scheduled_at']);
+                $table->dropIndex(['status', 'created_at']);
+                $table->dropIndex(['food_listing_id']);
+            });
+        }
     }
 };
