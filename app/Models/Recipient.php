@@ -11,6 +11,8 @@ class Recipient extends Model
 
     protected $fillable = [
         'user_id',
+        'email',
+        'phone',
         'organization_name',
         'contact_person',
         'address',
