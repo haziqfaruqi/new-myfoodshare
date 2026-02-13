@@ -16,11 +16,13 @@ This guide will help you deploy the MyFoodShare Laravel application to Railway.
 2. Click "New Project" or "Deploy from GitHub"
 3. Select your GitHub repository
 
-### 2. Add a PostgreSQL Database
+### 2. Add a MySQL Database
 
 1. In your Railway project, click "New Service"
-2. Select "Database" > "PostgreSQL"
-3. Railway will create a PostgreSQL database service (default name: "Postgres")
+2. Select "Database" > "MySQL"
+3. Railway will create a MySQL database service (default name: "MySQL")
+
+**Note:** You can also use PostgreSQL if preferred - just change `DB_CONNECTION=pgsql` and use `${{Postgres.*}}` references.
 
 ### 3. Configure Your Laravel Service
 
@@ -36,12 +38,12 @@ This guide will help you deploy the MyFoodShare Laravel application to Railway.
 | `APP_DEBUG` | `false` | Disable debug mode in production |
 | `APP_KEY` | *(auto-generated)* | Leave empty, Laravel will generate it |
 | `APP_URL` | *(your Railway URL)* | Your deployed app URL |
-| `DB_CONNECTION` | `pgsql` | Use PostgreSQL |
-| `DB_HOST` | `${{Postgres.HOSTNAME}}` | Reference Railway Postgres service |
-| `DB_PORT` | `${{Postgres.PORT}}` | Reference Railway Postgres port |
-| `DB_DATABASE` | `${{Postgres.DATABASE}}` | Reference Railway Postgres database |
-| `DB_USERNAME` | `${{Postgres.USER}}` | Reference Railway Postgres user |
-| `DB_PASSWORD` | `${{Postgres.PASSWORD}}` | Reference Railway Postgres password |
+| `DB_CONNECTION` | `mysql` | Use MySQL |
+| `DB_HOST` | `${{MySQL.HOSTNAME}}` | Reference Railway MySQL service |
+| `DB_PORT` | `${{MySQL.PORT}}` | Reference Railway MySQL port |
+| `DB_DATABASE` | `${{MySQL.DATABASE}}` | Reference Railway MySQL database |
+| `DB_USERNAME` | `${{MySQL.USER}` | Reference Railway MySQL user |
+| `DB_PASSWORD` | `${{MySQL.PASSWORD}}` | Reference Railway MySQL password |
 
 #### How to Add Railway References:
 
