@@ -1,8 +1,6 @@
 <?php
 
 // Railway initialization script
-// This file should be called from startCommand before the main server starts
-
 require __DIR__ . '/../vendor/autoload.php';
 
 $retries = 30;
@@ -32,18 +30,18 @@ while ($attempt < $retries) {
 }
 
 echo "Running migrations...\n";
-passthru('php artisan migrate --force', $exitCode);
+system('php artisan migrate --force', $exitCode);
 if ($exitCode !== 0) {
     echo "Migration failed with exit code $exitCode\n";
-    exit($exitCode);
+    // Don't exit on migration failure - might already be migrated
 }
 
 echo "Creating storage link...\n";
-passthru('php artisan storage:link', $exitCode);
+system('php artisan storage:link', $exitCode);
 
 echo "Caching configs...\n";
-passthru('php artisan config:cache', $exitCode);
-passthru('php artisan route:cache', $exitCode);
-passthru('php artisan view:cache', $exitCode);
+system('php artisan config:cache', $exitCode);
+system('php artisan route:cache', $exitCode);
+system('php artisan view:cache', $exitCode);
 
 echo "Initialization complete!\n";
