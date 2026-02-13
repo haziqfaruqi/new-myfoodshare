@@ -4,15 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MyFoodshare - Food Rescue Platform</title>
-    
+
     <!-- Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
+
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
@@ -25,7 +25,7 @@
                         sans: ['Inter', 'sans-serif'],
                     },
                     colors: {
-                        // Explicitly defining the palette requested
+                        // Explicitly defining palette requested
                         zinc: {
                             50: '#fafafa',
                             100: '#f4f4f5',
@@ -66,7 +66,7 @@
         /* Hide scrollbar for clean UI */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        
+
         body {
             background-color: #fafafa; /* Zinc-50 */
             color: #18181b; /* Zinc-900 */
@@ -98,8 +98,8 @@
                 <!-- Desktop Menu -->
                 <div class="hidden md:flex items-center space-x-8">
                     <a href="#how-it-works" class="text-sm font-medium text-zinc-500 hover:text-emerald-600 transition-colors">How it Works</a>
-                    <a href="#impact" class="text-sm font-medium text-zinc-500 hover:text-emerald-600 transition-colors">Impact</a>
                     <a href="#partners" class="text-sm font-medium text-zinc-500 hover:text-emerald-600 transition-colors">Partners</a>
+                    <a href="#impact" class="text-sm font-medium text-zinc-500 hover:text-emerald-600 transition-colors">Impact</a>
                 </div>
 
                 <!-- CTA & Mobile Menu Button -->
@@ -116,16 +116,17 @@
                     <i data-lucide="menu" class="w-6 h-6"></i>
                 </button>
             </div>
-        </div>
 
-        <!-- Mobile Menu (Hidden by default) -->
-        {{-- <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-zinc-200 absolute w-full">
-            <div class="px-4 pt-2 pb-6 space-y-1 shadow-lg">
-                <a href="#how-it-works" class="block px-3 py-3 rounded-md text-base font-medium text-zinc-600 hover:text-emerald-600 hover:bg-zinc-50">How it Works</a>
-                <a href="#impact" class="block px-3 py-3 rounded-md text-base font-medium text-zinc-600 hover:text-emerald-600 hover:bg-zinc-50">Impact</a>
-                <a href="#login-section" class="block mt-4 px-3 py-3 text-center rounded-md text-base font-medium bg-emerald-600 text-white">Login / Sign Up</a>
-            </div>
-        </div> --}}
+            <!-- Mobile Menu (Hidden by default) -->
+            {{-- <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-zinc-200 absolute w-full">
+                <div class="px-4 pt-2 pb-6 space-y-1 shadow-lg">
+                    <a href="#how-it-works" class="block px-3 py-3 rounded-md text-base font-medium text-zinc-600 hover:text-emerald-600 hover:bg-zinc-50">How it Works</a>
+                    <a href="#partners" class="block px-3 py-3 rounded-md text-base font-medium text-zinc-600 hover:text-emerald-600 hover:bg-zinc-50">Partners</a>
+                    <a href="#impact" class="block px-3 py-3 rounded-md text-base font-medium text-zinc-600 hover:text-emerald-600 hover:bg-zinc-50">Impact</a>
+                    <a href="#login-section" class="block mt-4 px-3 py-3 text-center rounded-md text-base font-medium bg-emerald-600 text-white">Login / Sign Up</a>
+                </div>
+            </div> --}}
+        </div>
     </nav>
 
     <!-- Main Content -->
@@ -141,12 +142,12 @@
                     </span>
                     Connecting Surplus to Needs
                 </div>
-                
+
                 <h1 class="text-4xl md:text-6xl font-bold text-zinc-900 tracking-tight leading-[1.1]">
                     Turn excess food into <br>
                     <span class="text-emerald-600">community impact.</span>
                 </h1>
-                
+
                 <p class="text-lg text-zinc-500 max-w-lg leading-relaxed">
                     MyFoodshare connects restaurants with surplus inventory to local communities and NGOs. Reduce waste, save costs, and feed those in need.
                 </p>
@@ -154,7 +155,7 @@
                 <div class="flex flex-col sm:flex-row gap-4 pt-4">
                     <div class="relative">
                         <button id="register-dropdown-btn" class="inline-flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-emerald-600 hover:bg-emerald-700 transition-all shadow-md hover:shadow-xl hover:shadow-emerald-900/10">
-                            Join the Movement
+                            Join Movement
                             <i data-lucide="chevron-down" class="ml-2 w-4 h-4"></i>
                         </button>
                         <!-- Dropdown menu -->
@@ -182,7 +183,7 @@
             <div class="relative hidden lg:block animate-fade-in-up" style="animation-delay: 200ms;">
                 <div class="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-emerald-100 rounded-full blur-3xl opacity-50 mix-blend-multiply"></div>
                 <div class="absolute bottom-0 left-0 -ml-20 -mb-20 w-96 h-96 bg-zinc-200 rounded-full blur-3xl opacity-50 mix-blend-multiply"></div>
-                
+
                 <div class="relative grid grid-cols-2 gap-4">
                     <div class="space-y-4 pt-12">
                         <div class="bg-white p-4 rounded-2xl shadow-xl border border-zinc-100 transform hover:-translate-y-1 transition-transform duration-300">
@@ -222,10 +223,49 @@
             </div>
         </div>
 
-        <!-- Login Portal Section -->
-        <section id="login-section" class="py-12 border-t border-zinc-200">
+        <!-- How it Works Section -->
+        <section id="how-it-works" class="py-16 bg-white rounded-3xl p-8 md:p-12 mb-16">
+            <div class="max-w-6xl mx-auto">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-zinc-900 mb-4">How it Works</h2>
+                    <p class="text-lg text-zinc-500 max-w-2xl mx-auto">Turn excess food into community impact in 3 simple steps</p>
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-8">
+                    <!-- Step 1 -->
+                    <div class="text-center space-y-4">
+                        <div class="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto">
+                            <i data-lucide="package" class="w-8 h-8 text-emerald-600"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-zinc-900">List Surplus Food</h3>
+                        <p class="text-zinc-500">Restaurants post available food items with quantities, expiry dates, and pickup details.</p>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="text-center space-y-4">
+                        <div class="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto">
+                            <i data-lucide="users" class="w-8 h-8 text-blue-600"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-zinc-900">Match & Connect</h3>
+                        <p class="text-zinc-500">Verified recipients browse and request food that matches their community's needs.</p>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="text-center space-y-4">
+                        <div class="w-16 h-16 bg-amber-100 rounded-2xl flex items-center justify-center mx-auto">
+                            <i data-lucide="truck" class="w-8 h-8 text-amber-600"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-zinc-900">Pickup & Impact</h3>
+                        <p class="text-zinc-500">Schedule pickup, verify with QR code, and deliver food to those in need.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Partners Section -->
+        <section id="partners" class="py-16">
             <div class="text-center mb-12">
-                <h2 class="text-2xl font-bold text-zinc-900 mb-2">Choose your Portal</h2>
+                <h2 class="text-2xl md:text-3xl font-bold text-zinc-900 mb-2">Choose your Portal</h2>
                 <p class="text-zinc-500">Select your role to access your dedicated dashboard.</p>
             </div>
 
@@ -256,7 +296,7 @@
                     <div class="w-12 h-12 rounded-xl bg-zinc-100 group-hover:bg-emerald-50 flex items-center justify-center mb-6 transition-colors">
                         <i data-lucide="heart-handshake" class="w-6 h-6 text-zinc-600 group-hover:text-emerald-600 transition-colors"></i>
                     </div>
-                    <h3 class="text-lg font-semibold text-zinc-900 mb-2">Recipient</h3>
+                    <h3 class="text-lg font-semibold text-zinc-900 mb-2">NGO / Recipient</h3>
                     <p class="text-sm text-zinc-500 mb-6 leading-relaxed">
                         Browse available donations, schedule pickups, and distribute to your community.
                     </p>
@@ -265,14 +305,14 @@
                     </a>
                 </div>
             </div>
-            
+
             <div class="text-center mt-8">
                 <p class="text-sm text-zinc-400">Already have an account? <a href="{{ route('login') }}" class="text-emerald-600 hover:underline font-medium">Sign in here</a></p>
             </div>
         </section>
 
-        <!-- Stats Section -->
-        <section class="mt-8 bg-zinc-900 rounded-3xl p-8 md:p-16 text-white text-center relative overflow-hidden">
+        <!-- Stats / Impact Section -->
+        <section id="impact" class="mt-8 bg-zinc-900 rounded-3xl p-8 md:p-16 text-white text-center relative overflow-hidden">
             <!-- Background Decoration -->
             <div class="absolute top-0 left-0 w-full h-full">
                 <div class="absolute top-1/2 left-1/4 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl"></div>
@@ -292,7 +332,7 @@
                     </div>
                     <div>
                         <div class="text-3xl md:text-4xl font-bold text-emerald-500 mb-2">85</div>
-                        <div class="text-sm text-zinc-400">Active NGOs</div>
+                        <div class="text-sm text-zinc-400">Active Recipients</div>
                     </div>
                     <div>
                         <div class="text-3xl md:text-4xl font-bold text-emerald-500 mb-2">RM40k</div>
@@ -318,7 +358,7 @@
                     <span class="font-bold text-sm tracking-tight text-zinc-900">MyFoodshare</span>
                 @endif
             </div>
-            
+
             <div class="flex gap-8 text-sm text-zinc-500">
                 <a href="#" class="hover:text-zinc-900">Privacy</a>
                 <a href="#" class="hover:text-zinc-900">Terms</a>

@@ -206,7 +206,7 @@
                         <div class="bg-white border border-zinc-200 rounded-xl shadow-sm p-5">
                             <div class="flex items-center justify-between mb-4">
                                 <h3 class="text-sm font-semibold text-zinc-900">Recent Notifications</h3>
-                                <button class="text-xs text-emerald-600 hover:underline">Mark all read</button>
+                                {{-- <button class="text-xs text-emerald-600 hover:underline">Mark all read</button> --}}
                             </div>
                             <div class="space-y-0">
                                 @forelse ($notifications as $notification)
@@ -270,7 +270,7 @@
                 </button>
             </div>
 
-            <form action="{{ route('restaurant.listings.store') }}" method="POST" enctype="multipart/form-data" class="p-6 overflow-y-auto space-y-4">
+            <form id="dashboard-post-form-1" action="{{ route('restaurant.listings.store') }}" method="POST" enctype="multipart/form-data" class="p-6 overflow-y-auto space-y-4">
                 @csrf
                 <!-- Form Fields -->
                 <div class="space-y-1">
@@ -312,7 +312,8 @@
                     </div>
                     <div class="space-y-1">
                         <label class="text-xs font-medium text-zinc-700">Quantity (Est.)</label>
-                        <input type="text" name="quantity" placeholder="e.g. 10 boxes / 5kg" class="w-full px-3 py-2 bg-white border border-zinc-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+                        <input type="number" name="quantity" placeholder="e.g., 5" min="1" step="0.1" required class="w-full px-3 py-2 bg-white border border-zinc-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+                        <p class="hidden text-xs text-red-500 mt-1 dashboard-quantity-error">Please enter a valid number (e.g., 5)</p>
                     </div>
                 </div>
 
@@ -427,7 +428,7 @@
                 </button>
             </div>
 
-            <form action="{{ route('restaurant.listings.store') }}" method="POST" enctype="multipart/form-data" class="p-6 overflow-y-auto space-y-4">
+            <form id="dashboard-post-form-1" action="{{ route('restaurant.listings.store') }}" method="POST" enctype="multipart/form-data" class="p-6 overflow-y-auto space-y-4">
                 @csrf
                 <!-- Form Fields -->
                 <div class="space-y-1">
@@ -469,7 +470,8 @@
                     </div>
                     <div class="space-y-1">
                         <label class="text-xs font-medium text-zinc-700">Quantity (Est.)</label>
-                        <input type="text" name="quantity" placeholder="e.g. 10 boxes / 5kg" class="w-full px-3 py-2 bg-white border border-zinc-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+                        <input type="number" name="quantity" placeholder="e.g., 5" min="1" step="0.1" required class="w-full px-3 py-2 bg-white border border-zinc-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+                        <p class="hidden text-xs text-red-500 mt-1 dashboard-quantity-error">Please enter a valid number (e.g., 5)</p>
                     </div>
                 </div>
 
@@ -626,6 +628,38 @@
     // Initialize Lucide Icons when DOM is loaded
     document.addEventListener('DOMContentLoaded', function() {
         lucide.createIcons();
+
+        // Quantity validation for dashboard forms
+        const quantityInputs = document.querySelectorAll('input[name="quantity"][type="number"]');
+        quantityInputs.forEach(input => {
+            input.addEventListener('input', function() {
+                const value = this.value;
+                if (value && isNaN(parseFloat(value))) {
+                    this.classList.add('border-red-500');
+                    this.classList.remove('border-zinc-200');
+                } else {
+                    this.classList.remove('border-red-500');
+                    this.classList.add('border-zinc-200');
+                }
+            });
+        });
+
+        // Form submission validation
+        const dashboardForms = document.querySelectorAll('form[action*="/restaurant/listings"]');
+        dashboardForms.forEach(form => {
+            form.addEventListener('submit', function(e) {
+                const qtyInput = form.querySelector('input[name="quantity"]');
+                const value = qtyInput ? qtyInput.value : '';
+
+                if (!value || isNaN(parseFloat(value))) {
+                    e.preventDefault();
+                    if (qtyInput) {
+                        qtyInput.classList.add('border-red-500');
+                    }
+                    alert('Please enter a valid quantity number (e.g., 5)');
+                }
+            });
+        });
     });
 </script>
 @endsection

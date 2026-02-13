@@ -309,46 +309,6 @@
                     </div>
                 @endif
 
-                <!-- Actions -->
-                <div class="bg-white rounded-lg shadow-sm p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Actions</h3>
-                    <div class="space-y-3">
-                        <a href="{{ route('food-listings.index') }}"
-                           class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors text-center text-sm font-medium">
-                            Browse More Food
-                        </a>
-                        <a href="{{ route('recipient.matches.index') }}"
-                           class="w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-200 transition-colors text-center text-sm font-medium">
-                            View All Matches
-                        </a>
-                        @if (in_array($match->status, ['pending', 'approved']))
-                            <form method="POST" action="{{ route('recipient.matches.cancel', $match->id) }}">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit"
-                                        class="w-full bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 transition-colors text-sm font-medium"
-                                        onclick="return confirm('Are you sure you want to cancel this match?');">
-                                    Cancel Match
-                                </button>
-                            </form>
-                        @endif
-                        @if ($match->status == 'scheduled' && !$match->in_progress)
-                            <form method="POST" action="{{ route('recipient.matches.confirmPickup', $match->id) }}">
-                                @csrf
-                                <button type="submit"
-                                        class="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors text-sm font-medium">
-                                    Confirm Pickup
-                                </button>
-                            </form>
-                        @endif
-                        @if ($match->status == 'in_progress')
-                            <a href="{{ route('recipient.matches.complete', $match->id) }}"
-                               class="w-full bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 transition-colors text-center text-sm font-medium">
-                                Complete Pickup
-                            </a>
-                        @endif
-                    </div>
-                </div>
             </div>
         </div>
     </div>

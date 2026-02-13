@@ -53,15 +53,10 @@
             <img src="https://api.dicebear.com/7.x/avataaars/svg?seed={{ auth()->user()->name }}" alt="User" class="w-9 h-9 rounded-full bg-emerald-50 border border-emerald-100">
             <div class="flex-1 min-w-0">
                 <p class="text-sm font-medium text-zinc-900 truncate">{{ auth()->user()->restaurantProfile->restaurant_name ?? auth()->user()->name }}</p>
-                <div class="flex items-center text-xs text-yellow-500">
-                    <i data-lucide="star" class="w-3 h-3 fill-current mr-1"></i>
-                    <span class="font-medium text-zinc-700">4.9</span>
-                    <span class="text-zinc-400 ml-1">(128)</span>
-                </div>
             </div>
-            <a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('restaurant-logout-form').submit();" class="text-zinc-400 hover:text-red-600 transition-colors">
+            <button onclick="event.preventDefault(); document.getElementById('restaurant-logout-form').submit();" class="text-zinc-400 hover:text-red-600 transition-colors">
                 <i data-lucide="log-out" class="w-4 h-4"></i>
-            </a>
+            </button>
             <form id="restaurant-logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
                 @csrf
             </form>

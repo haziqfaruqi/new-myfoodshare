@@ -65,9 +65,12 @@
                     <span class="truncate">Sarah (Coordinator)</span>
                 </div>
             </div>
-            <a href="{{ route('logout') }}" method="POST" class="text-zinc-400 hover:text-zinc-600">
+            <button onclick="event.preventDefault(); document.getElementById('recipient-logout-form').submit();" class="text-zinc-400 hover:text-zinc-600">
                 <i data-lucide="log-out" class="w-4 h-4"></i>
-            </a>
+            </button>
+            <form id="recipient-logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                @csrf
+            </form>
         </div>
     </div>
 </aside>

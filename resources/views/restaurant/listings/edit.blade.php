@@ -80,11 +80,12 @@
                         </select>
                     </div>
                     <div>
-                        <label class="text-xs font-medium text-zinc-700">Quantity</label>
-                        <input type="text" name="quantity" value="{{ $listing->quantity }}"
+                        <label class="text-xs font-medium text-zinc-700">Quantity (Est.)</label>
+                        <input type="number" name="quantity" id="quantity-input-edit" value="{{ $listing->quantity }}"
                                class="w-full mt-1 px-3 py-2 bg-white border border-zinc-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
-                               placeholder="e.g., 5 kg, 10 servings"
-                               required>
+                               placeholder="e.g., 5" min="1" step="0.1"
+                               required oninput="validateQuantityEdit(this)">
+                        <p id="quantity-error-edit" class="hidden text-xs text-red-500 mt-1">Please enter a valid number (e.g., 5)</p>
                     </div>
                 </div>
 
@@ -179,5 +180,23 @@
     document.addEventListener('DOMContentLoaded', function() {
         lucide.createIcons();
     });
+
+    // Quantity validation function for edit page
+    function validateQuantityEdit(input) {
+        const errorEl = document.getElementById('quantity-error-edit');
+        const value = input.value;
+
+        // Check if value contains non-numeric characters (except decimal point)
+        if (value && isNaN(parseFloat(value))) {
+            input.classList.add('border-red-500');
+            input.classList.remove('border-zinc-200');
+            errorEl.classList.remove('hidden');
+            input.value = '';
+        } else {
+            input.classList.remove('border-red-500');
+            input.classList.add('border-zinc-200');
+            errorEl.classList.add('hidden');
+        }
+    }
 </script>
 @endsection

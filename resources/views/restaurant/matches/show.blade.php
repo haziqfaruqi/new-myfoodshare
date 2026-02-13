@@ -148,6 +148,11 @@
                                 Schedule Pickup
                             </button>
                         </form>
+                        <a href="{{ route('restaurant.qr.generate', $match->id) }}"
+                           class="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors">
+                            <i data-lucide="qrcode" class="w-4 h-4"></i>
+                            Generate QR Code
+                        </a>
                     @endif
 
                     @if($match->status === 'scheduled')

@@ -203,9 +203,21 @@ class DashboardController extends Controller
     /**
      * Show user management page.
      */
-    public function userManagement()
+    public function userManagement(Request $request)
     {
-        $users = User::orderBy('created_at', 'desc')->paginate(20);
+        $query = User::query();
+
+        // Filter by role
+        if ($request->has('role') && $request->role !== 'all') {
+            $query->where('role', $request->role);
+        }
+
+        // Filter by status
+        if ($request->has('status') && $request->status !== 'all') {
+            $query->where('status', $request->status);
+        }
+
+        $users = $query->orderBy('created_at', 'desc')->paginate(20)->appends($request->all());
 
         $stats = [
             'total_users' => User::count(),
@@ -892,13 +904,13 @@ class DashboardController extends Controller
 
         $validated = $request->validate([
             'restaurant_name' => 'required|string|max:255',
-            'cuisine_type' => 'required|string|max:50',
-            'address' => 'required|string|max:255',
-            'city' => 'required|string|max:100',
-            'state' => 'required|string|max:100',
-            'zip_code' => 'required|string|max:20',
+            'cuisine_type' => 'nullable|string|max:50',
+            'address' => 'nullable|string|max:255',
+            'city' => 'nullable|string|max:100',
+            'state' => 'nullable|string|max:100',
+            'zip_code' => 'nullable|string|max:20',
             'phone' => 'nullable|string|max:20',
-            'email' => 'required|email|max:255',
+            'email' => 'nullable|email|max:255',
             'website' => 'nullable|url|max:255',
             'business_hours' => 'nullable|string|max:255',
             'description' => 'nullable|string',
@@ -1084,8 +1096,6 @@ class DashboardController extends Controller
     public function mapView()
     {
         $user = auth()->user();
-
-        // Get user's profile for pinned location
         $pinnedLocation = null;
 
         if ($user->latitude && $user->longitude) {
@@ -1099,42 +1109,36 @@ class DashboardController extends Controller
         $availableFoodCount = $this->getAvailableFoodCount();
         view()->share('availableFoodCount', $availableFoodCount);
 
-        // Get active food listings with restaurant information
         $foodListings = FoodListing::with(['restaurantProfile', 'creator'])
             ->where('status', 'active')
             ->where('approval_status', 'approved')
             ->where(function ($query) {
-                // Has its own coordinates OR restaurant has coordinates
+                // Coordinate Logic
                 $query->whereNotNull('latitude')
                     ->whereNotNull('longitude')
                     ->orWhereHas('restaurantProfile', function ($q) {
                         $q->whereNotNull('latitude')
-                          ->whereNotNull('longitude');
+                        ->whereNotNull('longitude');
                     });
             })
             ->where(function ($query) {
-                // Not expired (check both expiry_date and expiry_time)
-                $query->where('expiry_date', '>=', now()->toDateString())
-                    ->orWhere(function ($q) {
-                        $q->where('expiry_date', '=', now()->toDateString())
-                          ->where('expiry_time', '>=', now()->format('H:i'));
+                // Expiry Logic: Future date OR (Today AND Future time)
+                $nowDate = now()->toDateString();
+                $nowTime = now()->format('H:i:s');
+
+                $query->where('expiry_date', '>', $nowDate)
+                    ->orWhere(function ($q) use ($nowDate, $nowTime) {
+                        $q->where('expiry_date', $nowDate)
+                        ->where('expiry_time', '>=', $nowTime);
                     });
             })
             ->get()
-            ->filter(function ($listing) {
-                // Filter out listings that have no coordinates at all
-                $lat = $listing->latitude ?? $listing->restaurantProfile?->latitude;
-                $lng = $listing->longitude ?? $listing->restaurantProfile?->longitude;
-                return $lat && $lng;
-            })
             ->map(function ($listing) {
-                // Use listing coordinates if available, otherwise use restaurant coordinates
                 $lat = $listing->latitude ?? $listing->restaurantProfile?->latitude;
                 $lng = $listing->longitude ?? $listing->restaurantProfile?->longitude;
 
-                // Use expiry_time if it exists, otherwise use expiry_date
-                // Both are Carbon objects with datetime
-                $expiryCarbon = $listing->expiry_time ?? $listing->expiry_date;
+                // Combine expiry_date and expiry_time to get the full expiry datetime
+                $expiryCarbon = $listing->expiry_date->setTimeFrom($listing->expiry_time ?? '00:00');
                 $isExpiringSoon = $expiryCarbon->lessThan(now()->addHours(6));
 
                 return [

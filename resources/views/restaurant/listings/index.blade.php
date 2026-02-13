@@ -217,7 +217,7 @@
                 </button>
             </div>
 
-            <form action="{{ route('restaurant.listings.store') }}" method="POST" enctype="multipart/form-data" class="p-6 overflow-y-auto space-y-4">
+            <form id="post-donation-form" action="{{ route('restaurant.listings.store') }}" method="POST" enctype="multipart/form-data" class="p-6 overflow-y-auto space-y-4">
                 @csrf
                 <!-- Form Fields -->
                 <div class="space-y-1">
@@ -255,8 +255,9 @@
                         </select>
                     </div>
                     <div class="space-y-1">
-                        <label class="text-xs font-medium text-zinc-700">Quantity</label>
-                        <input type="text" name="quantity" placeholder="e.g., 5 kg, 10 servings" class="w-full px-3 py-2 bg-white border border-zinc-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+                        <label class="text-xs font-medium text-zinc-700">Quantity (Est.)</label>
+                        <input type="number" name="quantity" id="quantity-input" placeholder="e.g., 5" min="1" step="0.1" required class="w-full px-3 py-2 bg-white border border-zinc-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+                        <p id="quantity-error" class="hidden text-xs text-red-500 mt-1">Please enter a valid number (e.g., 5)</p>
                     </div>
                 </div>
 
@@ -325,6 +326,48 @@
 
         // Make previewImage available globally
         window.previewImage = previewImage;
+
+        // Quantity validation - attach to input after DOM is ready
+        const quantityInput = document.getElementById('quantity-input');
+        const quantityError = document.getElementById('quantity-error');
+
+        if (quantityInput) {
+            // Validate on input
+            quantityInput.addEventListener('input', function() {
+                const value = this.value;
+
+                if (value && isNaN(parseFloat(value))) {
+                    this.classList.add('border-red-500');
+                    this.classList.remove('border-zinc-200');
+                    if (quantityError) quantityError.classList.remove('hidden');
+                } else {
+                    this.classList.remove('border-red-500');
+                    this.classList.add('border-zinc-200');
+                    if (quantityError) quantityError.classList.add('hidden');
+                }
+            });
+        }
+
+        // Form submission validation
+        const donationForm = document.getElementById('post-donation-form');
+        if (donationForm) {
+            donationForm.addEventListener('submit', function(e) {
+                const qtyInput = document.getElementById('quantity-input');
+                const qtyError = document.getElementById('quantity-error');
+                const value = qtyInput ? qtyInput.value : '';
+
+                if (!value || isNaN(parseFloat(value))) {
+                    e.preventDefault();
+                    if (qtyInput) {
+                        qtyInput.classList.add('border-red-500');
+                    }
+                    if (qtyError) {
+                        qtyError.classList.remove('hidden');
+                    }
+                    alert('Please enter a valid quantity number (e.g., 5)');
+                }
+            });
+        }
     });
 </script>
 @endsection

@@ -210,11 +210,6 @@
                             <i data-lucide="phone" class="w-4 h-4 inline mr-2"></i>
                             Call Restaurant
                         </button> --}}
-                    @else
-                        <button class="px-4 py-2 bg-white border border-zinc-300 text-zinc-700 rounded-lg text-sm font-medium hover:bg-zinc-50 transition-colors">
-                            <i data-lucide="repeat" class="w-4 h-4 inline mr-2"></i>
-                            Request Again
-                        </button>
                     @endif
                 </div>
             </div>

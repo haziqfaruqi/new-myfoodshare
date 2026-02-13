@@ -69,18 +69,22 @@
             <div class="flex items-center justify-between">
                 <h2 class="text-lg font-semibold text-zinc-900">All Users</h2>
                 <div class="flex items-center gap-3">
-                    <select class="px-3 py-2 border border-zinc-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
-                        <option>All Roles</option>
-                        <option>admin</option>
-                        <option>restaurant_owner</option>
-                        <option>recipient</option>
-                    </select>
-                    <select class="px-3 py-2 border border-zinc-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
-                        <option>All Status</option>
-                        <option>active</option>
-                        <option>inactive</option>
-                        <option>pending</option>
-                    </select>
+                    <form method="GET" action="{{ route('admin.user-management') }}" class="flex items-center gap-3">
+                        <select name="role" onchange="this.form.submit()" class="px-3 py-2 border border-zinc-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                            <option value="all" {{ request('role', 'all') === 'all' ? 'selected' : '' }}>All Roles</option>
+                            <option value="admin" {{ request('role') === 'admin' ? 'selected' : '' }}>Admin</option>
+                            <option value="restaurant_owner" {{ request('role') === 'restaurant_owner' ? 'selected' : '' }}>Restaurant Owner</option>
+                            <option value="recipient" {{ request('role') === 'recipient' ? 'selected' : '' }}>Recipient</option>
+                        </select>
+                        <select name="status" onchange="this.form.submit()" class="px-3 py-2 border border-zinc-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                            <option value="all" {{ request('status', 'all') === 'all' ? 'selected' : '' }}>All Status</option>
+                            <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Active</option>
+                            <option value="inactive" {{ request('status') === 'inactive' ? 'selected' : '' }}>Inactive</option>
+                            <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
+                            <option value="suspended" {{ request('status') === 'suspended' ? 'selected' : '' }}>Suspended</option>
+                            <option value="rejected" {{ request('status') === 'rejected' ? 'selected' : '' }}>Rejected</option>
+                        </select>
+                    </form>
                     {{-- <button class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm font-medium">
                         <i data-lucide="plus" class="w-4 h-4 inline mr-2"></i>
                         Add User

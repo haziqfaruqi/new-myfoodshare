@@ -49,6 +49,16 @@
             <p class="text-sm text-zinc-500 mt-1">Update your restaurant details and contact information.</p>
         </div>
         <div class="p-6">
+            @if($errors->any())
+                <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <ul class="text-sm text-red-600">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             <form action="{{ route('restaurant.profile.update') }}" method="POST" class="space-y-6">
                 @csrf
                 @method('PUT')
